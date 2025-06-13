@@ -1,0 +1,344 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 41 100% 50%;
+    --primary-foreground: 0 0% 10%;
+
+    --secondary: 41 70% 95%;
+    --secondary-foreground: 0 0% 10%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 41 100% 60%;
+    --accent-foreground: 0 0% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 41 30% 80%;
+    --input: 41 30% 80%;
+    --ring: 41 100% 50%;
+
+    --radius: 0.7rem;
+
+    --sidebar-background: 41 30% 98%;
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-primary: 41 100% 50%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 41 100% 60%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 41 30% 80%;
+    --sidebar-ring: 41 100% 50%;
+    
+    /* Gold colors */
+    --gold-50: 41 100% 95%;
+    --gold-100: 41 90% 90%;
+    --gold-200: 41 90% 80%;
+    --gold-300: 41 85% 70%;
+    --gold-400: 41 85% 60%;
+    --gold-500: 41 80% 50%;
+    --gold-600: 41 75% 45%;
+    --gold-700: 41 70% 40%;
+    --gold-800: 41 65% 30%;
+    --gold-900: 41 60% 20%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  /* Mobile navbar background fix */
+  .mobile-navbar-overlay {
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .dark .mobile-navbar-overlay {
+    background: rgba(2, 6, 23, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* Advanced glass effect */
+  .glass-effect {
+    @apply backdrop-blur-md bg-white/30 border border-white/30 shadow-lg;
+    transition: all 0.3s ease;
+  }
+  .glass-effect:hover {
+    @apply bg-white/40 shadow-xl transform -translate-y-1;
+  }
+
+  /* Hover scale animation with smoothness */
+  .hover-scale {
+    @apply transition-all duration-300 hover:scale-105;
+    transform-origin: center center;
+  }
+  
+  /* Glasses animation */
+  .spin-glasses {
+    @apply animate-rotate-glasses;
+  }
+  
+  /* Advanced glass card effect with depth */
+  .glass-card {
+    @apply backdrop-blur-lg bg-white/30 border border-accent/20 
+      shadow-xl shadow-accent/10 rounded-xl transition-all duration-300;
+  }
+  .glass-card:hover {
+    @apply bg-white/40 shadow-2xl shadow-accent/15 transform -translate-y-1;
+  }
+  
+  /* Elegant button hover effect with glow */
+  .elegant-button {
+    @apply relative overflow-hidden rounded-full transition-all duration-300 px-6 py-2
+      before:absolute before:inset-0 before:w-full before:h-full before:bg-accent/20 
+      before:scale-x-0 before:origin-right before:transition-transform before:duration-300
+      hover:before:scale-x-100 hover:before:origin-left after:absolute after:inset-0 after:scale-0 
+      after:rounded-full after:opacity-0 after:bg-accent/10 after:transition-all after:duration-500
+      hover:after:scale-150 hover:after:opacity-100;
+  }
+  
+  /* Animated underline for links with shimmer */
+  .animated-link {
+    @apply relative inline-flex overflow-hidden after:absolute after:bottom-0 after:left-0 after:h-[2px]
+      after:w-0 after:bg-accent after:transition-all after:duration-300 hover:after:w-full
+      before:absolute before:bottom-0 before:left-0 before:h-[2px] before:w-0 before:bg-white/50
+      before:scale-x-100 before:transition-all before:duration-700 hover:before:w-full hover:before:left-full;
+  }
+  
+  /* Image zoom effect with subtle shadow */
+  .image-zoom {
+    @apply overflow-hidden rounded-xl relative isolate;
+  }
+  
+  .image-zoom::after {
+    content: '';
+    @apply absolute inset-0 bg-black/0 transition-all duration-500 z-[-1];
+  }
+  
+  .image-zoom:hover::after {
+    @apply bg-black/10;
+  }
+  
+  .image-zoom img {
+    @apply transition-all duration-500 hover:scale-110 transform-gpu;
+  }
+  
+  /* Feature card with hover effect */
+  .feature-card {
+    @apply rounded-xl overflow-hidden transition-all duration-500 
+      hover:-translate-y-2 hover:shadow-xl hover:shadow-accent/10
+      before:absolute before:inset-0 before:bg-gradient-to-b before:from-transparent before:to-black/10
+      before:opacity-0 before:transition-opacity before:duration-500 hover:before:opacity-100 relative;
+  }
+  
+  /* Shimmer animation for skeletons */
+  .shimmer {
+    @apply relative overflow-hidden;
+  }
+  
+  .shimmer::after {
+    @apply absolute inset-0 transform-gpu -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer;
+    content: '';
+  }
+  
+  /* Floating animation */
+  .floating {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+    100% { transform: translateY(0px); }
+  }
+  
+  /* Pulse glow effect */
+  .pulse-glow {
+    @apply animate-pulse-glow;
+  }
+  
+  /* Heartbeat animation */
+  .heartbeat {
+    animation: heartbeat 1.5s ease-in-out infinite;
+  }
+  
+  @keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    25% { transform: scale(1.1); }
+    50% { transform: scale(1); }
+    75% { transform: scale(1.1); }
+  }
+  
+  /* Rotating background gradient */
+  .rotating-gradient {
+    background: linear-gradient(45deg, var(--accent-color, #8a4fff), var(--secondary-accent, #b388ff), var(--third-accent, #da8fff), var(--fourth-accent, #ff7ae0));
+    background-size: 400% 400%;
+    animation: gradient-shift 15s ease infinite;
+  }
+  
+  @keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  /* Button background animation */
+  .animated-bg-button {
+    @apply relative overflow-hidden;
+    z-index: 1;
+  }
+  
+  .animated-bg-button::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-r from-accent to-primary;
+    z-index: -1;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform 0.5s ease-out;
+  }
+  
+  .animated-bg-button:hover::before {
+    transform: scaleX(1);
+  }
+  
+  /* Fade in animation for section reveal */
+  .reveal {
+    @apply opacity-0 transition-all duration-1000 translate-y-10;
+  }
+  
+  .reveal.active {
+    @apply opacity-100 translate-y-0;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-[#D4AF37] text-white hover:bg-[#BF9E30] px-4 py-2 rounded-md transition-all duration-300 
+      shadow-md hover:shadow-lg active:scale-95 transform-gpu;
+  }
+  
+  .btn-accent {
+    @apply bg-[#FFD700] text-black hover:bg-[#E6C200] px-4 py-2 rounded-md transition-all duration-300
+      shadow-md hover:shadow-lg hover:-translate-y-1 active:translate-y-0 transform-gpu;
+  }
+  
+  .btn-outline {
+    @apply border border-[#D4AF37] bg-transparent text-[#D4AF37] hover:bg-[#D4AF37] hover:text-white 
+      px-4 py-2 rounded-md transition-all duration-300 shadow-sm hover:shadow-md active:scale-95 transform-gpu;
+  }
+
+  .card-hover {
+    @apply hover:shadow-lg transition-all duration-300 hover:-translate-y-1 transform-gpu;
+  }
+
+  .nav-link {
+    @apply relative overflow-hidden after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 
+      after:bg-[#D4AF37] after:transition-all after:duration-300 hover:after:w-full
+      before:absolute before:bottom-0 before:right-full before:h-[2px] before:w-full before:bg-[#D4AF37]/30
+      before:transition-all before:duration-500 hover:before:right-0;
+  }
+  
+  /* Product card with hover effects */
+  .product-card {
+    @apply rounded-xl overflow-hidden border border-border bg-card transition-all duration-300
+      hover:shadow-xl hover:-translate-y-1 hover:shadow-accent/10 hover:border-accent/30 transform-gpu
+      relative before:absolute before:inset-0 before:bg-gradient-to-t before:from-black/10 before:to-transparent
+      before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100;
+  }
+  
+  /* Dashboard stat card with hover effect */
+  .stat-card {
+    @apply rounded-xl border border-border bg-card p-4 transition-all duration-300
+      hover:shadow-md hover:bg-card/80 hover:-translate-y-1 relative overflow-hidden
+      before:absolute before:inset-0 before:bg-gradient-to-br before:from-accent/5 before:to-transparent
+      before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 transform-gpu;
+  }
+  
+  /* Review card with hover effect */
+  .review-card {
+    @apply rounded-xl border border-border bg-card p-4 transition-all duration-300
+      hover:shadow-md hover:-translate-y-1 hover:border-accent/20 transform-gpu;
+  }
+  
+  /* Badge with pulse */
+  .badge-pulse {
+    @apply relative;
+  }
+  
+  .badge-pulse::before {
+    content: '';
+    @apply absolute inset-0 rounded-full animate-ping bg-current opacity-25;
+  }
+  
+  /* Modern bordered input */
+  .input-modern {
+    @apply border-b-2 border-muted focus:border-accent bg-transparent outline-none transition-all duration-300 px-2 py-1;
+  }
+  
+  /* Faded background section */
+  .faded-bg {
+    @apply relative overflow-hidden;
+  }
+  
+  .faded-bg::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-r from-accent/10 to-primary/10 opacity-50;
+    z-index: -1;
+  }
+}
+
+/* Additional keyframes for more advanced animations */
+@keyframes rotate-glasses {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 rgba(138, 79, 255, 0); }
+  50% { opacity: 0.8; box-shadow: 0 0 20px rgba(138, 79, 255, 0.5); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* New Gold gradient for buttons and accents */
+.gold-gradient {
+  background: linear-gradient(to right, #BF9E30, #D4AF37, #FFD700, #D4AF37);
+  background-size: 300% 100%;
+  animation: gold-gradient-shift 5s ease infinite;
+}
+
+@keyframes gold-gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
