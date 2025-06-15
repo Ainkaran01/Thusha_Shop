@@ -68,9 +68,6 @@ class ResendOTPSerializer(serializers.Serializer):
 from rest_framework import serializers
 from .models import CustomerProfile
 
-# serializers.py
-
-User = get_user_model()
 
 class ProfileSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='user.name', read_only=False)

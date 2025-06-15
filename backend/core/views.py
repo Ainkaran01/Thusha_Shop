@@ -16,7 +16,9 @@ from django.contrib.auth import authenticate
 from .serializers import ProfileSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
-
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.hashers import check_password
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 User = get_user_model()
 
@@ -241,3 +243,52 @@ class LogoutView(APIView):
                 {"detail": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+
+
+class ChangePasswordView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        current_password = request.data.get('currentPassword')
+        new_password = request.data.get('newPassword')
+        
+        # Validate required fields
+        if not current_password or not new_password:
+            return Response(
+                {"message": "Both current and new password are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Verify current password
+        if not check_password(current_password, request.user.password):
+            return Response(
+                {"message": "Current password is incorrect"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Validate new password strength
+        if len(new_password) < 6:
+            return Response(
+                {"message": "New password must be at least 8 characters"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if new_password == current_password:
+            return Response(
+                {"message": "New password must be different from current password"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Update password
+        request.user.set_password(new_password)
+        request.user.save()
+        
+        # Maintain session for logged in users
+        update_session_auth_hash(request, request.user)
+        
+        return Response(
+            {"message": "Password updated successfully"},
+            status=status.HTTP_200_OK
+        )        

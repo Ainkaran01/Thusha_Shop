@@ -11,7 +11,7 @@ urlpatterns = [
 
     # User roles
     # path('api/users/', include('users.urls')),
-#     path('api/doctors/', include('doctors.urls')),
+   path('api/doctors/', include('doctors.urls')),
 #     path('api/manufacturers/', include('manufacturers.urls')),
 #     path('api/delivery/', include('delivery.urls')),
 
