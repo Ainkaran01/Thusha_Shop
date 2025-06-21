@@ -100,7 +100,7 @@ INSTALLED_APPS = [
     # 'delivery',
     'appointments',
     'prescriptions',
-    # 'products',
+    'products',
     # 'orders',
     # 'reviews',
     # 'face_shape',
