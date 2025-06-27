@@ -215,7 +215,7 @@ const Contact = () => {
           <h2 className="text-2xl font-bold mb-6 text-black">Visit Our Locations</h2>
           <div className="space-y-6">
             <Card className="border border-gold-200 hover:shadow-lg transition-shadow overflow-hidden">
-              <div className="h-40 bg-[url('https://source.unsplash.com/random/?storefrontoptical')] bg-center bg-cover"></div>
+              <div className="h-40 bg-[url('/public/thusha.jpg')] bg-center bg-cover"></div>
               <CardHeader>
                 <CardTitle className="flex items-center text-black">
                   <MapPin className="h-5 w-5 mr-2 text-gold-600" />
