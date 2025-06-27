@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db import IntegrityError
 from .models import User, OTP,CustomerProfile
-from .utils import send_otp_email
+from .utils import send_otp_email,send_staff_welcome_email
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.contrib.auth.models import update_last_login
@@ -32,17 +32,30 @@ class RegisterView(APIView):
                 password = serializer.validated_data['password']
                 role = serializer.validated_data.get('role', 'customer')
 
+                 # Determine if user should be active immediately
+                is_staff_user = role in ['doctor', 'delivery', 'manufacturer']
+                is_active = True if is_staff_user else False
+
                 # Create user
                 user = User.objects.create_user(
                     email=email,
                     name=name,
                     password=password,
                     role=role,
-                    is_active=False
+                    is_active=is_active
                 )
 
-                otp = OTP.create_otp(user)
-                send_otp_email(user.email, otp.code)
+                # If it's a customer, send OTP
+                if not is_staff_user:
+                    otp = OTP.create_otp(user)
+                    send_otp_email(user.email, otp.code)
+                    return Response({
+                        "message": "OTP sent to your email",
+                        "email": user.email
+                    }, status=status.HTTP_201_CREATED)
+
+                else:
+                    send_staff_welcome_email(email, name, password)
 
                 return Response({
                     "message": "OTP sent to your email",
@@ -310,3 +323,108 @@ def verify_token(request):
             'role': request.user.role
         }
     })
+
+from rest_framework.decorators import  permission_classes
+
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from core.models import User  # your User model path
+
+@api_view(['GET'])
+def get_active_users_by_role(request):
+    """
+    Get list of active users grouped by role
+    Shows: Doctor, Customer, Delivery, Manufacturer
+    """
+    role_mapping = {
+        'doctor': 'Doctor',
+        'customer': 'Customer',
+        'delivery': 'Delivery',
+        'manufacturer': 'Manufacturer',
+    }
+
+    users = User.objects.filter( role__in=role_mapping.keys()).order_by("id")
+
+    data = []
+    for user in users:
+        data.append({
+            'id': user.id,
+            'name': user.name,
+            'email': user.email,
+            'role': role_mapping.get(user.role, user.role),
+            'is_active': user.is_active
+        })
+
+    return Response(data, status=status.HTTP_200_OK)
+
+@api_view(['PATCH'])
+def deactivate_user(request, user_id):
+    """Deactivate any user (doctor, customer, delivery, manufacturer) by setting is_active=False"""
+    role_mapping = {
+        'doctor': 'Doctor',
+        'customer': 'Customer',
+        'delivery': 'Delivery',
+        'manufacturer': 'Manufacturer',
+    }
+
+    try:
+        user = User.objects.get(id=user_id)
+        if user.role not in role_mapping:
+            return Response(
+                {'error': 'Invalid role for deactivation'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.is_active = False
+        user.save()
+        return Response(
+            {
+                'message': f"{role_mapping.get(user.role)} deactivated successfully",
+                'user_id': user.id,
+                'role': role_mapping.get(user.role),
+                'is_active': user.is_active
+            },
+            status=status.HTTP_200_OK
+        )
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'User not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+@api_view(['PATCH'])
+def activate_user(request, user_id):
+    """Activate any user (doctor, customer, delivery, manufacturer) by setting is_active=True"""
+    role_mapping = {
+        'doctor': 'Doctor',
+        'customer': 'Customer',
+        'delivery': 'Delivery',
+        'manufacturer': 'Manufacturer',
+    }
+
+    try:
+        user = User.objects.get(id=user_id)
+        if user.role not in role_mapping:
+            return Response(
+                {'error': 'Invalid role for activation'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.is_active = True
+        user.save()
+        return Response(
+            {
+                'message': f"{role_mapping.get(user.role)} activated successfully",
+                'user_id': user.id,
+                'role': role_mapping.get(user.role),
+                'is_active': user.is_active
+            },
+            status=status.HTTP_200_OK
+        )
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'User not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )

@@ -197,6 +197,10 @@ class AppointmentListView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
+
+        if user.role == 'admin':
+          return Appointment.objects.select_related('doctor', 'patient', 'doctor__user')
+        
         return Appointment.objects.filter(
             Q(patient=user) | Q(doctor__user=user)
         ).select_related('doctor', 'patient', 'doctor__user')
