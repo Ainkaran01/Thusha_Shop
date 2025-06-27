@@ -24,6 +24,7 @@ urlpatterns = [
     path('api/', include('face_shape.urls')),  # fallback or shared
     path('api/contact/', include('face_shape.urls')),
     path('api/faceshape/', include('face_shape.urls')),
+    path('api/adminprofile/', include('adminprofile.urls')),
 
  ]
 

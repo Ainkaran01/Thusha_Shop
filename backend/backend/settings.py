@@ -104,6 +104,9 @@ INSTALLED_APPS = [
     # 'orders',
     # 'reviews',
    'face_shape',
+   'adminprofile',
+
+   
 ]
 
 # Database
