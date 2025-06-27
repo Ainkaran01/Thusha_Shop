@@ -1,6 +1,6 @@
 # core/urls.py 
 from django.urls import path
-from .views import RegisterView, VerifyOTPView, ResendOTPView,  LoginView,ProfileView,LogoutView,ChangePasswordView,verify_token 
+from .views import RegisterView, VerifyOTPView, ResendOTPView,  LoginView,ProfileView,LogoutView,ChangePasswordView,verify_token ,get_active_users_by_role, deactivate_user,activate_user
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
@@ -13,4 +13,8 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('change-password/', ChangePasswordView.as_view(), name='change-password'),
     path('verify-token/', verify_token, name='verify-token'),
+
+    path('users/', get_active_users_by_role, name='get_active_users'),
+    path('users/<int:user_id>/deactivate/', deactivate_user, name='deactivate_user'),
+    path('users/<int:user_id>/activate/', activate_user, name='activate_user'),
 ]
