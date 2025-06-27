@@ -55,3 +55,16 @@ class AppointmentSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("This time slot is already booked.")
 
         return data
+    
+    def update(self, instance, validated_data):
+      print(f"Updating appointment {instance.id}. Current status: {instance.status}")
+      print(f"Requested changes: {validated_data}")
+    
+    # Ensure status is explicitly set if provided
+      if 'status' in validated_data:
+        print(f"Explicitly setting status to: {validated_data['status']}")
+    
+        instance = super().update(instance, validated_data)
+    
+        print(f"Updated status: {instance.status}")
+        return instance
