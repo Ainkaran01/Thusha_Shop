@@ -50,9 +50,17 @@ const DoctorAppointmentsTab = ({
     }
   };
 
-  const handleCancelAppointment = (appointmentId: string) => {
-    onUpdateAppointmentStatus(appointmentId, 'cancelled');
-  };
+  const handleCancelAppointment = async (appointmentId: string) => {
+  try {
+    setIsLoading(true);
+    await onUpdateAppointmentStatus(appointmentId, 'cancelled');
+  } catch (err) {
+    setError('Failed to cancel appointment. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const getStatusBadge = (type: string, status?: string) => {
     if (status === 'completed') return 'bg-green-100 text-green-800';
