@@ -10,12 +10,11 @@ import OrdersTable from "@/components/admin/OrdersTable";
 import ProductsTable from "@/components/admin/ProductsTable";
 import AppointmentsTable from "@/components/admin/AppointmentsTable";
 import CustomersTable from "@/components/admin/CustomersTable";
-import ProfileSettings from "@/components/admin/ProfileSettings";
 import ContactUsTable from "@/components/admin/ContactUsTable";
+import AccountSettings from "@/components/admin/AccountSettings";
 
 // Import mock data
 import {
-  mockCustomers,
   salesData,
   categoryData,
 } from "@/components/admin/mockData";
@@ -33,14 +32,15 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
   const { user } = useUser();
   const {
     orders,
-    products,
-    appointments,
+    
     stats,
     updateOrderStatus,
     deleteOrder,
-    updateAppointmentStatus,
+    
+    appointments,
     deleteAppointment,
 
+    products,
     updateStock,
     deleteProduct,
     addProduct,
@@ -51,6 +51,10 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
     addAccessory,
     deleteAccessory,
     updateAccessoryStock,
+
+    customers,
+    deactivateCustomer,
+    activateCustomer,
 
   } = useAdminDashboard();
 
@@ -70,26 +74,6 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
     fetchContacts();
   }, []);
 
-  const handleUpdateAppointmentStatus = (
-    appointmentId: string,
-    newStatus: string
-  ) => {
-    // Only doctors can update appointment status
-    if (user?.role === "admin") {
-      return;
-    }
-
-    updateAppointmentStatus(appointmentId, newStatus);
-  };
-
-  const handleDeleteAppointment = (appointmentId: string) => {
-    // Only doctors can delete appointments
-    if (user?.role === "admin") {
-      return;
-    }
-
-    deleteAppointment(appointmentId);
-  };
 
   const handleAssignDelivery = (orderId: string, deliveryPerson: string) => {
     // Handle delivery assignment logic here
@@ -136,29 +120,31 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
         />
       </TabsContent>
 
-      <TabsContent value="appointments">
+       <TabsContent value="appointments">
         <AppointmentsTable
           appointments={appointments}
-          onUpdateAppointmentStatus={handleUpdateAppointmentStatus}
-          onDeleteAppointment={handleDeleteAppointment}
-          onCreateStaffAccount={onCreateStaffAccount}
+          onDeleteAppointment={deleteAppointment}
         />
       </TabsContent>
 
       <TabsContent value="customers">
         <CustomersTable
-          customers={mockCustomers}
+          customers={customers}
+          onDeactivateCustomer={deactivateCustomer}
+          onActivateCustomer={activateCustomer}
           onCreateStaffAccount={onCreateStaffAccount}
         />
       </TabsContent>
+
       <TabsContent value="contactus">
         <ContactUsTable contacts={contacts} />
       </TabsContent>
 
       <TabsContent value="settings">
-        <ProfileSettings />
+        <AccountSettings />
       </TabsContent>
     </>
+
   );
 };
 
