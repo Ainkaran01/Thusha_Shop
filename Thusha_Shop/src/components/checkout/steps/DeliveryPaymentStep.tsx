@@ -6,7 +6,7 @@ import PaymentOptions from '../PaymentOptions';
 interface DeliveryPaymentStepProps {
   deliveryOption: "home" | "pickup";
   paymentMethod: "card" | "cash";
-  baseShippingCost: number;
+  shippingCost: number;
   onDeliveryOptionChange: (option: "home" | "pickup") => void;
   onPaymentMethodChange: (method: "card" | "cash") => void;
 }
@@ -14,7 +14,7 @@ interface DeliveryPaymentStepProps {
 const DeliveryPaymentStep: React.FC<DeliveryPaymentStepProps> = ({
   deliveryOption,
   paymentMethod,
-  baseShippingCost,
+  shippingCost,
   onDeliveryOptionChange,
   onPaymentMethodChange,
 }) => {
@@ -23,7 +23,7 @@ const DeliveryPaymentStep: React.FC<DeliveryPaymentStepProps> = ({
       <DeliveryOptions
         selectedOption={deliveryOption}
         onOptionChange={onDeliveryOptionChange}
-        shippingCost={baseShippingCost}
+        shippingCost={shippingCost}
       />
       
       <PaymentOptions

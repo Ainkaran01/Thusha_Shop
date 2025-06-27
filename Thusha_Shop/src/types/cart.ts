@@ -8,6 +8,7 @@ export type CartItem = {
     type: "standard" | "prescription";
     option: string;
     price: number;
+    prescriptionId?: string;
   };
   addedAt?: Date; 
   notes?: string;

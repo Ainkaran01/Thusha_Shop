@@ -6,6 +6,7 @@ export type VisionProblem = "nearsighted" | "farsighted" | "astigmatism" | "pres
 
 // Base profile interface for common fields
 export interface User {
+  profilePhoto: string;
   id: string;
   name: string;
   email: string;
@@ -25,7 +26,7 @@ export interface User {
   prescriptions?: Prescription[];
   avatarUrl?: string;
   preferences?: UserPreferences;
-  createdAt: string;
+  created_at: string;
   lastLogin?: string;
   orders?: string[];
   createdBy?: string;
@@ -33,7 +34,7 @@ export interface User {
 }
 
 
- export interface Prescription {
+export interface Prescription {
   id: number;
   prescription_id: string;
   doctor_name: string;
@@ -46,10 +47,11 @@ export interface User {
   left_sphere: string | null;
   left_cylinder: string | null;
   left_axis: string | null;
-  pupillary_distance: number | null;
+  pupillary_distance: number | null |string;
   status: string;  // add this line for status
+  patient_email_display: string;
+  additional_notes: string;
 }
-
 
 export interface UserPreferences {
   frameStyle?: string;

@@ -35,9 +35,9 @@ const StripePaymentForm: React.FC<StripePaymentFormProps> = ({ onSuccess, amount
         setPaymentInfo(prev => ({ ...prev, [name]: formatted }));
       }
     } else if (name === 'cvv') {
-      // Only allow max 4 digits for CVV
+      // Only allow max 3 digits for CVV
       const cleaned = value.replace(/\D/g, '');
-      if (cleaned.length <= 4) {
+      if (cleaned.length <= 3) {
         setPaymentInfo(prev => ({ ...prev, [name]: cleaned }));
       }
     } else if (name === 'expiryDate') {

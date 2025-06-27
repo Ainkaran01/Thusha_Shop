@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Product } from "@/types";
-import { products } from "@/data/products";
 import { useUser } from "@/context/UserContext";
 
 export interface CatalogFilters {
@@ -13,6 +12,8 @@ export interface CatalogFilters {
   visionProblem: string[];
   category: string[];
 }
+
+const API_BASE_URL =  'http://localhost:8000/api';
 
 export const useCatalogFilters = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -28,7 +29,30 @@ export const useCatalogFilters = () => {
     category: [],
   });
 
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(products);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch products from Django backend
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`${API_BASE_URL}/products/products`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch products');
+        }
+        const data = await response.json();
+        setFilteredProducts(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   // Initialize face shape filter if user has a known face shape
   useEffect(() => {
@@ -48,9 +72,11 @@ export const useCatalogFilters = () => {
     }
   }, [searchParams]);
 
-  // Apply filters and return filtered products
+  // Apply filters to the fetched products
   useEffect(() => {
-    let result = [...products];
+    if (isLoading) return;
+
+    let result = [...filteredProducts];
 
     // Apply search filter
     if (filters.search) {
@@ -59,8 +85,8 @@ export const useCatalogFilters = () => {
         product =>
           product.name.toLowerCase().includes(searchTerm) ||
           product.description.toLowerCase().includes(searchTerm) ||
-          product.frameType.toLowerCase().includes(searchTerm) ||
-          product.frameMaterial.toLowerCase().includes(searchTerm) ||
+          product.frameType?.toLowerCase().includes(searchTerm) ||
+          product.frameMaterial?.toLowerCase().includes(searchTerm) ||
           (product.category && product.category.toLowerCase().includes(searchTerm))
       );
     }

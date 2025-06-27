@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,22 +16,27 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
- const handleAddToCart = (e: React.MouseEvent) => {
-  e.preventDefault();
-  e.stopPropagation(); // 
-  addToCart(product);
-};
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart(product);
+  };
 
-const handleWishlistToggle = (e: React.MouseEvent) => {
-  e.preventDefault();
-  e.stopPropagation(); // 
-  if (isInWishlist(product.id)) {
-    removeFromWishlist(product.id);
-  } else {
-    addToWishlist(product);
-  }
-};
+  const handleWishlistToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product);
+    }
+  };
 
+  // Check if product is out of stock (stock < 1)
+const isOutOfStock =
+  typeof product.stock === 'number'
+    ? product.stock < 1
+    : !product.inStock;
 
   return (
     <Link to={`/product/${product.id}`}>
@@ -43,7 +47,7 @@ const handleWishlistToggle = (e: React.MouseEvent) => {
             alt={product.name}
             className="w-full h-48 object-cover rounded-t-lg"
           />
-          {!product.inStock && (
+          {isOutOfStock && (
             <Badge variant="destructive" className="absolute top-2 left-2">
               Out of Stock
             </Badge>
@@ -73,8 +77,8 @@ const handleWishlistToggle = (e: React.MouseEvent) => {
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xl font-bold">${product.price}</span>
-              {product.inStock && (
+              <span className="text-xl font-bold">LKR {product.price}</span>
+              {!isOutOfStock && (
                 <Button
                   size="sm"
                   onClick={handleAddToCart}

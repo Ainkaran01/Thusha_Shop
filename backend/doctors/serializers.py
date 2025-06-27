@@ -9,7 +9,7 @@ class DoctorProfileSerializer(serializers.ModelSerializer):
         model = DoctorProfile
         fields = [
             'name', 'email', # name is writable, email read-only
-             id, 
+            'id', 
             'specialization',
             'experience_years',
             'qualifications',
