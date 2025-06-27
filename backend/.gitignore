@@ -18,6 +18,7 @@ env/
 
 # Migrations (optional)
 **/migrations/*.pyc
+**/migrations
 **/migrations/__pycache__/
 *.log
 
