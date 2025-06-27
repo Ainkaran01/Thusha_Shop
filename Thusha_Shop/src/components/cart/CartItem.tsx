@@ -49,16 +49,24 @@ const CartItem: React.FC<CartItemProps> = ({
             </p>
             
             {/* Prescription lens option */}
-            {item.lensOption && (
-              <div className="mb-2">
-                <div className="flex items-center text-sm text-primary">
-                  <Check className="h-3 w-3 mr-1" />
-                  {item.lensOption.type === "prescription" 
-                    ? "Prescription Lens" 
-                    : "Standard Lens"}: {item.lensOption.option}
-                </div>
-              </div>
-            )}
+           {item.lensOption && (
+              <div className="mb-2 space-y-1">
+              <div className="flex items-center text-sm text-primary">
+                 <Check className="h-3 w-3 mr-1" />
+
+         {item.lensOption.type === "prescription" 
+        ? "Prescription Lens" 
+        : "Standard Lens"}: {item.lensOption.option}
+                 </div>
+
+             {item.lensOption.type === "prescription" && item.lensOption.prescriptionId && (
+                   <div className="text-xs text-muted-foreground pl-5">
+        Prescription ID: <span className="font-medium">{item.lensOption.prescriptionId}</span>
+                    </div>
+                )} 
+                  </div>
+                 )}
+
 
             <Button
               variant="ghost"
@@ -75,7 +83,9 @@ const CartItem: React.FC<CartItemProps> = ({
       {/* Price */}
       <div className="md:col-span-2 flex justify-between md:block">
         <span className="md:hidden text-sm text-muted-foreground">Price:</span>
-        <span className="text-center block w-full">${item.product.price.toFixed(2)}</span>
+        <span className="text-center block w-full">
+  LKR {Number(item.product.price).toFixed(2)}
+</span>
       </div>
 
       {/* Quantity */}
@@ -107,10 +117,10 @@ const CartItem: React.FC<CartItemProps> = ({
       <div className="md:col-span-2 flex justify-between md:block">
         <span className="md:hidden text-sm text-muted-foreground">Total:</span>
         <div className="text-right font-semibold block w-full">
-          ${(item.product.price * item.quantity).toFixed(2)}
+         LKR {(item.product.price * item.quantity).toFixed(2)}
           {item.lensOption && (
             <div className="text-xs text-muted-foreground">
-              + ${(item.lensOption.price * item.quantity).toFixed(2)} (lens)
+              + LKR{(item.lensOption.price * item.quantity).toFixed(2)} (lens)
             </div>
           )}
         </div>

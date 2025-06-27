@@ -3,6 +3,7 @@ from core.models import User
 from django.core.files.storage import FileSystemStorage
 import os
 
+
 class FrameType(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
@@ -12,6 +13,7 @@ class FrameType(models.Model):
         return self.name
 
 
+
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
@@ -19,6 +21,7 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
 
 
 class Product(models.Model):
@@ -47,6 +50,7 @@ class Product(models.Model):
         return self.name
     
 
+
 class Accessory(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
@@ -69,6 +73,19 @@ class Accessory(models.Model):
         verbose_name_plural = "Accessories"
         ordering = ['-created_at']
 
+
+
+class Review(models.Model):
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.IntegerField()
+    title = models.CharField(max_length=100, blank=True, null=True)  # Optional
+    comment = models.TextField(blank=True, null=True)  # Optional
+    created_at = models.DateTimeField(auto_now_add=True)  # Auto-set on creation
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Review for {self.product.name} by {self.user.username}"
 
 import os
 from uuid import uuid4

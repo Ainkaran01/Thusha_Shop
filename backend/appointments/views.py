@@ -214,7 +214,8 @@ class AppointmentDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Appointment.objects.all()
     serializer_class = AppointmentSerializer
     permission_classes = [IsAuthenticated]
-
+    filter_backends = []
+    
     def perform_update(self, serializer):
         appointment = serializer.save()
         if 'status' in serializer.validated_data:

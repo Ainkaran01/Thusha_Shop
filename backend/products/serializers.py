@@ -4,8 +4,22 @@ from .models import FrameType ,Category, Accessory, Product
 from django.conf import settings
 from django.core.files.storage import default_storage
 import os
-
+from .models import Review
 User = get_user_model()
+
+# serializers.py
+class ReviewSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+    
+    class Meta:
+        model = Review
+        fields = ['id', 'product', 'user', 'rating', 'title', 'comment', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'user', 'created_at', 'updated_at']  # Auto-managed fields
+        
+    def validate_rating(self, value):
+        if value < 1 or value > 5:
+            raise serializers.ValidationError("Rating must be between 1 and 5")
+        return value
 
 class FrameTypeSerializer(serializers.ModelSerializer):
     class Meta:

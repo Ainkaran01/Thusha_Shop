@@ -57,7 +57,7 @@ type Doctor = {
   specialization: string;
   image: string;
   experience_years: string;
-  availability: Availability;
+  availability: Availability | string;
 };
 
 type AppointmentData = {
@@ -80,15 +80,28 @@ const formSchema = z.object({
 
 const API_BASE_URL = "http://localhost:8000/api/appointments";
 
-const formatAvailability = (availability: Availability): string => {
+const formatAvailability = (availability: string | Availability): string => {
+  let availabilityObj: Record<string, any>;
+  if (typeof availability === 'string') {
+    try {
+      availabilityObj = JSON.parse(availability);
+    } catch (e) {
+      console.error("Error parsing availability:", e);
+      return "Not available";
+    }
+  } else {
+    availabilityObj = availability;
+  }
+
+  
   const days = [];
-  if (availability.monday) days.push("Mon");
-  if (availability.tuesday) days.push("Tue");
-  if (availability.wednesday) days.push("Wed");
-  if (availability.thursday) days.push("Thu");
-  if (availability.friday) days.push("Fri");
-  if (availability.saturday) days.push("Sat");
-  if (availability.sunday) days.push("Sun");
+  if (availabilityObj.monday) days.push("Mon");
+  if (availabilityObj.tuesday) days.push("Tue");
+  if (availabilityObj.wednesday) days.push("Wed");
+  if (availabilityObj.thursday) days.push("Thu");
+  if (availabilityObj.friday) days.push("Fri");
+  if (availabilityObj.saturday) days.push("Sat");
+  if (availabilityObj.sunday) days.push("Sun");
   
   return days.length > 0 ? `Available: ${days.join(", ")}` : "Not available";
 };
@@ -119,7 +132,7 @@ const DoctorAppointment = () => {
   // Fetch doctors when date changes
   useEffect(() => {
     const fetchDoctors = async () => {
-      const token = localStorage.getItem("access_token");
+      const token = sessionStorage.getItem("access_token");
       if (!token) {
         console.error("No token found");
         return;
@@ -133,6 +146,7 @@ const DoctorAppointment = () => {
           params
         });
         setDoctors(response.data);
+        console.log(response.data);
       } catch (error) {
         console.error("Error fetching doctors:", error);
         toast({
@@ -156,7 +170,7 @@ const DoctorAppointment = () => {
         return;
       }
 
-      const token = localStorage.getItem("access_token");
+      const token = sessionStorage.getItem("access_token");
       if (!token) return;
 
       setLoadingSlots(true);
@@ -236,7 +250,7 @@ const DoctorAppointment = () => {
         patient_email: data.email
       };
 
-      const token = localStorage.getItem('access_token');
+      const token = sessionStorage.getItem('access_token');
       const response = await axios.post(
         `${API_BASE_URL}/appointments/`,
         appointmentData,
@@ -247,7 +261,7 @@ const DoctorAppointment = () => {
           }
         }
       );
-
+    
       toast({
         title: "Appointment Booked!",
         description: `Your appointment is scheduled for ${appointmentData.date} at ${selectedTime}. Confirmation sent to your email.`,

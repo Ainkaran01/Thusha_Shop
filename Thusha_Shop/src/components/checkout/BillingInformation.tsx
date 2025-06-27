@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 interface BillingInfo {
-  Name: string;
+  name: string;
   email: string;
   phone: string;
   address1: string;
@@ -36,7 +36,7 @@ const BillingInformation: React.FC<BillingInformationProps> = ({
           <Input 
             id="Name" 
             name="tName" 
-            value={billingInfo.Name}
+            value={billingInfo.name}
             onChange={onBillingInfoChange}
             required
           />

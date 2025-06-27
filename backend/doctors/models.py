@@ -13,7 +13,7 @@ class DoctorProfile(models.Model):
     experience_years = models.IntegerField()
     qualifications = models.CharField(max_length=255)
     biography = models.TextField()
-    availability = models.JSONField(default=list)  # Example: ["monday", "wednesday", "friday"]
+    availability = models.JSONField(default=dict) 
 
     def __str__(self):
         return f"Dr. {self.user.name} - {self.specialization}"

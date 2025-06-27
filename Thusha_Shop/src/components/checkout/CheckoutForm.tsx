@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -6,34 +5,41 @@ import CheckoutSteps from './CheckoutSteps';
 import BillingStep from './steps/BillingStep';
 import DeliveryPaymentStep from './steps/DeliveryPaymentStep';
 import LensSelection from './LensSelection';
-import PrescriptionStep from './steps/PrescriptionStep';
+import PrescriptionChecker from '../PrescriptionChecker';
 import PaymentStep from './PaymentStep';
 import { CartItem } from "@/types/cart";
+
+interface BillingInfo {
+  Name: string;
+  email: string;
+  phone: string;
+  address1: string;
+  address2: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
+
+interface LensOption {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+}
 
 interface CheckoutFormProps {
   currentStep: number;
   hasEyeglasses: boolean;
-  needsPrescriptionVerification: boolean;
-  billingInfo: {
-    Name: string;
-    email: string;
-    phone: string;
-    address1: string;
-    address2: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
+  billingInfo: BillingInfo;
   sameAsBilling: boolean;
   deliveryOption: "home" | "pickup";
   paymentMethod: "card" | "cash";
-  baseShippingCost: number;
-  prescriptionVerified: boolean;
+  shippingCost: number;
   eyeglassesItems: CartItem[];
   lensOptions: {
-    standard: Array<{ id: string; name: string; price: number; description: string }>;
-    prescription: Array<{ id: string; name: string; price: number; description: string }>;
+    standard: LensOption[];
+    prescription: LensOption[];
   };
   orderTotal: number;
   onBillingInfoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -50,13 +56,11 @@ interface CheckoutFormProps {
 const CheckoutForm: React.FC<CheckoutFormProps> = ({
   currentStep,
   hasEyeglasses,
-  needsPrescriptionVerification,
   billingInfo,
   sameAsBilling,
   deliveryOption,
   paymentMethod,
-  baseShippingCost,
-  prescriptionVerified,
+  shippingCost,
   eyeglassesItems,
   lensOptions,
   orderTotal,
@@ -74,11 +78,68 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     switch (currentStep) {
       case 1: return "Enter your billing information";
       case 2: return "Choose delivery and payment options";
-      case 3: return "Select lens options (Normal or Powered)";
+      case 3: return hasEyeglasses ? "Select lens options" : "Complete your payment";
       case 4: return "Verify your prescription";
       case 5: return "Complete your payment";
       default: return "";
     }
+  };
+
+   const renderCurrentStep = () => {
+    if (currentStep === 1) {
+      return (
+        <BillingStep
+          billingInfo={billingInfo}
+          sameAsBilling={sameAsBilling}
+          onBillingInfoChange={onBillingInfoChange}
+          onSameAsBillingChange={onSameAsBillingChange}
+        />
+      );
+    }
+
+   if (currentStep === 2) {
+      return (
+        <DeliveryPaymentStep
+          deliveryOption={deliveryOption}
+          paymentMethod={paymentMethod}
+          shippingCost={shippingCost}
+          onDeliveryOptionChange={onDeliveryOptionChange}
+          onPaymentMethodChange={onPaymentMethodChange}
+        />
+      );
+    }
+
+    if (hasEyeglasses) {
+      if (currentStep === 3) {
+        return (
+          <LensSelection
+            eyeglassesItems={eyeglassesItems}
+            lensOptions={lensOptions}
+            onLensTypeSelect={onLensTypeSelect}
+            onLensOptionSelect={onLensOptionSelect}
+          />
+        );
+      }
+
+      if (currentStep === 4) {
+        return (
+          <PrescriptionChecker
+             onPrescriptionVerified={(prescription) => onPrescriptionVerified(prescription.id.toString())}
+            onCancel={onSkipPrescription}
+          />
+        );
+      }
+    }
+
+    // Final payment step (either step 3 for non-eyeglasses or step 5 for eyeglasses)
+    return (
+      <PaymentStep
+        paymentMethod={paymentMethod}
+        orderTotal={orderTotal}
+        deliveryOption={deliveryOption}
+        onPaymentSuccess={onPaymentSuccess}
+      />
+    );
   };
 
   return (
@@ -89,7 +150,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
           <CheckoutSteps
             currentStep={currentStep}
             hasEyeglasses={hasEyeglasses}
-            needsPrescriptionVerification={needsPrescriptionVerification}
           />
         </div>
         <CardDescription>
@@ -98,51 +158,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
       </CardHeader>
       <Separator />
       <CardContent className="pt-6">
-        {currentStep === 1 && (
-          <BillingStep
-            billingInfo={billingInfo}
-            sameAsBilling={sameAsBilling}
-            onBillingInfoChange={onBillingInfoChange}
-            onSameAsBillingChange={onSameAsBillingChange}
-          />
-        )}
-        
-        {currentStep === 2 && (
-          <DeliveryPaymentStep
-            deliveryOption={deliveryOption}
-            paymentMethod={paymentMethod}
-            baseShippingCost={baseShippingCost}
-            onDeliveryOptionChange={onDeliveryOptionChange}
-            onPaymentMethodChange={onPaymentMethodChange}
-          />
-        )}
-        
-        {currentStep === 3 && (
-          <LensSelection
-            eyeglassesItems={eyeglassesItems}
-            lensOptions={lensOptions}
-            onLensTypeSelect={onLensTypeSelect}
-            onLensOptionSelect={onLensOptionSelect}
-          />
-        )}
-
-        {currentStep === 4 && (
-          <PrescriptionStep
-            prescriptionVerified={prescriptionVerified}
-            needsPrescriptionVerification={needsPrescriptionVerification}
-            onPrescriptionVerified={onPrescriptionVerified}
-            onSkipPrescription={onSkipPrescription}
-          />
-        )}
-        
-        {currentStep === 5 && (
-          <PaymentStep
-            paymentMethod={paymentMethod}
-            orderTotal={orderTotal}
-            deliveryOption={deliveryOption}
-            onPaymentSuccess={onPaymentSuccess}
-          />
-        )}
+        {renderCurrentStep()}
       </CardContent>
     </Card>
   );

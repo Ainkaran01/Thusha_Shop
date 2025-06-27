@@ -1,26 +1,27 @@
-
-import { useState, useEffect } from 'react';
+// src/hooks/useCheckoutLogic.ts
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/context/CartContext';
 import { useUser } from '@/context/UserContext';
-import { sendOrderConfirmationEmail } from '@/services/emailService';
+import { createOrder } from '@/services/apiService';
+
 
 export const useCheckoutLogic = () => {
   const { cartItems, getCartTotal, getLensTotal, updateLensOption, clearCart } = useCart();
   const { user } = useUser();
   const { toast } = useToast();
   const navigate = useNavigate();
-  
+ 
+
   const [currentStep, setCurrentStep] = useState(1);
   const [orderComplete, setOrderComplete] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
-  const [prescriptionVerified, setPrescriptionVerified] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"card" | "cash">("card");
   const [deliveryOption, setDeliveryOption] = useState<"home" | "pickup">("home");
-  
+
   const [billingInfo, setBillingInfo] = useState({
-    Name: user?.name.split(" ")[0] || "",
+    name: user?.name || "",
     email: user?.email || "",
     phone: user?.profile?.phone_number || "",
     address1: user?.profile?.address_line1 || "",
@@ -30,126 +31,145 @@ export const useCheckoutLogic = () => {
     zipCode: user?.profile?.zip_code || "",
     country: user?.profile?.country || "",
   });
-  
+
   const [sameAsBilling, setSameAsBilling] = useState(true);
 
-  // Calculate totals
-  const cartTotal = getCartTotal();
-  const lensTotal = getLensTotal();
-  const subtotal = cartTotal + lensTotal;
-  const baseShippingCost = subtotal >= 100 ? 0 : 10;
-  const shippingCost = deliveryOption === "pickup" ? 0 : baseShippingCost;
-  const tax = subtotal * 0.05;
-  const orderTotal = subtotal + shippingCost + tax;
+  const hasEyeglasses = useMemo(() => 
+    cartItems.some(item => item.product.category === "eyeglasses"),
+  [cartItems]);
+
+  const cartTotal = useMemo(() => getCartTotal(), [getCartTotal]);
+  const lensTotal = useMemo(() => getLensTotal(), [getLensTotal]);
+  const subtotal = useMemo(() => cartTotal + lensTotal, [cartTotal, lensTotal]);
+
+  const shippingCost = useMemo(() => {
+    const baseCost = subtotal >= 1000 ? 0 : 500;
+    return deliveryOption === "pickup" ? 0 : baseCost;
+  }, [subtotal, deliveryOption]);
+
+  const tax = useMemo(() => subtotal * 0.05, [subtotal]);
+  const orderTotal = useMemo(() => subtotal + shippingCost + tax, [subtotal, shippingCost, tax]);
+
+  const validateBillingInfo = () => {
+    const requiredFields = ['name', 'email', 'phone', 'address1', 'city', 'state', 'zipCode'];
+    return requiredFields.every(field => Boolean(billingInfo[field as keyof typeof billingInfo]));
+  };
 
   const validateLensSelections = () => {
-    const frameItems = cartItems.filter(item => item.product.category === "eyeglasses");
-    
-    for (const item of frameItems) {
-      if (!item.lensOption) {
-        toast({
-          title: "Missing Lens Selection",
-          description: `Please select lens type for ${item.product.name}`,
-          variant: "destructive",
-        });
-        return false;
-      }
-      
-      if (item.lensOption.type === "prescription") {
-        const activePrescription = user?.prescriptions?.find(p => p.isActive === true) || user?.prescriptions?.[0];
-        if (!activePrescription) {
-          toast({
-            title: "Prescription Required",
-            description: "Please add a prescription to your account for powered lenses before proceeding",
-            variant: "destructive",
-          });
-          return false;
-        }
-      }
-    }
-    
-    return true;
+    if (!hasEyeglasses) return true;
+    return cartItems
+      .filter(item => item.product.category === "eyeglasses")
+      .every(item => item.lensOption);
   };
 
   const nextStep = () => {
-    if (currentStep === 1) {
-      if (!billingInfo.Name  || !billingInfo.email || !billingInfo.phone || !billingInfo.address1 || !billingInfo.address2 || !billingInfo.city || !billingInfo.state || !billingInfo.zipCode) {
-        toast({
-          title: "Missing Information",
-          description: "Please fill out all required billing fields",
-          variant: "destructive",
-        });
-        return;
-      }
-      setCurrentStep(2);
-    } else if (currentStep === 2) {
-      const hasEyeglasses = cartItems.some(item => item.product.category === "eyeglasses");
-      
-      if (hasEyeglasses) {
-        setCurrentStep(3);
-      } else {
-        setCurrentStep(5);
-      }
-    } else if (currentStep === 3) {
-      if (!validateLensSelections()) {
-        return;
-      }
-
-      const needsPrescriptionVerification = cartItems.some(
-        item => item.lensOption?.type === "prescription"
-      );
-      
-      if (needsPrescriptionVerification && !prescriptionVerified) {
-        setCurrentStep(4);
-      } else {
-        setCurrentStep(5);
-      }
-    } else if (currentStep === 4) {
-      if (!prescriptionVerified) {
-        toast({
-          title: "Prescription Required",
-          description: "Please verify your prescription before continuing",
-          variant: "destructive",
-        });
-        return;
-      }
-      setCurrentStep(5);
+    if (currentStep === 1 && !validateBillingInfo()) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill out all required billing fields",
+        variant: "destructive",
+      });
+      return;
     }
+
+    if (currentStep === 3 && hasEyeglasses && !validateLensSelections()) {
+      toast({
+        title: "Missing Lens Selection",
+        description: "Please select lens options for all eyeglasses",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCurrentStep(prev => {
+      if (prev === 1) return 2;
+      if (prev === 2) return hasEyeglasses ? 3 : 5;
+      if (prev === 3) return hasEyeglasses ? 4 : 5;
+      if (prev === 4) return 5;
+      return prev;
+    });
   };
 
   const prevStep = () => {
-    setCurrentStep(prev => prev - 1);
-  };
-
-  const handlePaymentSuccess = async (paymentId?: string) => {
-    const randomOrderNumber = `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
-    setOrderNumber(randomOrderNumber);
-    
-    setOrderComplete(true);
-    
-    try {
-      await sendOrderConfirmationEmail({
-        to: billingInfo.email,
-        subject: "Order Confirmation",
-        orderNumber: randomOrderNumber,
-        customerName: `${billingInfo.Name} `,
-        orderTotal: orderTotal,
-        deliveryDate: deliveryOption === "pickup" ? "Ready for pickup in 1-2 business days" : "Delivered in 3-5 business days"
-      });
-      
-      console.log("Order confirmation email sent successfully");
-    } catch (error) {
-      console.error("Failed to send order confirmation email:", error);
-    }
-    
-    clearCart();
-    
-    toast({
-      title: "Order Placed Successfully",
-      description: `Your order #${randomOrderNumber} has been received and is being processed. A confirmation email has been sent to ${billingInfo.email}.`,
-      duration: 5000,
+    setCurrentStep(prev => {
+      if (prev === 2) return 1;
+      if (prev === 3) return 2;
+      if (prev === 4) return 3;
+      if (prev === 5) return hasEyeglasses ? 4 : 2;
+      return prev;
     });
   };
+    const generateOrderNumber = () => {
+  const now = new Date();
+  const datePart = now.toISOString().slice(0, 10).replace(/-/g, '');
+  const randomPart = Math.floor(1000 + Math.random() * 9000);
+  return `ORD-${datePart}-${randomPart}`;
+};
+
+const handlePaymentSuccess = async (paymentId?: string) => {
+  try {
+    const orderNumber = generateOrderNumber();
+    
+    // Validate cart items
+    if (cartItems.length === 0) {
+      throw new Error("Your cart is empty");
+    }
+
+    const orderData = {
+      order_number: orderNumber,
+      user: user?.id,
+      payment_method: paymentMethod,
+      delivery_option: deliveryOption,
+      total_price: orderTotal.toFixed(2),
+      items: cartItems.map(item => ({
+        product_id: item.product.id,
+        product_name: item.product.name,
+        quantity: item.quantity,
+        price: item.product.price,
+        lens_option: item.lensOption ? {
+          option: item.lensOption.option,
+          type: item.lensOption.type,
+          price: item.lensOption.price,
+          ...(item.lensOption.prescriptionId && {
+            prescriptionId: item.lensOption.prescriptionId
+          })
+        } : null,
+        prescription: item.lensOption?.prescriptionId || null
+      })),
+      billing: {
+        name: billingInfo.name,
+        email: billingInfo.email,
+        phone: billingInfo.phone,
+        address1: billingInfo.address1,
+        address2: billingInfo.address2 || null,
+        city: billingInfo.city,
+        state: billingInfo.state,
+        zip_code: billingInfo.zipCode,
+        country: billingInfo.country
+      }
+    };
+
+    const createdOrder = await createOrder(orderData);
+    
+    setOrderNumber(createdOrder.order_number);
+    setOrderComplete(true);
+    clearCart();
+    toast({
+      title: "Order Placed Successfully",
+      description: `Your order #${createdOrder.order_number} has been received. Confirmation sent to ${billingInfo.email}.`,
+      duration: 5000,
+    });
+
+    return createdOrder;
+  } catch (error: any) {
+    toast({
+      title: "Order Failed",
+      description: error.message || "There was an error processing your order. Please try again.",
+      variant: "destructive",
+    });
+    throw error;
+  }
+};
 
   useEffect(() => {
     if (cartItems.length === 0 && !orderComplete) {
@@ -158,29 +178,25 @@ export const useCheckoutLogic = () => {
   }, [cartItems, orderComplete, navigate]);
 
   return {
-    // State
     currentStep,
+    hasEyeglasses,
     orderComplete,
     orderNumber,
-    prescriptionVerified,
     paymentMethod,
     deliveryOption,
     billingInfo,
     sameAsBilling,
     cartTotal,
     lensTotal,
-    baseShippingCost,
     shippingCost,
     tax,
     orderTotal,
-    // Actions
     nextStep,
     prevStep,
     setBillingInfo,
     setSameAsBilling,
     setPaymentMethod,
     setDeliveryOption,
-    setPrescriptionVerified,
     updateLensOption,
     handlePaymentSuccess,
   };
