@@ -13,7 +13,7 @@ interface UpdatePrescriptionProps {
 }
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('access_token');
+  const token = sessionStorage.getItem('access_token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 

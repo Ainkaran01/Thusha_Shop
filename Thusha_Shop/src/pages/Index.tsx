@@ -150,7 +150,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Products */}
+    
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -226,7 +226,7 @@ const Index = () => {
               </Button>
             </motion.div>
             <motion.div 
-              className="lg:w-1/2"
+              className="lg:w-1/2"  // 12rem = 192px height
               initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
@@ -235,7 +235,7 @@ const Index = () => {
               <img
                 src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80"
                 alt="Face shape analysis"
-                className="rounded-lg shadow-xl w-full"
+                className="rounded-lg shadow-xl w-[450px] h-[600px]  w-full"
               />
             </motion.div>
           </div>

@@ -19,9 +19,9 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
   const { isAuthenticated } = useUser(); 
 
-  // Load wishlist from localStorage on initial load
+  // Load wishlist from sessionStorage on initial load
   useEffect(() => {
-    const savedWishlist = localStorage.getItem("wishlist");
+    const savedWishlist = sessionStorage.getItem("wishlist");
     if (savedWishlist) {
       try {
         setWishlistItems(JSON.parse(savedWishlist));
@@ -31,9 +31,9 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Save wishlist to localStorage whenever it changes
+  // Save wishlist to sessionStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem("wishlist", JSON.stringify(wishlistItems));
+    sessionStorage.setItem("wishlist", JSON.stringify(wishlistItems));
   }, [wishlistItems]);
 
 

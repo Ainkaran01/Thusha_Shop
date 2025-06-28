@@ -44,7 +44,7 @@ const CartItem: React.FC<CartItemProps> = ({
               {item.product.name}
             </Link>
             <p className="text-sm text-muted-foreground mb-2">
-              {item.product.frameType}, {item.product.frameMaterial},{" "}
+              {item.product.frame_type.name}, {item.product.frame_material},{" "}
               {item.product.color}
             </p>
             

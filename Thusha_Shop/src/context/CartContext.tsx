@@ -30,9 +30,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
   const { toast } = useToast();
   const { isAuthenticated } = useUser(); 
-  // Load cart from localStorage on initial load
+  // Load cart from sessionStorage on initial load
   useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
+    const savedCart = sessionStorage.getItem("cart");
     if (savedCart) {
       try {
         const parsedCart = JSON.parse(savedCart);
@@ -55,9 +55,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Save cart to localStorage whenever it changes
+  // Save cart to sessionStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(state.cartItems));
+    sessionStorage.setItem("cart", JSON.stringify(state.cartItems));
   }, [state.cartItems]);
 
  const addToCart = (product: Product, quantity = 1) => {

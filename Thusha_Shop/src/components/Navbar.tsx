@@ -21,21 +21,21 @@ const Navbar = () => {
   const location = useLocation();
 
   // Check if user is on admin-related paths
-  const isAdminPath = location.pathname.includes('admin-dashboard') || 
-                      location.pathname.includes('doctor-dashboard') || 
-                      location.pathname.includes('delivery-dashboard') ||
-                      location.pathname.includes('manufacturer-dashboard');
+  const isAdminPath = location.pathname.includes('admin-dashboard') ||
+    location.pathname.includes('doctor-dashboard') ||
+    location.pathname.includes('delivery-dashboard') ||
+    location.pathname.includes('manufacturer-dashboard');
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
-  
+
   // Add scroll effect
   React.useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -85,18 +85,17 @@ const Navbar = () => {
   const showShopLinks = !isAdminPath;
 
   return (
-    <header 
+    <header
       className={cn(
         "sticky top-0 z-50 transition-all duration-300 backdrop-blur-sm border-b",
-        isScrolled 
-          ? "bg-background/80 shadow-sm py-2" 
+        isScrolled
+          ? "bg-background/80 shadow-sm py-2"
           : "bg-background py-4"
       )}
     >
       <div className="container mx-auto px-4 flex justify-between items-center">
         {/* Logo */}
-        <Link 
-          to="/" 
+        <div
           className={cn(
             "text-2xl font-bold flex items-center space-x-2 transition-all duration-300",
             isScrolled ? "scale-90" : ""
@@ -104,10 +103,10 @@ const Navbar = () => {
         >
           <span className="text-primary">Thusha</span>
           <span className="border-l-2 border-muted-foreground pl-2">Optical</span>
-        </Link>
+        </div>
 
         {/* Desktop Navigation */}
-        <DesktopNavigation 
+        <DesktopNavigation
           isAdminPath={isAdminPath}
           handleBookAppointment={handleBookAppointment}
         />
@@ -117,7 +116,7 @@ const Navbar = () => {
           <ThemeToggle />
           <UserDropdown isAdminPath={isAdminPath} />
           {showShopLinks && (
-            <ShopIcons 
+            <ShopIcons
               handleWishlistNavigation={handleWishlistNavigation}
               handleCartNavigation={handleCartNavigation}
             />
@@ -127,15 +126,15 @@ const Navbar = () => {
         {/* Mobile Menu Button */}
         <div className="md:hidden flex items-center gap-3">
           <ThemeToggle />
-          
+
           {/* Only show cart and wishlist for regular users */}
           {showShopLinks && (
-            <ShopIcons 
+            <ShopIcons
               handleWishlistNavigation={handleWishlistNavigation}
               handleCartNavigation={handleCartNavigation}
             />
           )}
-          
+
           <Button
             variant="outline"
             size="icon"
@@ -147,7 +146,7 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Menu */}
-        <MobileMenu 
+        <MobileMenu
           isMenuOpen={isMenuOpen}
           toggleMenu={toggleMenu}
           isAdminPath={isAdminPath}

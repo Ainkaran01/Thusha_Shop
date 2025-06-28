@@ -30,7 +30,7 @@ interface EditProductFormProps {
     description: string;
     category: { id: number; name: string };
     price: number;
-    stock: number;
+    stock?: number;
     frame_type?: { id: number; name: string };
     frame_material?: string;
     colors?: string;

@@ -88,7 +88,7 @@ const Checkout = () => {
     nextStep();
   };
 
-  const eyeglassesItems = cartItems.filter(item => item.product.category === "eyeglasses");
+  const eyeglassesItems = cartItems.filter(item => item.product.category.name === "Eyeglasses");
   const hasEyeglasses = eyeglassesItems.length > 0;
   const totalSteps = hasEyeglasses ? 5 : 3;
 

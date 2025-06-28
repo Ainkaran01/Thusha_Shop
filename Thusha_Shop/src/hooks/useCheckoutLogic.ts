@@ -35,7 +35,7 @@ export const useCheckoutLogic = () => {
   const [sameAsBilling, setSameAsBilling] = useState(true);
 
   const hasEyeglasses = useMemo(() => 
-    cartItems.some(item => item.product.category === "eyeglasses"),
+    cartItems.some(item => item.product.category.name === "Eyeglasses"),
   [cartItems]);
 
   const cartTotal = useMemo(() => getCartTotal(), [getCartTotal]);
@@ -58,7 +58,7 @@ export const useCheckoutLogic = () => {
   const validateLensSelections = () => {
     if (!hasEyeglasses) return true;
     return cartItems
-      .filter(item => item.product.category === "eyeglasses")
+      .filter(item => item.product.category.name === "Eyeglasses")
       .every(item => item.lensOption);
   };
 
