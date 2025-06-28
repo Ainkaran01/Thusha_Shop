@@ -17,7 +17,7 @@ const APPOINTMENTS_API_URL = 'http://localhost:8000/api/appointments/';
 const PRESCRIPTIONS_API_URL = 'http://localhost:8000/api/prescriptions/';
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('access_token');
+  const token = sessionStorage.getItem('access_token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 

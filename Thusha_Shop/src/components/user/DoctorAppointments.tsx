@@ -40,7 +40,7 @@ const DoctorAppointments = () => {
   useEffect(() => {
    const fetchAppointments = async () => {
       try {
-        const token = localStorage.getItem("access_token");
+        const token = sessionStorage.getItem("access_token");
         if (!token) {
           throw new Error("No authentication token found");
         }
@@ -113,7 +113,7 @@ const DoctorAppointments = () => {
 
   const handleCancelAppointment = async (appointmentId: number) => {
     try {
-      const token = localStorage.getItem("access_token");
+      const token = sessionStorage.getItem("access_token");
       await axios.patch(
         `${API_BASE_URL}/${appointmentId}/`,
         { status: "cancelled" },

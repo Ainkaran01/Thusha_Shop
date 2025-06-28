@@ -19,7 +19,7 @@ urlpatterns = [
      path('api/appointments/', include('appointments.urls')),
      path('api/prescriptions/', include('prescriptions.urls')),
      path('api/products/', include('products.urls')),
-#     path('api/orders/', include('orders.urls')),
+    path('api/orders/', include('orders.urls')),
 #     path('api/reviews/', include('reviews.urls')),
     path('api/', include('face_shape.urls')),  # fallback or shared
     path('api/contact/', include('face_shape.urls')),

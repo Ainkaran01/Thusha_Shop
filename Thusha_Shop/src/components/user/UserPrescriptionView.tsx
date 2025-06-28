@@ -46,7 +46,7 @@ const UserPrescriptionView: React.FC<UserPrescriptionViewProps> = ({ title = "My
     setLoading(true);
     const response = await axios.get(`${API_BASE_URL}${user.id}/`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        'Authorization': `Bearer ${sessionStorage.getItem('access_token')}`
       }
     });
 

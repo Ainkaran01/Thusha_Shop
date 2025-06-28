@@ -1,4 +1,3 @@
-
 export interface ApiProduct {
   id: number;
   name: string;
@@ -17,6 +16,7 @@ export interface ApiProduct {
   vision_problems: string[];
   sold:number;
   images: string[];
+  frame_material?: string;
 
 }
 
@@ -35,8 +35,7 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  inStock?: boolean;  // Legacy field
-  stock?: number; 
+  stock: number;
   size: string;
   weight: number;
   sold:number;
@@ -45,13 +44,12 @@ export interface Product {
   frame_type: FrameType;
   images: string[];
 
-  frameMaterial?: string;
+  frame_material?: string;
   colors?: string;
   features?: string[];
   face_shapes?: string[];
   vision_problems?: string[];
-  ratings?: number;
-  reviewCount?: number;
+  
   created_at?: string;
   manufacturer_id?: number;
 }
@@ -61,7 +59,7 @@ export interface ProductFormData {
   description: string;
   category: string;
   price: string;
-  stock?: number;
+  stock: string;
   frameType: string;
   frameMaterial: string;
   colors: string;
@@ -73,32 +71,22 @@ export interface ProductFormData {
 }
 
 
+
+
 export function normalizeProduct(apiProduct: ApiProduct): Product {
+  
   return {
-    id: apiProduct.id,
-    name: apiProduct.name,
-    description: apiProduct.description,
-    price: apiProduct.price,
-    stock: apiProduct.stock,
-    size: apiProduct.size,
-    weight: apiProduct.weight,
-    sold: apiProduct.sold,
+    ...apiProduct,
     images: apiProduct.images || [],
-    colors: apiProduct.colors,
-    features: apiProduct.features,
-    face_shapes: apiProduct.face_shapes,
-    vision_problems: apiProduct.vision_problems,
-    created_at: apiProduct.created_at,
-    manufacturer_id: apiProduct.manufacturer,
     category: apiProduct.category 
-      ? typeof apiProduct.category === 'string'
+      ? (typeof apiProduct.category === 'string'
         ? { id: 0, name: apiProduct.category }
-        : apiProduct.category
-      : { id: 0, name: 'Uncategorized' },
+        : apiProduct.category)
+      : null,
     frame_type: apiProduct.frame_type
-      ? typeof apiProduct.frame_type === 'string'
+      ? (typeof apiProduct.frame_type === 'string'
         ? { id: 0, name: apiProduct.frame_type }
-        : apiProduct.frame_type
-      : { id: 0, name: 'Unknown Type' }
+        : apiProduct.frame_type)
+      : null
   };
 }

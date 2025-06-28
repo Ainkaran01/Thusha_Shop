@@ -11,6 +11,7 @@ __pycache__/
 venv/
 ENV/
 env/
+media/
 
 # Pytest
 .cache/
@@ -18,6 +19,7 @@ env/
 
 # Migrations (optional)
 **/migrations/*.pyc
+**/migrations
 **/migrations/__pycache__/
 *.log
 

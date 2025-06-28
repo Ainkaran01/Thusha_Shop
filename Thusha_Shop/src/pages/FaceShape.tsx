@@ -144,8 +144,12 @@ const FaceShapePage = () => {
     }
   };
 
-  const viewRecommendations = () => {
-    navigate("/catalog");
+ const viewRecommendations = () => {
+    if (faceShape) {
+      navigate(`/catalog?faceShape=${faceShape}`);
+    } else {
+      navigate("/catalog");
+    }
   };
 
   return (
@@ -226,7 +230,7 @@ const FaceShapePage = () => {
                     shape === faceShape ? "ring-2 ring-primary" : ""
                   }`}
                 >
-                  <img src={info.image} alt={shape} className="w-full h-48 object-cover" />
+                  <img src={info.image} alt={shape} className="w-30 h-30 object-cover" />
                   <div className="p-4">
                     <h3 className="font-semibold capitalize">{shape}</h3>
                     <p className="text-sm mt-2">{info.description}</p>
@@ -302,12 +306,12 @@ const FaceShapePage = () => {
 
           <TabsContent value="camera">
   <div className="flex flex-col items-center gap-4">
-  
+
 
     {/* Camera logic */}
     {capturedImage ? (
   <>
-    
+
       <img src={capturedImage} alt="Captured" className="max-w-xs mx-auto rounded-md mb-4" />
       <div className="flex justify-center gap-3">
         <Button onClick={resetCamera} variant="outline">Retake</Button>
@@ -315,7 +319,7 @@ const FaceShapePage = () => {
           {analyzingFace ? "Analyzing..." : "Analyze"}
         </Button>
       </div>
-    
+
   </>
 ) : (
   <div className="border-2 border-dashed border-border rounded-lg p-8 mb-6">
@@ -345,7 +349,7 @@ const FaceShapePage = () => {
 
           </Tabs>
                    <Separator />
-          
+
           <div className="p-6 bg-accent">
              <h3 className="font-semibold mb-2">Tips for Best Results</h3>
              <ul className="space-y-2">
@@ -374,3 +378,4 @@ const FaceShapePage = () => {
 };
 
 export default FaceShapePage;
+
