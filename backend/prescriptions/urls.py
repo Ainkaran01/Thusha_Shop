@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import PrescriptionView,PrescriptionByUserView
+from .views import PrescriptionView
 
 urlpatterns = [
     path('', PrescriptionView.as_view()),            # /api/prescriptions/
