@@ -18,7 +18,6 @@ import {
   loginSchema,
   registerSchema,
 } from "@/utils/validation";
-import { defaultUser } from "@/services/authService";
 import { authClient, apiClient } from '@/lib/api-clients';
 
 
@@ -33,7 +32,7 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
       
       try {
-        const refreshToken = localStorage.getItem('refresh_token');
+        const refreshToken = sessionStorage.getItem('refresh_token');
         if (!refreshToken) throw new Error('No refresh token');
         
         const response = await authClient.post('/api/core/token/refresh/', {
@@ -41,16 +40,16 @@ apiClient.interceptors.response.use(
         });
         
         const newAccessToken = response.data.access;
-        localStorage.setItem('access_token', newAccessToken);
+        sessionStorage.setItem('access_token', newAccessToken);
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
         originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
 
         return apiClient(originalRequest);
       } catch (refreshError) {
         console.error("Refresh token failed:", refreshError);
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
+        sessionStorage.removeItem('access_token');
+        sessionStorage.removeItem('refresh_token');
+        sessionStorage.removeItem('user');
 
         return Promise.reject(refreshError);
       }
@@ -66,38 +65,41 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
 
-  // Load user from localStorage on mount
- useEffect(() => {
-  
+  // Load user from sessionStorage on mount
+  useEffect(() => {
   const initializeAuth = async () => {
-    const accessToken = localStorage.getItem('access_token');
-    const savedUser = localStorage.getItem('user');
+    const accessToken = sessionStorage.getItem('access_token');
+    const savedUser = sessionStorage.getItem('user');
 
     if (accessToken && savedUser) {
       try {
-        // Verify token is still valid by making a lightweight API call
-        await authClient.get('/api/core/verify-token/');
-        
-        // Set axios default headers
+        // ✅ Set Authorization header BEFORE verifying
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-        
-        // Parse and set user data
-        const parsedUser = JSON.parse(savedUser);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
-        
-        // Refresh user data in background
-        fetchProfile().catch(() => {
-          console.warn("Background profile refresh failed");
-        });
+
+        // ✅ Use apiClient so token refresh interceptor works
+        const res = await apiClient.get('/api/core/verify-token/');
+
+        if (res?.data?.valid) {
+          // ✅ Parse and set user
+          const parsedUser = JSON.parse(savedUser);
+          setUser(parsedUser);
+          setIsAuthenticated(true);
+
+          // ✅ Fetch fresh profile in background
+          fetchProfile().catch(() => {
+            console.warn("Background profile refresh failed");
+          });
+        } else {
+          throw new Error("Invalid token");
+        }
       } catch (error) {
-        // Token verification failed - clear invalid auth data
+        // Token invalid or expired
         console.error("Token verification failed:", error);
         performCleanup(); // silent cleanup
       }
     } else {
-      // No valid auth data found
-      setUser(defaultUser);
+      // No valid session found
+     
       setIsAuthenticated(false);
     }
   };
@@ -105,12 +107,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   initializeAuth();
 }, []);
 
-  // Save user to localStorage when it changes
+  // Save user to sessionStorage when it changes
   useEffect(() => {
     if (user && isAuthenticated) {
-      localStorage.setItem("user", JSON.stringify(user));
+      sessionStorage.setItem("user", JSON.stringify(user));
     } else {
-      localStorage.removeItem("user");
+      sessionStorage.removeItem("user");
     }
   }, [user, isAuthenticated]);
 
@@ -140,10 +142,10 @@ const login = async (email: string, password: string): Promise<User> => {
     const response = await authClient.post("/api/core/login/", { email, password });
     const { access, refresh, user } = response.data;
 
-    // (Optional) Use httpOnly cookies instead of localStorage
-    localStorage.setItem('access_token', access);
-    localStorage.setItem('refresh_token', refresh);
-    localStorage.setItem('user', JSON.stringify(user));
+    // (Optional) Use httpOnly cookies instead of sessionStorage
+    sessionStorage.setItem('access_token', access);
+    sessionStorage.setItem('refresh_token', refresh);
+    sessionStorage.setItem('user', JSON.stringify(user));
     // Set default auth header for future requests
     authClient.defaults.headers.common['Authorization'] = `Bearer ${access}`;
 
@@ -175,7 +177,7 @@ const login = async (email: string, password: string): Promise<User> => {
 
   // Logout function
 const logout = async (showToast = true) => {
-  const refreshToken = localStorage.getItem("refresh_token");
+  const refreshToken = sessionStorage.getItem("refresh_token");
 
   try {
     if (refreshToken) {
@@ -213,9 +215,9 @@ const logout = async (showToast = true) => {
 };
 
 const performCleanup = async () => {
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
-  localStorage.removeItem("user");
+  sessionStorage.removeItem("access_token");
+  sessionStorage.removeItem("refresh_token");
+  sessionStorage.removeItem("user");
   sessionStorage.clear();
 
   setUser(null);
@@ -284,8 +286,8 @@ const performCleanup = async () => {
     const { access, refresh, user } = response.data; // Ensure backend returns tokens
 
     // Store tokens and update state
-    localStorage.setItem('access_token', access);
-    localStorage.setItem('refresh_token', refresh);
+    sessionStorage.setItem('access_token', access);
+    sessionStorage.setItem('refresh_token', refresh);
     setUser(user);
     setIsAuthenticated(true);
 
@@ -500,4 +502,6 @@ export function useUser() {
   }
   return context;
 }
+
+
 

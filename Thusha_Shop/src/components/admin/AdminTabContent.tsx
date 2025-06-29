@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useAdminDashboard } from "@/context/AdminDashboardContext";
 import { useUser } from "@/context/UserContext";
 import { TabsContent } from "@/components/ui/tabs";
@@ -10,7 +10,7 @@ import OrdersTable from "@/components/admin/OrdersTable";
 import ProductsTable from "@/components/admin/ProductsTable";
 import AppointmentsTable from "@/components/admin/AppointmentsTable";
 import CustomersTable from "@/components/admin/CustomersTable";
-import ContactUsTable from "@/components/admin/ContactUsTable";
+import ContactUsTable, { ContactMessage } from "@/components/admin/ContactUsTable";
 import AccountSettings from "@/components/admin/AccountSettings";
 
 // Import mock data

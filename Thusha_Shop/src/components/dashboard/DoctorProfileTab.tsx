@@ -32,7 +32,7 @@ interface DoctorProfileTabProps {
   profileForm: DoctorProfile;
   onEditProfile: () => void;
   onSaveProfile: () => void;
-  onProfileChange: (field: string, value: string) => void;
+  onProfileChange: (field: string, value: string | number | boolean | object) => void;
   onCancelEdit: () => void;
 }
 
@@ -93,7 +93,8 @@ const DoctorProfileTab = ({
       ...currentAvailability,
       [day]: checked
     };
-    onProfileChange('availability', JSON.stringify(newAvailability));
+   onProfileChange('availability', newAvailability);
+
   };
 
   return (

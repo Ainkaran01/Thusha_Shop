@@ -24,7 +24,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { products, reviews } from "@/data/products";
-import { Product, Review } from "@/types";
+import { Product} from "../types/product";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { toast } from "@/components/ui/use-toast";

@@ -11,7 +11,7 @@ __pycache__/
 venv/
 ENV/
 env/
-
+backend
 # Pytest
 .cache/
 .pytest_cache/
