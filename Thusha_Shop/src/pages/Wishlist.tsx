@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Heart, ShoppingCart, Trash2 } from "lucide-react";
@@ -6,25 +5,47 @@ import { Button } from "@/components/ui/button";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
 import { motion } from "framer-motion";
+import { Product } from "@/types/product";
 
 const Wishlist = () => {
-  const { wishlistItems, removeFromWishlist, clearWishlist } = useWishlist();
+  const { wishlistItems, removeFromWishlist, clearWishlist, isLoading } = useWishlist();
   const { addToCart } = useCart();
 
-  const handleRemoveItem = (productId: number) => {
-    removeFromWishlist(productId);
+  const handleRemoveItem = async (productId: number) => {
+    await removeFromWishlist(productId);
   };
 
-  const handleAddToCart = (productId: number) => {
-    const product = wishlistItems.find(item => item.id === productId);
-    if (product) {
-      addToCart(product);
+  const handleAddToCart = (product: Product) => {
+    addToCart(product);
+  };
+
+  const handleClearWishlist = async () => {
+    await clearWishlist();
+  };
+
+  const formatPrice = (price: number): string => {
+    return new Intl.NumberFormat('en-LK', {
+      style: 'currency',
+      currency: 'LKR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(price);
+  };
+
+  const getFirstImage = (images: string[]): string => {
+    if (!images || images.length === 0) {
+      return '/placeholder.jpg';
     }
+    return images[0] || '/placeholder.jpg';
   };
 
-  const handleClearWishlist = () => {
-    clearWishlist();
-  };
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <p>Loading your wishlist...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -56,7 +77,12 @@ const Wishlist = () => {
             <h2 className="text-xl font-semibold">
               {wishlistItems.length} {wishlistItems.length === 1 ? "Item" : "Items"}
             </h2>
-            <Button variant="outline" size="sm" onClick={handleClearWishlist}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleClearWishlist}
+              disabled={isLoading}
+            >
               <Trash2 className="h-4 w-4 mr-1" /> Clear Wishlist
             </Button>
           </div>
@@ -64,7 +90,7 @@ const Wishlist = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {wishlistItems.map((product, index) => (
               <motion.div
-                key={product.id}
+                key={`${product.id}-${index}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -72,9 +98,12 @@ const Wishlist = () => {
               >
                 <Link to={`/product/${product.id}`} className="block relative">
                   <img
-                    src={product.images[0]}
+                    src={getFirstImage(product.images)}
                     alt={product.name}
                     className="w-full h-48 object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/placeholder.jpg';
+                    }}
                   />
                   <Button
                     variant="ghost"
@@ -84,6 +113,7 @@ const Wishlist = () => {
                       e.preventDefault();
                       handleRemoveItem(product.id);
                     }}
+                    disabled={isLoading}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -97,7 +127,7 @@ const Wishlist = () => {
                     >
                       {product.name}
                     </Link>
-                    <span className="font-semibold">${product.price.toFixed(2)}</span>
+                    <span className="font-semibold">{formatPrice(product.price)}</span>
                   </div>
                   <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                     {product.description}
@@ -107,7 +137,8 @@ const Wishlist = () => {
                       variant="default"
                       size="sm"
                       className="w-full"
-                      onClick={() => handleAddToCart(product.id)}
+                      onClick={() => handleAddToCart(product)}
+                      disabled={isLoading}
                     >
                       <ShoppingCart className="h-4 w-4 mr-1" /> Add to Cart
                     </Button>
@@ -130,4 +161,4 @@ const Wishlist = () => {
   );
 };
 
-export default Wishlist;
+export default Wishlist;  

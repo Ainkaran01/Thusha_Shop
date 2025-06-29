@@ -101,9 +101,10 @@ INSTALLED_APPS = [
     'appointments',
     'prescriptions',
     'products',
-    'orders',
+     'orders',
     # 'reviews',
    'face_shape',
+   'wishlist',
    'adminprofile',
 
    

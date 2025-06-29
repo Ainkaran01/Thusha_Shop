@@ -13,7 +13,7 @@ export interface Accessory {
   price:number;
   sold:number;
   size: string;
-  image: string; 
+  images: string[]; 
   weight: number;
   manufacturer: number; 
   created_at: string; 
@@ -28,7 +28,7 @@ export interface ApiAccessory {
   size: string;
   weight: number;
   stock: number;
-  image: string;
+  images: string[];
   manufacturer: number;
   created_at: string;
   sold:number;
