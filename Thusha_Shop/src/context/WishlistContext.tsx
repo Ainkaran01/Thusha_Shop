@@ -1,7 +1,8 @@
   
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { toast } from "../components/ui/use-toast";
-import { Product } from "@/types/product";
+import { Product,ApiProduct } from "@/types/product";
+import { normalizeProduct } from "@/types/product";
 
 type WishlistContextType = {
   wishlistItems: Product[];
@@ -56,16 +57,13 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       if (!response.ok) throw new Error("Failed to fetch wishlist");
 
       const data = await response.json();
+      
 
       // Validate and transform wishlist items
-      const products: Product[] = data
-        .map((wishlistItem: any) => wishlistItem?.product)
-        .filter((product: any): product is Product => (
-          product && 
-          typeof product.id === 'number' &&
-          typeof product.name === 'string' &&
-          typeof product.price === 'number'
-        ));
+     const products: Product[] = data
+  .map((wishlistItem: any) => wishlistItem?.product_details)
+  .filter((p: any): p is ApiProduct => !!p && typeof p.id === "number")
+  .map((apiProduct: ApiProduct) => normalizeProduct(apiProduct));
 
       setWishlistItems(products);
     } catch (err) {
