@@ -12,6 +12,16 @@ import AppointmentsTable from "@/components/admin/AppointmentsTable";
 import CustomersTable from "@/components/admin/CustomersTable";
 import ContactUsTable, { ContactMessage } from "@/components/admin/ContactUsTable";
 import AccountSettings from "@/components/admin/AccountSettings";
+import { useState,useEffect } from "react";
+
+interface ContactMessage {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+}
 
 // Import mock data
 import {

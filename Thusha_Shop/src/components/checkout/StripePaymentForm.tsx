@@ -70,7 +70,7 @@ const StripePaymentForm: React.FC<StripePaymentFormProps> = ({ onSuccess, amount
     }
     
     if (!paymentInfo.cvv || paymentInfo.cvv.length < 3) {
-      errors.push("Please enter a valid CVV (3-4 digits)");
+      errors.push("Please enter a valid CVV (3 digits)");
     }
     
     return errors;
@@ -100,7 +100,7 @@ const StripePaymentForm: React.FC<StripePaymentFormProps> = ({ onSuccess, amount
       setIsSubmitting(false);
       toast({
         title: "Payment Successful",
-        description: `Your payment of $${amount.toFixed(2)} was processed successfully`,
+        description: `Your payment of LKR ${amount.toFixed(2)} was processed successfully`,
       });
       
       // Clear form data
@@ -171,7 +171,7 @@ const StripePaymentForm: React.FC<StripePaymentFormProps> = ({ onSuccess, amount
                 value={paymentInfo.cvv}
                 onChange={handleChange}
                 type="password"
-                maxLength={4}
+                maxLength={3}
                 autoComplete="cc-csc"
                 required
               />
@@ -179,7 +179,7 @@ const StripePaymentForm: React.FC<StripePaymentFormProps> = ({ onSuccess, amount
           </div>
 
           <div className="text-sm text-muted-foreground mt-2">
-            <p>Amount to be charged: <span className="font-medium">${amount.toFixed(2)}</span></p>
+            <p>Amount to be charged: <span className="font-medium">LKR {amount.toFixed(2)}</span></p>
             <p className="text-xs mt-1">By proceeding, you agree to our terms and conditions</p>
           </div>
         </CardContent>
@@ -189,7 +189,7 @@ const StripePaymentForm: React.FC<StripePaymentFormProps> = ({ onSuccess, amount
             className="w-full" 
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Processing..." : `Pay $${amount.toFixed(2)}`}
+            {isSubmitting ? "Processing..." : `Pay LKR ${amount.toFixed(2)}`}
           </Button>
         </CardFooter>
       </form>

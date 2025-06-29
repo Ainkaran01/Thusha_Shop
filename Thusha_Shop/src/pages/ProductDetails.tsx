@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { 
-  Heart, 
-  Share, 
-  Truck, 
-  ShieldCheck, 
-  Repeat, 
-  Star, 
-  ChevronRight, 
-  ChevronLeft, 
+import {
+  Heart,
+  Share,
+  Truck,
+  ShieldCheck,
+  Repeat,
+  Star,
+  ChevronRight,
+  ChevronLeft,
   Check,
   Camera
 } from "lucide-react";
@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { 
+import {
   Carousel,
   CarouselContent,
   CarouselItem,
@@ -24,7 +24,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { products, reviews } from "@/data/products";
-import { Product} from "../types/product";
+import { Product, Review } from "@/types"
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { toast } from "@/components/ui/use-toast";
@@ -71,7 +71,8 @@ const ProductDetails = () => {
         }
         const data = await response.json();
         setProduct(data);
-        
+        console.log("product", data)
+
         // Fetch reviews for this product
         const reviewsResponse = await fetch(`${API_BASE_URL}/products/${id}/reviews/`);
         if (reviewsResponse.ok) {
@@ -105,7 +106,7 @@ const ProductDetails = () => {
       quantity: 1,
       selectedLens: selectedLens
     } as unknown as Product);
-    
+
     toast({
       title: "Added to Cart",
       description: `${product.name} has been added to your cart.`,
@@ -115,7 +116,7 @@ const ProductDetails = () => {
   const handleLensSelected = (lensData: any) => {
     setSelectedLens(lensData);
     setShowLensSelector(false);
-    
+
     // Add the product with the lens to the cart
     if (product) {
       addToCart({
@@ -124,7 +125,7 @@ const ProductDetails = () => {
         selectedLens: lensData,
         price: product.price + (lensData.lensOption?.price || 0) // Add lens price to total
       } as unknown as Product);
-      
+
       toast({
         title: "Added to Cart",
         description: `${product.name} with ${lensData.lensOption?.name || 'selected'} lenses has been added to your cart.`,
@@ -195,48 +196,47 @@ const ProductDetails = () => {
         {/* Product Images */}
         <div>
           <div className="relative overflow-hidden bg-secondary rounded-lg mb-4 h-[500px]">
-            <motion.img 
+            <motion.img
               key={currentImageIndex}
-              src={product.images?.[currentImageIndex] || ''} 
+              src={product.images?.[currentImageIndex] || ''}
               alt={product.name}
               className="w-full h-full object-contain"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
             />
-           <Button 
-  variant="ghost" 
-  size="icon" 
-  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white/90 text-foreground rounded-full"
-  onClick={() => {
-    setCurrentImageIndex(prev => (prev > 0 ? prev - 1 : (product.images?.length || 1) - 1));
-  }}
->
-  <ChevronLeft className="h-5 w-5" />
-</Button>
-<Button 
-  variant="ghost" 
-  size="icon" 
-  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white/90 text-foreground rounded-full"
-  onClick={() => {
-    setCurrentImageIndex(prev => (prev < (product.images?.length || 1) - 1 ? prev + 1 : 0));
-  }}
->
-  <ChevronRight className="h-5 w-5" />
-</Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white/90 text-foreground rounded-full"
+              onClick={() => {
+                setCurrentImageIndex(prev => (prev > 0 ? prev - 1 : (product.images?.length || 1) - 1));
+              }}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white/90 text-foreground rounded-full"
+              onClick={() => {
+                setCurrentImageIndex(prev => (prev < (product.images?.length || 1) - 1 ? prev + 1 : 0));
+              }}
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
           </div>
 
           <div className="grid grid-cols-4 gap-4">
             {product.images?.map((image, index) => (
-              <div 
-                key={index} 
-                className={`cursor-pointer border-2 rounded-md overflow-hidden h-24 ${
-                  index === currentImageIndex ? 'border-primary' : 'border-transparent'
-                }`}
+              <div
+                key={index}
+                className={`cursor-pointer border-2 rounded-md overflow-hidden h-24 ${index === currentImageIndex ? 'border-primary' : 'border-transparent'
+                  }`}
                 onClick={() => setCurrentImageIndex(index)}
               >
-                <img 
-                  src={image} 
+                <img
+                  src={image}
                   alt={`${product.name} thumbnail ${index + 1}`}
                   className="w-full h-full object-cover"
                 />
@@ -254,9 +254,8 @@ const ProductDetails = () => {
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`h-5 w-5 ${
-                      i < Math.floor(product.ratings || 0) ? "fill-yellow-500" : "fill-gray-200"
-                    }`}
+                    className={`h-5 w-5 ${i < Math.floor(product.ratings || 0) ? "fill-yellow-500" : "fill-gray-200"
+                      }`}
                   />
                 ))}
               </div>
@@ -317,86 +316,86 @@ const ProductDetails = () => {
           <Separator className="my-6" />
 
           {/* Add to Cart */}
-         <div className="mb-6">
-  <div className="flex items-center mb-4">
-    <span className="mr-4 font-medium">Quantity:</span>
-    <div className="flex items-center border border-input rounded-md">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => handleQuantityChange(quantity - 1)}
-        disabled={quantity <= 1}
-        className="h-10 px-3"
-      >
-        -
-      </Button>
-      <span className="w-10 text-center">{quantity}</span>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => handleQuantityChange(quantity + 1)}
-        disabled={('stock' in product ? product.stock <= quantity : !product.inStock)}
-        className="h-10 px-3"
-      >
-        +
-      </Button>
-    </div>
-    <div className="ml-auto text-right">
-      <div className="text-sm text-muted-foreground">
-        {'stock' in product ? (
-          product.stock > 0 ? (
-            <span className="text-green-600 flex items-center">
-              <Check className="h-4 w-4 mr-1" /> 
-              {product.stock} in Stock
-            </span>
-          ) : (
-            <span className="text-red-600">Out of Stock</span>
-          )
-        ) : product.inStock ? (
-          <span className="text-green-600 flex items-center">
-            <Check className="h-4 w-4 mr-1" /> In Stock
-          </span>
-        ) : (
-          <span className="text-red-600">Out of Stock</span>
-        )}
-      </div>
-    </div>
-  </div>
+          <div className="mb-6">
+            <div className="flex items-center mb-4">
+              <span className="mr-4 font-medium">Quantity:</span>
+              <div className="flex items-center border border-input rounded-md">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleQuantityChange(quantity - 1)}
+                  disabled={quantity <= 1}
+                  className="h-10 px-3"
+                >
+                  -
+                </Button>
+                <span className="w-10 text-center">{quantity}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleQuantityChange(quantity + 1)}
+                  disabled={('stock' in product ? product.stock <= quantity : !product.inStock)}
+                  className="h-10 px-3"
+                >
+                  +
+                </Button>
+              </div>
+              <div className="ml-auto text-right">
+                <div className="text-sm text-muted-foreground">
+                  {'stock' in product ? (
+                    product.stock > 0 ? (
+                      <span className="text-green-600 flex items-center">
+                        <Check className="h-4 w-4 mr-1" />
+                        {product.stock} in Stock
+                      </span>
+                    ) : (
+                      <span className="text-red-600">Out of Stock</span>
+                    )
+                  ) : product.inStock ? (
+                    <span className="text-green-600 flex items-center">
+                      <Check className="h-4 w-4 mr-1" /> In Stock
+                    </span>
+                  ) : (
+                    <span className="text-red-600">Out of Stock</span>
+                  )}
+                </div>
+              </div>
+            </div>
 
-  <div className="flex flex-col sm:flex-row gap-3">
-    <Button 
-      onClick={handleAddToCart} 
-      disabled={'stock' in product ? product.stock <= 0 : !product.inStock}
-      className="flex-1"
-      size="lg"
-    >
-      Add to Cart
-    </Button>
-    <Button 
-      variant="outline" 
-      onClick={handleToggleWishlist}
-      className="flex-1"
-      size="lg"
-    >
-      {isInWishlist(product.id) ? (
-        <span className="flex items-center">
-          <Heart className="h-5 w-5 mr-2 fill-red-500 text-red-500" />
-          Added to Wishlist
-        </span>
-      ) : (
-        <span className="flex items-center">
-          <Heart className="h-5 w-5 mr-2" />
-          Add to Wishlist
-        </span>
-      )}
-    </Button>
-  </div>
-</div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={handleAddToCart}
+                disabled={'stock' in product ? product.stock <= 0 : !product.inStock}
+                className="flex-1"
+                size="lg"
+              >
+                Add to Cart
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleToggleWishlist}
+                className="flex-1"
+                size="lg"
+              >
+                {isInWishlist(product.id) ? (
+                  <span className="flex items-center">
+                    <Heart className="h-5 w-5 mr-2 fill-red-500 text-red-500" />
+                    Added to Wishlist
+                  </span>
+                ) : (
+                  <span className="flex items-center">
+                    <Heart className="h-5 w-5 mr-2" />
+                    Add to Wishlist
+                  </span>
+                )}
+              </Button>
+            </div>
+          </div>
 
           {/* Virtual Try-On Button */}
           {product.frameType && (
             <div className="mb-6">
-              <Button 
+              <Button
                 onClick={() => setShowVirtualTryOn(true)}
                 variant="outline"
                 className="w-full"
@@ -491,29 +490,29 @@ const ProductDetails = () => {
                     <li><strong>Prescription Compatible:</strong> Yes</li>
                   </ul>
                 </div>
-               <div>
-  <h4 className="font-medium mb-2">Recommended For</h4>
-  {product.face_shapes?.length ? (
-    <div className="mb-4">
-    <p className="font-medium">Face Shapes:</p>
-      <div className="flex flex-wrap gap-2 mt-1">
-        {product.face_shapes.map(shape => (
-          <Badge key={shape} className="capitalize">{shape}</Badge>
-        ))}
-      </div>
-    </div>
-  ) : null}
-  {product.vision_problems?.length ? (
-    <div>
-      <p className="font-medium">Vision Problems:</p>
-      <div className="flex flex-wrap gap-2 mt-1">
-        {product.vision_problems.map(problem => (
-          <Badge key={problem} className="capitalize">{problem}</Badge>
-        ))}
-      </div>
-    </div>
-  ) : null}
-</div>
+                <div>
+                  <h4 className="font-medium mb-2">Recommended For</h4>
+                  {product.face_shapes?.length ? (
+                    <div className="mb-4">
+                      <p className="font-medium">Face Shapes:</p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {product.face_shapes.map(shape => (
+                          <Badge key={shape} className="capitalize">{shape}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                  {product.vision_problems?.length ? (
+                    <div>
+                      <p className="font-medium">Vision Problems:</p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {product.vision_problems.map(problem => (
+                          <Badge key={problem} className="capitalize">{problem}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </div>
           </TabsContent>
@@ -524,24 +523,24 @@ const ProductDetails = () => {
             <div>
               <h3 className="text-xl font-semibold mb-4">Shipping Information</h3>
               <p className="mb-4">
-                We offer free standard shipping on all orders within the United States. 
+                We offer free standard shipping on all orders within the United States.
                 International shipping rates vary by destination.
               </p>
-              
+
               <h4 className="font-medium mb-2">Shipping Options</h4>
               <ul className="space-y-2 mb-6">
                 <li><strong>Standard Shipping:</strong> 5-7 business days (Free)</li>
                 <li><strong>Express Shipping:</strong> 2-3 business days (LKR 400)</li>
                 <li><strong>Next Day Shipping:</strong> Next business day if ordered before 2pm EST (LKR 500)</li>
               </ul>
-              
+
               <h3 className="text-xl font-semibold mb-4">Return Policy</h3>
               <p className="mb-4">
-                We offer a 30-day return policy for all our frames. If you're not completely 
-                satisfied with your purchase, you can return it within 30 days for a full refund 
+                We offer a 30-day return policy for all our frames. If you're not completely
+                satisfied with your purchase, you can return it within 30 days for a full refund
                 or exchange.
               </p>
-              
+
               <h4 className="font-medium mb-2">Return Process</h4>
               <ol className="list-decimal list-inside space-y-2">
                 <li>Contact our customer service to initiate a return</li>
@@ -550,12 +549,12 @@ const ProductDetails = () => {
                 <li>Drop off the package at any postal service location</li>
                 <li>Once we receive and inspect the return, we'll process your refund</li>
               </ol>
-              
+
               <div className="bg-secondary p-4 rounded-lg mt-6">
                 <p className="font-medium">Note</p>
                 <p className="text-sm">
-                  Prescription lenses are custom-made for your specific vision needs and 
-                  cannot be returned unless there's a manufacturing defect. Please contact 
+                  Prescription lenses are custom-made for your specific vision needs and
+                  cannot be returned unless there's a manufacturing defect. Please contact
                   our customer service if you have any issues with your prescription lenses.
                 </p>
               </div>
@@ -564,7 +563,7 @@ const ProductDetails = () => {
         </Tabs>
       </div>
 
-    
+
       {/* Accessories Section - Only show for eyeglasses */}
       {product.category === "eyeglasses" && (
         <div className="mb-16">
@@ -584,11 +583,11 @@ const ProductDetails = () => {
             </div>
           </>
         )}
-        
+
         {product.category === "sunglasses" && (
           <RelatedProducts currentProductId={product.id} category="sunglasses" />
         )}
-        
+
         {product.category === "accessories" && (
           <>
             <RelatedProducts currentProductId={product.id} category="accessories" />

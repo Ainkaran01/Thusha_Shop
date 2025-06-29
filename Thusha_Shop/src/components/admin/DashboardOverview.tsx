@@ -28,12 +28,12 @@ interface Order {
 
 
 interface Appointment {
-  id: string;
-  customer: string;
+  id: number;
+  patient_name: string;
   date: string;
   time: string;
   status: string;
-  doctor: string;
+  doctor_name: string;
 }
 
 interface SalesDataPoint {

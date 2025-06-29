@@ -17,6 +17,12 @@ const DesktopNavigation: React.FC<DesktopNavigationProps> = ({
   return (
     <nav className="hidden md:flex space-x-6">
       <Link
+        to="/"
+        className="nav-link font-medium text-foreground hover:text-primary transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all hover:after:w-full"
+      >
+        Home
+      </Link>
+      <Link
         to="/catalog"
         className="nav-link font-medium text-foreground hover:text-primary transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all hover:after:w-full"
       >
@@ -28,12 +34,12 @@ const DesktopNavigation: React.FC<DesktopNavigationProps> = ({
       >
         Face Shape
       </Link>
-      <Link
+      {/* <Link
         to="/vision-test"
         className="nav-link font-medium text-foreground hover:text-primary transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all hover:after:w-full"
       >
         Vision Test
-      </Link>
+      </Link> */}
       <button
         onClick={handleBookAppointment}
         className="nav-link font-medium text-foreground hover:text-primary transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all hover:after:w-full flex items-center"

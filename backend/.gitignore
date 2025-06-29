@@ -12,6 +12,8 @@ venv/
 ENV/
 env/
 backend
+media/
+
 # Pytest
 .cache/
 .pytest_cache/

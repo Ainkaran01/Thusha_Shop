@@ -94,10 +94,10 @@ export const reviews: Review[] = [
 export const products: Product[] = [
   {
     id: 1,
-    name: "Classic Aviator",
+    name: "Gray Transparent Full Rim Round",
     description: "Timeless aviator sunglasses with premium UV protection",
-    price:1000,
-    images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
+    price:5399.99,
+    images: ["images/r1.png"],
     category: "sunglasses",
     inStock: true,
     ratings: 4.5,
@@ -113,10 +113,10 @@ export const products: Product[] = [
   },
   {
     id: 2,
-    name: "Modern Square",
+    name: "Dark Gunmetal Half Rim Rectangle",
     description: "Contemporary square frames perfect for professional settings",
-    price: 1500,
-    images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
+    price: 3999.99,
+    images: ["images/f1.jpg"],
     category: "eyeglasses",
     inStock: true,
     ratings: 4.7,
@@ -132,10 +132,10 @@ export const products: Product[] = [
   },
   {
     id: 5,
-    name: "Premium Lens Cleaning Kit",
+    name: "Black Rimless Aviator",
     description: "Complete cleaning kit with microfiber cloths, cleaning solution, and carrying case",
-    price: 19.99,
-    images: ["/placeholder.svg", "/placeholder.svg"],
+    price: 4500.00,
+    images: ["images/f2.jpg"],
     category: "accessories",
     inStock: true,
     ratings: 4.6,
@@ -151,10 +151,10 @@ export const products: Product[] = [
   },
   {
     id: 6,
-    name: "Anti-Fog Lens Spray",
+    name: "Gray Transparent Full Rim Square",
     description: "Professional-grade anti-fog spray for all types of lenses",
-    price: 12.99,
-    images: ["/placeholder.svg", "/placeholder.svg"],
+    price: 4500.00,
+    images: ["images/f3.jpg"],
     category: "accessories",
     inStock: true,
     ratings: 4.4,
@@ -328,49 +328,49 @@ export const faceShapeGuide = {
     characteristics: ["Slightly wider at the cheekbones", "Forehead slightly wider than chin", "Balanced proportions"],
     recommendedFrames: ["Most frame styles work", "Angular frames add definition", "Cat-eye shapes"],
     avoidFrames: ["Oversized frames", "Very narrow frames"],
-    image: "/placeholder.svg"
+    image: "/images/o1.png"
   },
   round: {
     description: "Round faces have soft curves with similar width and length.",
     characteristics: ["Equal width and length", "Soft, curved lines", "Full cheeks"],
     recommendedFrames: ["Angular frames", "Square shapes", "Rectangle frames"],
     avoidFrames: ["Round frames", "Small frames", "Oversized round styles"],
-    image: "/placeholder.svg"
+    image: "/images/c1.png"
   },
   square: {
     description: "Square faces feature strong, angular jawlines and broad foreheads.",
     characteristics: ["Strong jawline", "Broad forehead", "Angular features"],
     recommendedFrames: ["Round frames", "Oval shapes", "Cat-eye styles"],
     avoidFrames: ["Square frames", "Angular styles", "Geometric shapes"],
-    image: "/placeholder.svg"
+    image: "/images/s1.png"
   },
   heart: {
     description: "Heart-shaped faces are wider at the forehead and narrow at the chin.",
     characteristics: ["Wide forehead", "Narrow chin", "High cheekbones"],
     recommendedFrames: ["Bottom-heavy frames", "Cat-eye shapes", "Round frames"],
     avoidFrames: ["Top-heavy frames", "Very wide frames"],
-    image: "/placeholder.svg"
+    image: "/images/h1.png"
   },
   diamond: {
     description: "Diamond faces are widest at the cheekbones with narrow forehead and chin.",
     characteristics: ["Narrow forehead and chin", "Wide cheekbones", "Angular features"],
     recommendedFrames: ["Cat-eye frames", "Oval shapes", "Rimless styles"],
     avoidFrames: ["Narrow frames", "Small styles"],
-    image: "/placeholder.svg"
+    image: "/images/d1.png"
   },
-  triangle: {
-    description: "Triangle faces are wider at the jaw and narrow at the forehead.",
-    characteristics: ["Narrow forehead", "Wide jawline", "Broader lower face"],
-    recommendedFrames: ["Top-heavy frames", "Cat-eye styles", "Aviator shapes"],
-    avoidFrames: ["Bottom-heavy frames", "Wide frames at bottom"],
-    image: "/placeholder.svg"
-  },
+  // triangle: {
+  //   description: "Triangle faces are wider at the jaw and narrow at the forehead.",
+  //   characteristics: ["Narrow forehead", "Wide jawline", "Broader lower face"],
+  //   recommendedFrames: ["Top-heavy frames", "Cat-eye styles", "Aviator shapes"],
+  //   avoidFrames: ["Bottom-heavy frames", "Wide frames at bottom"],
+  //   image: "https://www.detect-face-shape.com/static/images/shapes/triangle.svg"
+  // },
   oblong: {
     description: "Oblong faces are longer than they are wide with balanced proportions.",
     characteristics: ["Face longer than wide", "Balanced width", "Long face shape"],
     recommendedFrames: ["Wide frames", "Deep frames", "Oversized styles"],
     avoidFrames: ["Narrow frames", "Small frames", "Very thin styles"],
-    image: "/placeholder.svg"
+    image: "/images/ob1.png"
   }
 };
 
