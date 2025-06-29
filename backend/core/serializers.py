@@ -21,11 +21,11 @@ class RegisterSerializer(serializers.Serializer):
         default='customer'
     )
 
-    def validate_email(self, value):
-        User = get_user_model()
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("A user with this email already exists.")
-        return value
+    # def validate_email(self, value):
+    #     User = get_user_model()
+    #     if User.objects.filter(email=value).exists():
+    #         raise serializers.ValidationError("A user with this email already exists.")
+    #     return value
 
     def validate(self, data):
         if data['password'] != data['confirm_password']:
@@ -93,3 +93,24 @@ class ProfileSerializer(serializers.ModelSerializer):
             instance.user.save(update_fields=['name'])
 
         return super().update(instance, validated_data)
+    
+
+# ForgotPasswordSerializer
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        try:
+            user = User.objects.get(email=value, is_active=True)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("No active user with this email exists.")
+        return value
+
+class VerifyOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.CharField(max_length=6)
+
+class ResetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    new_password = serializers.CharField(write_only=True, min_length=6)
