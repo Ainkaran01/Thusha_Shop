@@ -1,16 +1,25 @@
-
 import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useUser } from "@/context/UserContext";
 import LoginForm from "@/components/account/LoginForm";
 import RegisterForm from "@/components/account/RegisterForm";
 import UserProfile from "@/components/user/UserProfile";
 import { Glasses, Eye } from "lucide-react";
+import ResetPasswordPage from "@/components/account/ResetPasswordPage";
 
 const Account = () => {
   const { user, isAuthenticated } = useUser();
-  const [authMode, setAuthMode] = useState<"login" | "register">("login");
-
+  const [authMode, setAuthMode] = useState<"login" | "register" | "reset">(
+    "login"
+  );
+  const [emailForReset, setEmailForReset] = useState("");
+  
   const toggleAuthMode = () => {
     setAuthMode(authMode === "login" ? "register" : "login");
   };
@@ -42,8 +51,14 @@ const Account = () => {
       {/* Floating background shapes */}
       <div className="absolute inset-0 opacity-20">
         <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-yellow-400 rounded-full blur-xl animate-float"></div>
-        <div className="absolute top-3/4 right-1/4 w-24 h-24 bg-yellow-500 rounded-full blur-xl animate-float" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute top-1/2 left-1/2 w-20 h-20 bg-yellow-300 rounded-full blur-xl animate-float" style={{ animationDelay: '4s' }}></div>
+        <div
+          className="absolute top-3/4 right-1/4 w-24 h-24 bg-yellow-500 rounded-full blur-xl animate-float"
+          style={{ animationDelay: "2s" }}
+        ></div>
+        <div
+          className="absolute top-1/2 left-1/2 w-20 h-20 bg-yellow-300 rounded-full blur-xl animate-float"
+          style={{ animationDelay: "4s" }}
+        ></div>
       </div>
 
       <div className="w-full max-w-md relative z-10">
@@ -61,7 +76,7 @@ const Account = () => {
         <Card className="backdrop-blur-sm bg-white/95 shadow-2xl border-2 border-yellow-500/20 relative overflow-hidden">
           {/* Card decorative border */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600"></div>
-          
+
           <CardHeader className="text-center pb-6 pt-8">
             <div className="flex items-center justify-center mb-4">
               {authMode === "login" ? (
@@ -74,24 +89,41 @@ const Account = () => {
               {authMode === "login" ? "Welcome Back" : "Join Our Community"}
             </CardTitle>
             <CardDescription className="text-slate-600 mt-2">
-              {authMode === "login" 
-                ? "Sign in to access your vision profile and orders" 
+              {authMode === "login"
+                ? "Sign in to access your vision profile and orders"
                 : "Create your account to start your vision journey"}
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent className="px-8 pb-8">
-            {authMode === "login" ? (
-              <LoginForm onToggleAuthMode={toggleAuthMode} />
-            ) : (
-              <RegisterForm onToggleAuthMode={toggleAuthMode} />
+            {authMode === "login" && (
+              <LoginForm
+                onToggleAuthMode={() => setAuthMode("register")}
+                onForgotPassword={(email) => {
+                  setEmailForReset(email); // ✅ store email
+                  setAuthMode("reset"); // ✅ show reset screen
+                }}
+              />
+            )}
+
+            {authMode === "register" && (
+              <RegisterForm onToggleAuthMode={() => setAuthMode("login")} />
+            )}
+
+            {authMode === "reset" && (
+              <ResetPasswordPage
+                email={emailForReset}
+                onBackToLogin={() => setAuthMode("login")}
+              />
             )}
           </CardContent>
         </Card>
 
         {/* Trust indicators */}
         <div className="text-center mt-6">
-          <p className="text-sm text-yellow-200 mb-2">Trusted by over 10,000+ customers</p>
+          <p className="text-sm text-yellow-200 mb-2">
+            Trusted by over 10,000+ customers
+          </p>
           <div className="flex items-center justify-center space-x-4 text-xs text-yellow-300">
             <span>🔒 Secure</span>
             <span>👥 Trusted</span>
