@@ -77,7 +77,11 @@ export function normalizeProduct(apiProduct: ApiProduct): Product {
   
   return {
     ...apiProduct,
-    images: apiProduct.images || [],
+      images: apiProduct.images.map((img) => {
+  const cleanPath = img.startsWith("/media/") ? img : `/media/${img}`;
+  return `http://localhost:8000${cleanPath}`;
+}),
+
     category: apiProduct.category 
       ? (typeof apiProduct.category === 'string'
         ? { id: 0, name: apiProduct.category }
