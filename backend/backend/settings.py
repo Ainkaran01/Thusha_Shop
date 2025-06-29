@@ -106,6 +106,7 @@ INSTALLED_APPS = [
    'face_shape',
    'wishlist',
    'adminprofile',
+   
 
    
 ]
