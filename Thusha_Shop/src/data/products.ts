@@ -328,49 +328,49 @@ export const faceShapeGuide = {
     characteristics: ["Slightly wider at the cheekbones", "Forehead slightly wider than chin", "Balanced proportions"],
     recommendedFrames: ["Most frame styles work", "Angular frames add definition", "Cat-eye shapes"],
     avoidFrames: ["Oversized frames", "Very narrow frames"],
-    image: "https://www.detect-face-shape.com/static/images/shapes/oval.svg"
+    image: "/images/o1.png"
   },
   round: {
     description: "Round faces have soft curves with similar width and length.",
     characteristics: ["Equal width and length", "Soft, curved lines", "Full cheeks"],
     recommendedFrames: ["Angular frames", "Square shapes", "Rectangle frames"],
     avoidFrames: ["Round frames", "Small frames", "Oversized round styles"],
-    image: "https://www.detect-face-shape.com/static/images/shapes/round.svg"
+    image: "/images/c1.png"
   },
   square: {
     description: "Square faces feature strong, angular jawlines and broad foreheads.",
     characteristics: ["Strong jawline", "Broad forehead", "Angular features"],
     recommendedFrames: ["Round frames", "Oval shapes", "Cat-eye styles"],
     avoidFrames: ["Square frames", "Angular styles", "Geometric shapes"],
-    image: "https://www.detect-face-shape.com/static/images/shapes/square.svg"
+    image: "/images/s1.png"
   },
   heart: {
     description: "Heart-shaped faces are wider at the forehead and narrow at the chin.",
     characteristics: ["Wide forehead", "Narrow chin", "High cheekbones"],
     recommendedFrames: ["Bottom-heavy frames", "Cat-eye shapes", "Round frames"],
     avoidFrames: ["Top-heavy frames", "Very wide frames"],
-    image: "https://www.detect-face-shape.com/static/images/shapes/heart-shaped.svg"
+    image: "/images/h1.png"
   },
   diamond: {
     description: "Diamond faces are widest at the cheekbones with narrow forehead and chin.",
     characteristics: ["Narrow forehead and chin", "Wide cheekbones", "Angular features"],
     recommendedFrames: ["Cat-eye frames", "Oval shapes", "Rimless styles"],
     avoidFrames: ["Narrow frames", "Small styles"],
-    image: "https://www.detect-face-shape.com/static/images/shapes/diamond.svg"
+    image: "/images/d1.png"
   },
-  triangle: {
-    description: "Triangle faces are wider at the jaw and narrow at the forehead.",
-    characteristics: ["Narrow forehead", "Wide jawline", "Broader lower face"],
-    recommendedFrames: ["Top-heavy frames", "Cat-eye styles", "Aviator shapes"],
-    avoidFrames: ["Bottom-heavy frames", "Wide frames at bottom"],
-    image: "https://www.detect-face-shape.com/static/images/shapes/triangle.svg"
-  },
+  // triangle: {
+  //   description: "Triangle faces are wider at the jaw and narrow at the forehead.",
+  //   characteristics: ["Narrow forehead", "Wide jawline", "Broader lower face"],
+  //   recommendedFrames: ["Top-heavy frames", "Cat-eye styles", "Aviator shapes"],
+  //   avoidFrames: ["Bottom-heavy frames", "Wide frames at bottom"],
+  //   image: "https://www.detect-face-shape.com/static/images/shapes/triangle.svg"
+  // },
   oblong: {
     description: "Oblong faces are longer than they are wide with balanced proportions.",
     characteristics: ["Face longer than wide", "Balanced width", "Long face shape"],
     recommendedFrames: ["Wide frames", "Deep frames", "Oversized styles"],
     avoidFrames: ["Narrow frames", "Small frames", "Very thin styles"],
-    image: "https://www.detect-face-shape.com/static/images/shapes/oblong.svg"
+    image: "/images/ob1.png"
   }
 };
 
