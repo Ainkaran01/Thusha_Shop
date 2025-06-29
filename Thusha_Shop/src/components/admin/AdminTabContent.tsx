@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useAdminDashboard } from "@/context/AdminDashboardContext";
 import { useUser } from "@/context/UserContext";
 import { TabsContent } from "@/components/ui/tabs";
