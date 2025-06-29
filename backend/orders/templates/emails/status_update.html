@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Order Status Update</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #f8f9fa; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .status-update { margin: 20px 0; padding: 15px; background-color: #e9ecef; border-radius: 5px; }
+        .footer { margin-top: 20px; font-size: 0.9em; color: #6c757d; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Order Status Update</h1>
+            <p>Your order status has changed</p>
+        </div>
+        
+        <div class="content">
+            <p>Hello {{ customer_name }},</p>
+            
+            <div class="status-update">
+                <p>The status of your order <strong>#{{ order_number }}</strong> has been updated:</p>
+                <p><strong>From:</strong> {{ old_status }}</p>
+                <p><strong>To:</strong> {{ new_status }}</p>
+                <p><strong>Delivery Method:</strong> {{ delivery_option }}</p>
+            </div>
+            
+            <p>You can check your order details anytime by logging into your account.</p>
+            <p>If you have any questions about this update, please reply to this email.</p>
+        </div>
+        
+        <div class="footer">
+            <p>Thank you for shopping with us!</p>
+        </div>
+    </div>
+</body>
+</html>

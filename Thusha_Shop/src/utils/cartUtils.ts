@@ -42,13 +42,10 @@ export const calculateTax = (cartItems: CartItem[], taxRate: number = 0.07): num
   return calculateGrandTotal(cartItems) * taxRate;
 };
 
-/**
- * Calculate shipping cost based on cart total
- * Free shipping for orders over $100
- */
+
 export const calculateShipping = (cartItems: CartItem[]): number => {
   const subtotal = calculateGrandTotal(cartItems);
-  return subtotal >= 100 ? 0 : 10;
+  return subtotal >= 1000 ? 0 : 500;
 };
 
 /**
@@ -57,6 +54,6 @@ export const calculateShipping = (cartItems: CartItem[]): number => {
 export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD'
+    currency: 'LKR'
   }).format(amount);
 };

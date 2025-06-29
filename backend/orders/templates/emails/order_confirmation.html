@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Order Confirmation #{{ order.order_number }}</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+        }
+        .header { 
+            background-color: #f8f9fa; 
+            padding: 20px; 
+            text-align: center; 
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .content { 
+            padding: 20px; 
+        }
+        .order-details { 
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        .footer { 
+            margin-top: 20px; 
+            font-size: 0.9em; 
+            color: #6c757d;
+            text-align: center;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        table th, table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Order Confirmation #{{ order.order_number }}</h1>
+            <p>Thank you for your purchase, {{ order.billing.name }}!</p>
+        </div>
+        
+        <div class="content">
+            <p>Your order <strong>#{{ order.order_number }}</strong> has been received and is being processed.</p>
+            
+            <div class="order-details">
+                <h3>Order Summary</h3>
+                <p><strong>Order Date:</strong> {{ order.created_at|date:"F j, Y" }}</p>
+                <p><strong>Order Total:</strong>LKR {{ order.total_price }}</p>
+                
+                <h4>Order Items:</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+                        <tr>
+                            <td>{{ item.product.name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>LKR {{ item.price }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                <p><strong>Shipping Address:</strong><br>
+                {{ order.delivery_option }}<br>
+                
+            </div>
+            
+            <p>You'll receive another email when your order ships. If you have any questions, please contact our support team.</p>
+        </div>
+        
+        <div class="footer">
+            <p>Thank you for shopping with us!</p>
+            <p>&copy; {% now "Y" %} {{ settings.SITE_NAME }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
