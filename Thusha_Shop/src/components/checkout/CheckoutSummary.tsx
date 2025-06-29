@@ -42,12 +42,12 @@ const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
               <div className="flex-1">
                 <h4 className="font-medium mb-1">{item.product.name}</h4>
                 <p className="text-sm text-muted-foreground mb-1">
-                  {item.product.frameType}, {item.product.frameMaterial}
+                  {item.product.frame_type.name}, {item.product.frame_material}
                 </p>
                 <div className="flex justify-between">
                   <div className="text-sm">Qty: {item.quantity}</div>
                   <div className="font-medium">
-                    ${(item.product.price * item.quantity).toFixed(2)}
+                    LKR {(item.product.price * item.quantity).toFixed(2)}
                   </div>
                 </div>
                 
@@ -58,7 +58,7 @@ const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
                       {item.lensOption.type === "prescription" ? "Prescription" : "Standard"}: {item.lensOption.option}
                     </div>
                     <div className="text-sm font-medium text-right">
-                      + ${(item.lensOption.price * item.quantity).toFixed(2)}
+                      + LKR {(item.lensOption.price * item.quantity).toFixed(2)}
                     </div>
                   </div>
                 )}
@@ -72,31 +72,31 @@ const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
         <div className="space-y-2">
           <div className="flex justify-between">
             <span>Products Subtotal</span>
-            <span>${cartTotal.toFixed(2)}</span>
+            <span>LKR {cartTotal.toFixed(2)}</span>
           </div>
           {lensTotal > 0 && (
             <div className="flex justify-between">
               <span>Lens Options</span>
-              <span>${lensTotal.toFixed(2)}</span>
+              <span>LKR {lensTotal.toFixed(2)}</span>
             </div>
           )}
           <div className="flex justify-between">
             <span>Shipping</span>
             <span>
-              {shippingCost === 0 ? "Free" : `$${shippingCost.toFixed(2)}`}
+              {shippingCost === 0 ? "Free" : `LKR ${shippingCost.toFixed(2)}`}
             </span>
           </div>
           <div className="flex justify-between">
             <span>Tax (5%)</span>
-            <span>${tax.toFixed(2)}</span>
+            <span>LKR {tax.toFixed(2)}</span>
           </div>
-        </div>
+        </div> 
         
         <Separator className="my-4" />
         
         <div className="flex justify-between font-semibold text-lg">
           <span>Total</span>
-          <span>${orderTotal.toFixed(2)}</span>
+          <span>LKR {orderTotal.toFixed(2)}</span>
         </div>
         
         <div className="mt-4 bg-accent p-3 rounded-md text-sm text-muted-foreground">

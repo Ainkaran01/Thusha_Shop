@@ -29,41 +29,42 @@ const PrescriptionChecker = ({
   const { toast } = useToast();
   const { user } = useUser();
 
-   useEffect(() => {
+  useEffect(() => {
     const fetchActivePrescription = async () => {
       if (!user?.id) return;
 
       setIsLoading(true);
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/prescriptions/${user.id}/`, {
+        const response = await axios.get(`${API_BASE_URL}/api/prescriptions/`, {
           headers: {
             Authorization: `Bearer ${sessionStorage.getItem("access_token")}`,
           },
         });
 
-        // The API returns a single prescription object, not an array
-        const prescriptionData = response.data;
+        const prescriptions = response.data;
 
-        // Check if the prescription is active
-        if (prescriptionData && prescriptionData.status === "active") {
+        // Find the active prescription
+        const active = prescriptions.find((p: Prescription) => p.status?.toLowerCase() === "active");
+
+        if (active) {
           const formattedPrescription: Prescription = {
-            ...prescriptionData,
-            id: prescriptionData.id,
-            prescription_id: prescriptionData.prescription_id || prescriptionData.id,
-            doctor_name: prescriptionData.doctor_name,
-            patient_name: prescriptionData.patient_name,
-            date_issued: prescriptionData.date_issued,
-            expiry_date: prescriptionData.expiry_date,
-            right_sphere: prescriptionData.right_sphere,
-            right_cylinder: prescriptionData.right_cylinder,
-            right_axis: prescriptionData.right_axis,
-            left_sphere: prescriptionData.left_sphere,
-            left_cylinder: prescriptionData.left_cylinder,
-            left_axis: prescriptionData.left_axis,
-            pupillary_distance: prescriptionData.pupillary_distance,
-            status: prescriptionData.status,
-            patient_email_display: prescriptionData.patient_email_display,
-            additional_notes: prescriptionData.additional_notes
+            ...active,
+            id: active.id,
+            prescription_id: active.prescription_id || active.id,
+            doctor_name: active.doctor_name,
+            patient_name: active.patient_name,
+            date_issued: active.date_issued,
+            expiry_date: active.expiry_date,
+            right_sphere: active.right_sphere,
+            right_cylinder: active.right_cylinder,
+            right_axis: active.right_axis,
+            left_sphere: active.left_sphere,
+            left_cylinder: active.left_cylinder,
+            left_axis: active.left_axis,
+            pupillary_distance: active.pupillary_distance,
+            status: active.status,
+            patient_email_display: active.patient_email_display,
+            additional_notes: active.additional_notes
           };
 
           setActivePrescription(formattedPrescription);
@@ -72,15 +73,14 @@ const PrescriptionChecker = ({
         } else {
           toast({
             title: "No Active Prescription",
-            description: prescriptionData 
-              ? "Your prescription is not active." 
-              : "No prescription found.",
+            description: "You don't have any active prescriptions.",
             variant: "destructive",
           });
         }
+
       } catch (error) {
         console.error("Error fetching prescription:", error);
-        
+
         let errorMessage = "Failed to fetch prescription.";
         if (error instanceof AxiosError) {
           if (error.response?.status === 404) {
@@ -128,9 +128,9 @@ const PrescriptionChecker = ({
           <div>
             <h3 className="text-lg font-medium">Your Prescription</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              {isLoading ? "Loading your prescription..." : 
-               activePrescription ? "We found your active prescription" :
-               "No active prescription found"}
+              {isLoading ? "Loading your prescription..." :
+                activePrescription ? "We found your active prescription" :
+                  "No active prescription found"}
             </p>
           </div>
 

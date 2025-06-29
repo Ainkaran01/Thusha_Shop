@@ -35,13 +35,7 @@ const QuickActions = () => {
       href: "/doctor-appointment",
       color: "bg-purple-500"
     },
-    {
-      title: "Vision Test",
-      description: "Take online vision test",
-      icon: Eye,
-      href: "/vision-test",
-      color: "bg-orange-500"
-    },
+    
     {
       title: "Contact Support",
       description: "Get help from our team",
