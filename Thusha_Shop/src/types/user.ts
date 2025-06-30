@@ -95,4 +95,8 @@ export interface UserContextType {
   validateForm: (schema: any, data: any) => { success: boolean; errors?: any };
   verifyOTP: (email: string, otp: string) => Promise<boolean>;
   resendOTP: (email: string) => Promise<void>;
+
+  sendPasswordResetOtp: (email: string) => Promise<void>;
+  verifyPasswordResetOtp: (email: string, otp: string) => Promise<boolean>;
+  resetPassword: (email: string, newPassword: string) => Promise<void>;
 }

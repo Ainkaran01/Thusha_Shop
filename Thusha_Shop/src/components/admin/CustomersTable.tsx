@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Card,
   CardHeader,
@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusIcon, BanIcon, CheckCircleIcon } from "lucide-react";
+import { PlusIcon, BanIcon, CheckCircleIcon, SearchIcon } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -47,6 +47,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 
 interface Customer {
   id: number;
@@ -69,15 +70,14 @@ interface CustomersTableProps {
 }
 
 const getRandomAvatarColor = (str: string) => {
-  // Generate a consistent color based on the string
   const colors = [
-    "bg-pink-500",
-    "bg-purple-500",
-    "bg-yellow-500",
-    "bg-green-500",
-    "bg-blue-500",
-    "bg-red-500",
-    "bg-indigo-500",
+    "bg-pink-100 text-pink-800",
+    "bg-purple-100 text-purple-800",
+    "bg-yellow-100 text-yellow-800",
+    "bg-green-100 text-green-800",
+    "bg-blue-100 text-blue-800",
+    "bg-red-100 text-red-800",
+    "bg-indigo-100 text-indigo-800",
   ];
   const hash = str.split("").reduce((acc, char) => char.charCodeAt(0) + acc, 0);
   return colors[hash % colors.length];
@@ -102,23 +102,74 @@ const CustomersTable: React.FC<CustomersTableProps> = ({
     null
   );
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRole, setSelectedRole] = useState<string>("all");
 
-   // Group customers by role
-  const customersByRole = customers.reduce((acc, customer) => {
-    const role = customer.role.toLowerCase();
-    if (!acc[role]) acc[role] = [];
-    acc[role].push(customer);
-    return acc;
-  }, {} as Record<string, Customer[]>);
-
-  // Define role display names
+  // Define role order and display names
+  const roleOrder = ["doctor", "manufacturer", "delivery", "customer"];
   const roleDisplayNames: Record<string, string> = {
     doctor: "Doctors",
     delivery: "Delivery Personnel",
     manufacturer: "Manufacturers",
-    customer: "Customers"
+    customer: "Customers",
+    all: "All Roles",
   };
 
+  const roleBadgeColors: Record<string, string> = {
+    doctor: "bg-blue-100 text-blue-800",
+    delivery: "bg-orange-100 text-orange-800",
+    manufacturer: "bg-purple-100 text-purple-800",
+    customer: "bg-gray-100 text-gray-800",
+  };
+
+  // Filter and sort customers based on search and role selection
+  const filteredCustomers = useMemo(() => {
+    let result = [...customers];
+
+    // Filter by search term (name or email)
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(
+        (customer) =>
+          customer.name.toLowerCase().includes(term) ||
+          customer.email.toLowerCase().includes(term)
+      );
+    }
+
+    // Filter by selected role
+    if (selectedRole !== "all") {
+      result = result.filter(
+        (customer) => customer.role.toLowerCase() === selectedRole.toLowerCase()
+      );
+    }
+
+    // Sort by active status (active first) then by ID
+    return result.sort((a, b) => {
+      if (a.is_active === b.is_active) {
+        return a.id - b.id;
+      }
+      return a.is_active ? -1 : 1;
+    });
+  }, [customers, searchTerm, selectedRole]);
+
+  // Group filtered customers by role
+  const customersByRole = useMemo(() => {
+    return filteredCustomers.reduce((acc, customer) => {
+      const role = customer.role.toLowerCase();
+      if (!acc[role]) acc[role] = [];
+      acc[role].push(customer);
+      return acc;
+    }, {} as Record<string, Customer[]>);
+  }, [filteredCustomers]);
+
+  // Get roles present in filtered results
+  const visibleRoles = useMemo(() => {
+    const roles = new Set<string>();
+    filteredCustomers.forEach((customer) =>
+      roles.add(customer.role.toLowerCase())
+    );
+    return roleOrder.filter((role) => roles.has(role));
+  }, [filteredCustomers]);
 
   const handleCreateStaff = async () => {
     if (!newStaffName || !newStaffEmail || !newStaffPassword) {
@@ -195,150 +246,234 @@ const CustomersTable: React.FC<CustomersTableProps> = ({
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row justify-between items-start">
-        <div>
-          <CardTitle>User Database</CardTitle>
-          <CardDescription>View user details</CardDescription>
-        </div>
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetTrigger asChild>
-            <Button>Add Staff Account</Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Create Staff Account</SheetTitle>
-              <SheetDescription>
-                Create a new doctor or delivery personnel account.
-              </SheetDescription>
-            </SheetHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  placeholder="Enter full name"
-                  value={newStaffName}
-                  onChange={(e) => setNewStaffName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter email address"
-                  value={newStaffEmail}
-                  onChange={(e) => setNewStaffEmail(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter password"
-                  value={newStaffPassword}
-                  onChange={(e) => setNewStaffPassword(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Select
-                  value={newStaffRole}
-                  onValueChange={(
-                    value: "doctor" | "delivery" | "manufacturer"
-                  ) => setNewStaffRole(value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="manufacturer">Manufacturer</SelectItem>
-                    <SelectItem value="delivery">Delivery Personnel</SelectItem>
-                    <SelectItem value="doctor">Doctor</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <SheetFooter>
-              <Button onClick={handleCreateStaff} disabled={isSubmitting}>
-                {isSubmitting ? "Creating..." : "Create Account"}
-              </Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
-      </CardHeader>
-  <CardContent className="space-y-6">
-        {Object.entries(customersByRole).map(([role, roleCustomers]) => (
-          <div key={role} className="rounded-md border overflow-hidden">
-            <div className="bg-gray-100 px-6 py-3 border-b">
-              <h3 className="font-medium text-lg">
-                {roleDisplayNames[role] || `${role}s`}
-                <span className="text-sm text-gray-500 ml-2">
-                  ({roleCustomers.length})
-                </span>
-              </h3>
-            </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                   <TableHead>ID</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {roleCustomers.map((customer) => (
-                  <TableRow key={customer.id}>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Avatar className={`h-8 w-8 mr-2 ${getRandomAvatarColor(customer.name)}`}>
-                          <AvatarFallback className="text-white">
-                            {customer.name.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span>{customer.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{customer.email}</TableCell>
-                    <TableCell>Uid-{customer.id}</TableCell>
-                    <TableCell className={customer.is_active ? "text-green-600" : "text-red-600"}>
-                      {customer.is_active ? "Active" : "Inactive"}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          setCustomerToUpdate(customer);
-                          setIsConfirmOpen(true);
-                        }}
-                        className={customer.is_active 
-                          ? "bg-red-100 text-red-600 hover:bg-red-200" 
-                          : "bg-green-100 text-green-600 hover:bg-green-200"
-                        }
-                      >
-                        {customer.is_active ? (
-                          <>
-                            <BanIcon className="h-4 w-4 mr-1" />
-                            Deactivate
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircleIcon className="h-4 w-4 mr-1" />
-                            Activate
-                          </>
-                        )}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+    <Card className="border-none shadow-none">
+      <CardHeader className="flex flex-col gap-4 px-0">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <CardTitle className="text-2xl">User Management</CardTitle>
+            <CardDescription>
+              Manage all system users and their access
+            </CardDescription>
           </div>
-        ))}
+          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+            <SheetTrigger asChild>
+              <Button className="gap-2">
+                <PlusIcon className="h-4 w-4" />
+                Add Staff
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Create Staff Account</SheetTitle>
+                <SheetDescription>
+                  Create a new staff account with specific permissions.
+                </SheetDescription>
+              </SheetHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    placeholder="Enter full name"
+                    value={newStaffName}
+                    onChange={(e) => setNewStaffName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter email address"
+                    value={newStaffEmail}
+                    onChange={(e) => setNewStaffEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter password"
+                    value={newStaffPassword}
+                    onChange={(e) => setNewStaffPassword(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="role">Role</Label>
+                  <Select
+                    value={newStaffRole}
+                    onValueChange={(
+                      value: "doctor" | "delivery" | "manufacturer"
+                    ) => setNewStaffRole(value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="doctor">Doctor</SelectItem>
+                      <SelectItem value="manufacturer">Manufacturer</SelectItem>
+                      <SelectItem value="delivery">
+                        Delivery Personnel
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <SheetFooter>
+                <Button onClick={handleCreateStaff} disabled={isSubmitting}>
+                  {isSubmitting ? "Creating..." : "Create Account"}
+                </Button>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Search and Filter Controls */}
+        <div className="flex flex-col sm:flex-row gap-4 w-full">
+          <div className="relative flex-1">
+            <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search by name or email..."
+              className="pl-9"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="w-full sm:w-[200px]">
+            <Select value={selectedRole} onValueChange={setSelectedRole}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="doctor">Doctors</SelectItem>
+                <SelectItem value="manufacturer">Manufacturers</SelectItem>
+                <SelectItem value="delivery">Delivery Personnel</SelectItem>
+                <SelectItem value="customer">Customers</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="px-0 space-y-8">
+        {visibleRoles.length > 0 ? (
+          visibleRoles.map((role) => (
+            <div key={role} className="rounded-lg border overflow-hidden">
+              <div className="bg-gray-50 px-6 py-3 border-b flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <h3 className="font-medium text-lg">
+                    {roleDisplayNames[role] || `${role}s`}
+                  </h3>
+                  <Badge className={roleBadgeColors[role]}>
+                    {customersByRole[role]?.length || 0}{" "}
+                    {customersByRole[role]?.length === 1 ? "user" : "users"}
+                  </Badge>
+                </div>
+                {role !== "customer" && (
+                  <Badge variant="outline" className="border-gray-300">
+                    Staff
+                  </Badge>
+                )}
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[200px]">User</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>ID</TableHead>
+                    <TableHead className="w-[120px]">Status</TableHead>
+                    {role !== "customer" && (
+                      <TableHead className="w-[150px] text-right">
+                        Actions
+                      </TableHead>
+                    )}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {customersByRole[role]?.map((customer) => (
+                    <TableRow key={customer.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-9 w-9">
+                            <AvatarFallback
+                              className={`text-white ${getRandomAvatarColor(
+                                customer.name
+                              )}`}
+                            >
+                              {customer.name.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+
+                          <div>
+                            <p className="font-medium">{customer.name}</p>
+                            <p className="text-sm text-gray-500">{role}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{customer.email}</TableCell>
+                      <TableCell>UID-{customer.id}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={customer.is_active ? "default" : "secondary"}
+                          className={
+                            customer.is_active
+                              ? "bg-green-100 text-green-800"
+                              : "bg-gray-100 text-gray-800"
+                          }
+                        >
+                          {customer.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      </TableCell>
+                      {role !== "customer" && (
+                        <TableCell className="text-right">
+                          <Button
+                            size="sm"
+                            variant={
+                              customer.is_active ? "destructive" : "default"
+                            }
+                            onClick={() => {
+                              setCustomerToUpdate(customer);
+                              setIsConfirmOpen(true);
+                            }}
+                            className="h-8"
+                          >
+                            {customer.is_active ? (
+                              <>
+                                <BanIcon className="h-4 w-4 mr-1" />
+                                Deactivate
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircleIcon className="h-4 w-4 mr-1" />
+                                Activate
+                              </>
+                            )}
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center py-12 gap-2 text-gray-500">
+            <SearchIcon className="h-8 w-8" />
+            <p className="text-lg">No users found matching your criteria</p>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setSearchTerm("");
+                setSelectedRole("all");
+              }}
+            >
+              Clear filters
+            </Button>
+          </div>
+        )}
       </CardContent>
 
       {/* Confirmation Dialog */}

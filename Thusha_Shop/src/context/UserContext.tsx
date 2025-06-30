@@ -973,6 +973,78 @@ const createInitialProfile = async () => {
     return user.role === requiredRoles;
   };
 
+   // forgot password section 
+  const sendPasswordResetOtp = async (email: string): Promise<void> => {
+    try {
+      await authClient.post("/api/core/forgot-password/send-otp/", { email });
+      toast({
+        title: "OTP Sent",
+        description: `A 6-digit code has been sent to ${email}`,
+      });
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message || error.message || "Failed to send OTP";
+      toast({
+        title: "Enter the correct Email",
+        description: message,
+        variant: "destructive",
+      });
+      throw new Error(message);
+    }
+  };
+
+  const verifyPasswordResetOtp = async (
+    email: string,
+    otp: string
+  ): Promise<boolean> => {
+    try {
+      const response = await authClient.post(
+        "/api/core/forgot-password/verify-otp/",
+        {
+          email,
+          otp,
+        }
+      );
+      return response.data.verified;
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message || error.message || "Invalid OTP";
+      toast({
+        title: "Enter Correct OTP",
+        description: message,
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  const resetPassword = async (
+    email: string,
+    newPassword: string
+  ): Promise<void> => {
+    try {
+      await authClient.post("/api/core/forgot-password/reset/", {
+        email,
+        new_password: newPassword,
+      });
+      toast({
+        title: "Password Reset",
+        description: "Your password has been updated successfully",
+      });
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Password reset failed";
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
+      throw new Error(message);
+    }
+  };
+
   return (
     <UserContext.Provider
       value={{
@@ -992,6 +1064,9 @@ const createInitialProfile = async () => {
         hasRole,
         verifyOTP,
         resendOTP,
+        sendPasswordResetOtp,
+        verifyPasswordResetOtp,
+        resetPassword,
       }}
     >
       {children}

@@ -38,7 +38,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="orders">Orders</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="appointments">Appointments</TabsTrigger>
-            <TabsTrigger value="customers">Customers</TabsTrigger>
+            <TabsTrigger value="customers">Users</TabsTrigger>
             <TabsTrigger value="contactus">Contactus</TabsTrigger>
             <TabsTrigger value="settings">Account</TabsTrigger>
           </TabsList>

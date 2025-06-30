@@ -21,6 +21,14 @@ from django.contrib.auth.hashers import check_password
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.throttling import AnonRateThrottle
 User = get_user_model()
+from doctors.models import DoctorProfile  
+from django.core.mail import send_mail
+from .serializers import (
+    ForgotPasswordSerializer,
+    VerifyOTPSerializer,
+    ResetPasswordSerializer
+)
+from datetime import timedelta
 
 class RegisterView(APIView):
     def post(self, request):
@@ -32,6 +40,17 @@ class RegisterView(APIView):
                 password = serializer.validated_data['password']
                 role = serializer.validated_data.get('role', 'customer')
 
+                 # Delete unverified customer if already exists
+                if role == 'customer':
+                    existing_user = User.objects.filter(email=email).first()
+                    if existing_user:
+                        if not existing_user.is_active:
+                            existing_user.delete()  # 👈 delete immediately
+                        else:
+                            return Response({
+                                "error": "A user with this email already exists"
+                            }, status=status.HTTP_400_BAD_REQUEST)
+                        
                  # Determine if user should be active immediately
                 is_staff_user = role in ['doctor', 'delivery', 'manufacturer']
                 is_active = True if is_staff_user else False
@@ -45,6 +64,26 @@ class RegisterView(APIView):
                     is_active=is_active
                 )
 
+                 #  AUTO CREATE PROFILE FOR DOCTOR 
+                if role == 'doctor':
+                    DoctorProfile.objects.create(
+                        user=user,
+                        specialization='',
+                        experience_years=0,
+                        qualifications='',
+                        biography='',
+                        availability={
+                        "monday": False,
+                        "tuesday": False,
+                        "wednesday": False,
+                        "thursday": False,
+                        "friday": False,
+                        "saturday": False,
+                        "sunday": False
+                        }
+
+                    )
+
                 # If it's a customer, send OTP
                 if not is_staff_user:
                     otp = OTP.create_otp(user)
@@ -57,11 +96,20 @@ class RegisterView(APIView):
                 else:
                     send_staff_welcome_email(email, name, password)
 
-                return Response({
-                    "message": "OTP sent to your email",
-                    "email": user.email
-                }, status=status.HTTP_201_CREATED)
-
+                # Generate tokens for staff
+                    refresh = RefreshToken.for_user(user)
+                    return Response({
+                        "access": str(refresh.access_token),
+                        "refresh": str(refresh),
+                        "user": {
+                            "id": user.id,
+                            "email": user.email,
+                            "name": user.name,
+                            "role": user.role
+                        },
+                        "message": "Staff account created successfully"
+                    }, status=status.HTTP_201_CREATED)
+                
             except IntegrityError:
                 return Response(
                     {"error": "A user with this email already exists"},
@@ -77,8 +125,7 @@ class RegisterView(APIView):
                 )
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-
+       
 
 class VerifyOTPView(APIView):
     def post(self, request):
@@ -427,4 +474,105 @@ def activate_user(request, user_id):
         return Response(
             {'error': 'User not found'},
             status=status.HTTP_404_NOT_FOUND
+        )
+    
+    #forgot password views
+class ForgotPasswordSendOTPView(APIView):
+    def post(self, request):
+        serializer = ForgotPasswordSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        email = serializer.validated_data['email']
+        user = User.objects.get(email=email)
+
+        # Create and send OTP
+        otp = OTP.create_otp(user)
+       
+        try:
+            send_mail(
+                subject="Your Password Reset OTP",
+                message=f"Your OTP code is: {otp.code}\nThis code will expire in 5 minutes.",
+                from_email="thushaopticals@gmail.com",
+                recipient_list=[email],
+                fail_silently=False,
+            )
+            return Response(
+                {"message": "OTP has been sent to your email"},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {"message": "Failed to send OTP. Please try again later."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class ForgotPasswordVerifyOTPView(APIView):
+    def post(self, request):
+        serializer = VerifyOTPSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        email = serializer.validated_data['email']
+        otp_code = serializer.validated_data['otp']  
+
+        try:
+            user = User.objects.get(email=email)
+            otp = OTP.objects.get(
+                user=user,
+                code=otp_code,
+                expires_at__gt=timezone.now()
+            )
+            return Response(
+                {
+                    "verified": True,  
+                    "message": "OTP verified successfully"
+                },
+                status=status.HTTP_200_OK
+            )
+        except User.DoesNotExist:
+            return Response(
+                {"verified": False, "message": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except OTP.DoesNotExist:
+            return Response(
+                {"verified": False, "message": "Invalid or expired OTP"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"verified": False, "message": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+class ForgotPasswordResetView(APIView):
+    def post(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        email = serializer.validated_data['email']
+        new_password = serializer.validated_data['new_password']
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {"message": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        except OTP.DoesNotExist:
+            return Response(
+                {"message": "Invalid or expired OTP"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response(
+            {"message": "Password reset successfully"},
+            status=status.HTTP_200_OK
         )
