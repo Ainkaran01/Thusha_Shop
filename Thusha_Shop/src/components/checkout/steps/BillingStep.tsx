@@ -4,7 +4,7 @@ import BillingInformation from '../BillingInformation';
 
 interface BillingStepProps {
   billingInfo: {
-    Name: string;
+    name: string;
     email: string;
     phone: string;
     address1: string;

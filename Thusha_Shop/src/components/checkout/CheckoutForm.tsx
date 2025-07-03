@@ -10,7 +10,7 @@ import PaymentStep from './PaymentStep';
 import { CartItem } from "@/types/cart";
 
 interface BillingInfo {
-  Name: string;
+  name: string;
   email: string;
   phone: string;
   address1: string;

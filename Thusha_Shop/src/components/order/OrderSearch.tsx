@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { orders } from "@/data/products";
-import { Order, OrderStatus } from "@/types";
+import { Order, OrderStatus } from "@/types/order";
 
 interface OrderSearchProps {
   onOrderFound: (order: Order) => void;

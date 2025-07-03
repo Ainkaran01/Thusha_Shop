@@ -1,17 +1,36 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Package, Clock, CheckCircle, Truck, HelpCircle } from "lucide-react";
 import { Link } from "react-router-dom";
-import { orders } from "@/data/products";
-import { Order, OrderStatus } from "@/types";
+import { Order, OrderStatus } from "@/types/order";
+import { getUserOrders } from "@/services/apiService"; // adjust path if different
+import { Loader2 } from "lucide-react";
 
 interface MyOrdersListProps {
   onViewOrder: (order: Order) => void;
 }
 
 const MyOrdersList: React.FC<MyOrdersListProps> = ({ onViewOrder }) => {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const data = await getUserOrders();
+        setOrders(data);
+        console.log(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, []);
+
   const getStatusLabel = (status: OrderStatus) => {
     switch (status) {
       case "pending":
@@ -28,6 +47,24 @@ const MyOrdersList: React.FC<MyOrdersListProps> = ({ onViewOrder }) => {
         return { label: "Unknown", color: "text-gray-500", icon: HelpCircle };
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-10 text-muted-foreground">
+        <Loader2 className="h-6 w-6 animate-spin mr-2" />
+        Loading your orders...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12 text-red-500">
+        <HelpCircle className="h-8 w-8 mx-auto mb-2" />
+        <p>{error}</p>
+      </div>
+    );
+  }
 
   if (orders.length === 0) {
     return (
@@ -47,61 +84,44 @@ const MyOrdersList: React.FC<MyOrdersListProps> = ({ onViewOrder }) => {
   return (
     <div className="space-y-6">
       {orders.map((order) => {
-        // Ensure order.status is treated as OrderStatus
         const typedOrder: Order = {
           ...order,
           status: order.status as OrderStatus
         };
-        
+
+        const { icon: StatusIcon, color, label } = getStatusLabel(typedOrder.status);
+
         return (
           <Card key={order.id}>
             <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
               <div>
                 <CardTitle className="text-base">Order #{order.id}</CardTitle>
                 <CardDescription>
-                  Placed on {new Date(order.createdAt).toLocaleDateString()}
+                  Placed on {new Date(order.created_at).toLocaleDateString()}
                 </CardDescription>
               </div>
               <div className="flex items-center space-x-1">
-                {(() => {
-                  const { icon: StatusIcon, color } = getStatusLabel(typedOrder.status);
-                  return (
-                    <span className={`${color} flex items-center`}>
-                      <StatusIcon className="h-4 w-4 mr-1" />
-                      {getStatusLabel(typedOrder.status).label}
-                    </span>
-                  );
-                })()}
+                <span className={`${color} flex items-center`}>
+                  <StatusIcon className="h-4 w-4 mr-1" />
+                  {label}
+                </span>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Total Amount:</span>
-                  <span className="font-medium">${order.totalAmount.toFixed(2)}</span>
+                  <span className="font-medium"> LKR { order.total_price}</span>
                 </div>
-                
                 <div className="text-sm">
                   <span className="text-muted-foreground">Items:</span>{" "}
                   {order.items.length} {order.items.length === 1 ? "item" : "items"}
                 </div>
-                
-                {order.trackingNumber && (
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Tracking Number:</span>{" "}
-                    {order.trackingNumber}
-                  </div>
-                )}
-                
-                <div className="text-sm">
-                  <span className="text-muted-foreground">Estimated Delivery:</span>{" "}
-                  {new Date(order.estimatedDelivery).toLocaleDateString()}
-                </div>
               </div>
             </CardContent>
             <CardFooter>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 className="w-full"
                 onClick={() => onViewOrder(typedOrder)}
