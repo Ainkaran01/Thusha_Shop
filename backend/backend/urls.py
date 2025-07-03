@@ -25,6 +25,7 @@ urlpatterns = [
     path('api/contact/', include('face_shape.urls')),
     path('api/faceshape/', include('face_shape.urls')),
     path('api/wishlist/', include('wishlist.urls')),
+    path('api/cart/', include('cart.urls')),
     path('api/adminprofile/', include('adminprofile.urls')),
 
  ]

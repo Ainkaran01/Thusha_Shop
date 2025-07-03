@@ -1,142 +1,328 @@
-
-import React, { createContext, useContext, useState, useReducer, useEffect } from "react";
-import { useToast } from "../hooks/use-toast";
-import { Product } from "../types";
-import { CartItem } from "../types/cart";
-import { calculateCartTotal, calculateLensTotal, calculateItemCount } from "../utils/cartUtils";
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  useState,
+} from "react";
+import { toast } from "../components/ui/use-toast";
+import { Product, ApiProduct, normalizeProduct } from "@/types/product";
+import { CartItem } from "@/types/cart";
 import { cartReducer, CartState } from "./cartReducer";
-import { useUser } from "./UserContext";
+import {
+  calculateCartTotal,
+  calculateLensTotal,
+  calculateItemCount,
+} from "../utils/cartUtils";
+
+type LensOption = {
+  type: "standard" | "prescription";
+  option: string;
+  price: number;
+  prescriptionId?: string;
+};
+
 type CartContextType = {
   cartItems: CartItem[];
-  addToCart: (product: Product, quantity?: number) => void;
-  removeFromCart: (productId: number) => void;
+  addToCart: (product: Product) => Promise<void>;
+  removeFromCart: (productId: number) => Promise<void>;
   updateQuantity: (productId: number, quantity: number) => void;
-  updateLensOption: (productId: number, lensOption: { type: "standard" | "prescription"; option: string; price: number; }) => void;
-  clearCart: () => void;
+  updateLensOption: (productId: number, lensOption: LensOption) => void;
+  clearCart: () => Promise<void>;
   getCartTotal: () => number;
   getLensTotal: () => number;
   getItemCount: () => number;
-  setPrescriptionVerified?: (verified: boolean) => void;
+  isLoading: boolean;
+  error: string | null;
+  refreshCart: () => Promise<void>;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const API_BASE_URL = "http://localhost:8000/api";
+const CART_ENDPOINTS = {
+  BASE: "/cart/",
+  ITEM: (id: number) => `/cart/${id}/`,
+};
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const initialState: CartState = {
     cartItems: [],
-    prescriptionVerified: false
+    prescriptionVerified: false,
   };
-  
+
   const [state, dispatch] = useReducer(cartReducer, initialState);
-  const { toast } = useToast();
-  const { isAuthenticated } = useUser(); 
-  // Load cart from sessionStorage on initial load
-  useEffect(() => {
-    const savedCart = sessionStorage.getItem("cart");
-    if (savedCart) {
-      try {
-        const parsedCart = JSON.parse(savedCart);
-        // We need to set each item individually through the reducer
-        parsedCart.forEach((item: CartItem) => {
-          dispatch({ type: 'ADD_ITEM', product: item.product, quantity: item.quantity });
-          
-          // If there's a lens option, update it
-          if (item.lensOption) {
-            dispatch({ 
-              type: 'UPDATE_LENS_OPTION', 
-              productId: item.product.id, 
-              lensOption: item.lensOption 
-            });
-          }
-        });
-      } catch (error) {
-        console.error("Failed to parse cart data:", error);
-      }
-    }
-  }, []);
-
-  // Save cart to sessionStorage whenever it changes
-  useEffect(() => {
-    sessionStorage.setItem("cart", JSON.stringify(state.cartItems));
-  }, [state.cartItems]);
-
- const addToCart = (product: Product, quantity = 1) => {
-  if (!isAuthenticated) {
-    toast({
-      title: "Login Required",
-      description: "Please login to add items to your cart",
-      variant: "destructive",
-    });
-    return;
-  }
-  
-  dispatch({ type: 'ADD_ITEM', product, quantity });
-  
-  const existingItem = state.cartItems.find(
-    (item) => item.product.id === product.id
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(() =>
+    sessionStorage.getItem("access_token")
   );
-  
-  if (existingItem) {
-    toast({
-      title: "Product updated in cart",
-      description: `${product.name} quantity updated to ${existingItem.quantity + quantity}`,
-    });
-  } else {
-    toast({
-      title: "Product added to cart",
-      description: `${product.name} added to your cart`,
-    });
-  }
-};
 
-  const removeFromCart = (productId: number) => {
-    const itemToRemove = state.cartItems.find(
-      (item) => item.product.id === productId
-    );
-    
-    if (itemToRemove) {
-      toast({
-        title: "Product removed from cart",
-        description: `${itemToRemove.product.name} removed from your cart`,
-      });
-    }
-    
-    dispatch({ type: 'REMOVE_ITEM', productId });
+  // Get auth headers fresh on every call to handle token changes
+  const getAuthHeaders = () => {
+    const token = sessionStorage.getItem("access_token");
+    return token
+      ? {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        }
+      : {};
   };
 
-  const updateQuantity = (productId: number, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(productId);
+  // Check if user is authenticated based on token presence
+  const isAuthenticated = () => !!sessionStorage.getItem("access_token");
+
+  // Fetch cart from backend and populate state
+  const fetchCart = async () => {
+    if (!isAuthenticated()) {
+      dispatch({ type: "CLEAR_CART" });
       return;
     }
 
-    dispatch({ type: 'UPDATE_QUANTITY', productId, quantity });
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}${CART_ENDPOINTS.BASE}`, {
+        headers: getAuthHeaders(),
+      });
+
+      if (response.status === 401) {
+        // Token expired or invalid: clear cart & token
+        dispatch({ type: "CLEAR_CART" });
+        setToken(null);
+        throw new Error("Session expired. Please login again.");
+      }
+      if (!response.ok) throw new Error("Failed to fetch cart");
+
+      const data = await response.json();
+     
+ 
+      dispatch({ type: "CLEAR_CART" });
+ 
+      const items: CartItem[] = data
+        .map((item: any) => ({
+          product: normalizeProduct(item.product),
+          quantity: item.quantity,
+          lensOption: item.lensOption || null,
+        }))
+        .filter((item) => !!item.product);
+
+      // Add items one by one through reducer to keep state consistent
+      items.forEach((item) => {
+        dispatch({
+          type: "ADD_ITEM",
+          product: item.product,
+          quantity: item.quantity,
+        });
+
+        if (item.lensOption) {
+          dispatch({
+            type: "UPDATE_LENS_OPTION",
+            productId: item.product.id,
+            lensOption: item.lensOption,
+          });
+        }
+      });
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to load cart";
+      setError(errorMessage);
+      console.error("Cart fetch error:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const updateLensOption = (productId: number, lensOption: { type: "standard" | "prescription"; option: string; price: number }) => {
-    dispatch({ type: 'UPDATE_LENS_OPTION', productId, lensOption });
+  // Fetch cart once on mount
+  useEffect(() => {
+    fetchCart();
+  }, []);
 
+  // Watch token changes every 2 seconds, update token state and refetch cart or clear cart on logout
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const currentToken = sessionStorage.getItem("access_token");
+      if (currentToken !== token) {
+        setToken(currentToken);
+        if (currentToken) {
+          fetchCart();
+        } else {
+          dispatch({ type: "CLEAR_CART" });
+        }
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [token]);
+
+  // Add product to cart (quantity always 1 here)
+  const addToCart = async (product: Product, quantity = 1) => {
+    if (!isAuthenticated()) {
+      toast({
+        title: "Login Required",
+        description: "Please login to add items to your cart",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}${CART_ENDPOINTS.BASE}`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ product_id: product.id, quantity}),
+      });
+
+      if (response.status === 401) {
+        setToken(null);
+        throw new Error("Session expired. Please login again.");
+      }
+      if (!response.ok) throw new Error("Failed to add to cart");
+
+      dispatch({ type: "ADD_ITEM", product, quantity: 1 });
+
+      toast({
+        title: "Added to cart",
+        description: `${product.name} has been added to your cart`,
+      });
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to add to cart";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Remove item from cart by productId
+  const removeFromCart = async (productId: number) => {
+    if (!isAuthenticated()) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}${CART_ENDPOINTS.ITEM(productId)}`,
+        {
+          method: "DELETE",
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (response.status === 401) {
+        setToken(null);
+        throw new Error("Please login again to perform this action");
+      }
+      if (!response.ok) throw new Error("Failed to remove from cart");
+
+      dispatch({ type: "REMOVE_ITEM", productId });
+
+      toast({
+        title: "Removed from cart",
+        description: "Item has been removed from your cart",
+      });
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to remove from cart";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Clear entire cart
+  const clearCart = async () => {
+    if (!isAuthenticated()) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}${CART_ENDPOINTS.BASE}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+
+      if (response.status === 401) {
+        setToken(null);
+        throw new Error("Please login again to perform this action");
+      }
+      if (!response.ok) throw new Error("Failed to clear cart");
+
+      dispatch({ type: "CLEAR_CART" });
+      toast({
+        title: "Cart cleared",
+        description: "All items have been removed from your cart",
+      });
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to clear cart";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Update quantity locally (optional sync with backend if needed)
+ const updateQuantity = async (productId: number, quantity: number) => {
+  if (quantity <= 0) {
+    removeFromCart(productId);
+    return;
+  }
+
+  dispatch({ type: "UPDATE_QUANTITY", productId, quantity });
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/cart/${productId}/update/`, {
+      method: "PATCH",
+      headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ quantity }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server responded with ${response.status}`);
+    }
+  } catch (error) {
+    console.error("Failed to update quantity on server:", error);
+  }
+};
+
+
+  // Update lens option locally (optional sync with backend if needed)
+  const updateLensOption = (productId: number, lensOption: LensOption) => {
+    dispatch({ type: "UPDATE_LENS_OPTION", productId, lensOption });
     toast({
       title: "Lens option updated",
-      description: `Lens option updated for your frame`,
-    });
-  };
-
-  const clearCart = () => {
-    dispatch({ type: 'CLEAR_CART' });
-    toast({
-      title: "Cart cleared",
-      description: "All items have been removed from your cart",
+      description: "Lens selection applied",
     });
   };
 
   const getCartTotal = () => calculateCartTotal(state.cartItems);
   const getLensTotal = () => calculateLensTotal(state.cartItems);
   const getItemCount = () => calculateItemCount(state.cartItems);
-
-  const setPrescriptionVerified = (verified: boolean) => {
-    dispatch({ type: 'SET_PRESCRIPTION_VERIFIED', verified });
-  };
 
   return (
     <CartContext.Provider
@@ -150,7 +336,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         getCartTotal,
         getLensTotal,
         getItemCount,
-        setPrescriptionVerified,
+        isLoading,
+        error,
+        refreshCart: fetchCart,
       }}
     >
       {children}
