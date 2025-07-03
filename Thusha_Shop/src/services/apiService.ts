@@ -38,15 +38,6 @@ export const updateOrderStatus = async (orderNumber: string, statusData: { statu
   }
 };
 
-export const getOrderDetails = async (orderNumber: string) => {
-  try {
-    const response = await api.get(`/orders/${orderNumber}/`);
-    return response.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to fetch order details');
-  }
-};
-
 export const getUserOrders = async () => {
   try {
     const response = await api.get('/orders/list/');

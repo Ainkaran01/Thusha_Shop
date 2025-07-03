@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { OrderStatus } from "@/types";
+import { OrderStatus } from "@/types/order";
 
 interface OrderStatusCardProps {
   orderId: string;
@@ -23,7 +23,6 @@ const OrderStatusCard: React.FC<OrderStatusCardProps> = ({
     switch (status) {
       case "pending": return "bg-yellow-500";
       case "processing": return "bg-blue-500";
-      case "ready_to_deliver": return "bg-purple-500";
       case "shipped": return "bg-orange-500";
       case "delivered": return "bg-green-500";
       case "cancelled": return "bg-red-500";
