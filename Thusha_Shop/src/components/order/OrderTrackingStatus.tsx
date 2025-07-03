@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { OrderStatus } from "@/types";
+import { OrderStatus } from "@/types/order";
 import OrderStatusCard from './OrderStatusCard';
 import OrderProgressTimeline from './OrderProgressTimeline';
 import LiveTrackingCard from './LiveTrackingCard';
@@ -36,9 +36,9 @@ const OrderTrackingStatus: React.FC<OrderTrackingStatusProps> = ({
       if (currentStatus === "pending") {
         onStatusUpdate?.("processing");
       } else if (currentStatus === "processing") {
-        onStatusUpdate?.("ready_to_deliver");
-      } else if (currentStatus === "ready_to_deliver") {
         onStatusUpdate?.("shipped");
+      } else if (currentStatus === "shipped") {
+        onStatusUpdate?.("delivered");
       }
     }, 30000); // Update status every 30 seconds for demo
 

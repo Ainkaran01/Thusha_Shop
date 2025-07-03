@@ -1,10 +1,20 @@
-
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Order, OrderStatus } from "@/types";
-import { Clock, Package, Truck, CheckCircle, HelpCircle } from "lucide-react";
+import { Order, OrderStatus } from "@/types/order";
+import {
+  Clock,
+  Package,
+  Truck,
+  CheckCircle,
+  HelpCircle
+} from "lucide-react";
 
 interface OrderDetailsProps {
   order: Order;
@@ -14,7 +24,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order }) => {
   const getStatusLabel = (status: OrderStatus) => {
     switch (status) {
       case "pending":
-        return { label: "Order Pending", color: "text-yellow-500", icon: Clock };
+        return { label: "Pending", color: "text-yellow-500", icon: Clock };
       case "processing":
         return { label: "Processing", color: "text-blue-500", icon: Package };
       case "shipped":
@@ -49,127 +59,82 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order }) => {
           </span>
         </div>
       </div>
-      
+
       {/* Order Progress */}
       <div className="mb-8">
         <div className="relative">
           <div className="flex justify-between mb-2">
-            <div className="text-center w-24">
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center mx-auto ${
-                getStatusStep(order.status) >= 1 
-                  ? "bg-primary text-primary-foreground" 
-                  : order.status === "cancelled" 
-                    ? "bg-red-500 text-white" 
+            {[
+              { step: 1, label: "Order Placed", Icon: Clock },
+              { step: 2, label: "Processing", Icon: Package },
+              { step: 3, label: "Shipped", Icon: Truck },
+              { step: 4, label: "Delivered", Icon: CheckCircle },
+            ].map(({ step, label, Icon }, index) => (
+              <div className="text-center w-24" key={index}>
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center mx-auto ${
+                  getStatusStep(order.status) >= step
+                    ? "bg-primary text-primary-foreground"
+                    : order.status === "cancelled"
+                    ? "bg-red-500 text-white"
                     : "bg-muted text-muted-foreground"
-              }`}>
-                <Clock className="h-5 w-5" />
+                }`}>
+                  <Icon className="h-5 w-5" />
+                </div>
+                <span className="text-xs mt-1 block">{label}</span>
               </div>
-              <span className="text-xs mt-1 block">Order Placed</span>
-            </div>
-            <div className="text-center w-24">
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center mx-auto ${
-                getStatusStep(order.status) >= 2 
-                  ? "bg-primary text-primary-foreground" 
-                  : order.status === "cancelled" 
-                    ? "bg-red-500 text-white" 
-                    : "bg-muted text-muted-foreground"
-              }`}>
-                <Package className="h-5 w-5" />
-              </div>
-              <span className="text-xs mt-1 block">Processing</span>
-            </div>
-            <div className="text-center w-24">
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center mx-auto ${
-                getStatusStep(order.status) >= 3 
-                  ? "bg-primary text-primary-foreground" 
-                  : order.status === "cancelled" 
-                    ? "bg-red-500 text-white" 
-                    : "bg-muted text-muted-foreground"
-              }`}>
-                <Truck className="h-5 w-5" />
-              </div>
-              <span className="text-xs mt-1 block">Shipped</span>
-            </div>
-            <div className="text-center w-24">
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center mx-auto ${
-                getStatusStep(order.status) >= 4 
-                  ? "bg-primary text-primary-foreground" 
-                  : order.status === "cancelled" 
-                    ? "bg-red-500 text-white" 
-                    : "bg-muted text-muted-foreground"
-              }`}>
-                <CheckCircle className="h-5 w-5" />
-              </div>
-              <span className="text-xs mt-1 block">Delivered</span>
-            </div>
+            ))}
           </div>
-          
+
           {/* Progress bar */}
           <div className="absolute top-5 left-12 right-12 flex items-center">
-            <div className={`h-1 flex-1 ${
-              getStatusStep(order.status) >= 2 
-                ? "bg-primary" 
-                : order.status === "cancelled" 
-                  ? "bg-red-500" 
+            {[2, 3, 4].map((s, i) => (
+              <div key={i} className={`h-1 flex-1 ${
+                getStatusStep(order.status) >= s
+                  ? "bg-primary"
+                  : order.status === "cancelled"
+                  ? "bg-red-500"
                   : "bg-muted"
-            }`}></div>
-            <div className={`h-1 flex-1 ${
-              getStatusStep(order.status) >= 3 
-                ? "bg-primary" 
-                : order.status === "cancelled" 
-                  ? "bg-red-500" 
-                  : "bg-muted"
-            }`}></div>
-            <div className={`h-1 flex-1 ${
-              getStatusStep(order.status) >= 4 
-                ? "bg-primary" 
-                : order.status === "cancelled" 
-                  ? "bg-red-500" 
-                  : "bg-muted"
-            }`}></div>
+              }`} />
+            ))}
           </div>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <h3 className="font-semibold mb-2">Order Details</h3>
           <div className="text-sm space-y-1">
-            <p><span className="text-muted-foreground">Date Placed:</span> {new Date(order.createdAt).toLocaleDateString()}</p>
-            <p><span className="text-muted-foreground">Total Amount:</span> ${order.totalAmount.toFixed(2)}</p>
-            <p><span className="text-muted-foreground">Payment Method:</span> {order.paymentMethod}</p>
-            {order.trackingNumber && (
-              <p><span className="text-muted-foreground">Tracking Number:</span> {order.trackingNumber}</p>
-            )}
-            <p><span className="text-muted-foreground">Estimated Delivery:</span> {new Date(order.estimatedDelivery).toLocaleDateString()}</p>
+            <p><span className="text-muted-foreground">Date Placed:</span> {new Date(order.created_at).toLocaleDateString()}</p>
+            <p><span className="text-muted-foreground">Total Amount:</span> LKR { order.total_price}</p>
+            <p><span className="text-muted-foreground">Payment Method:</span> {order.payment_method}</p>
           </div>
         </div>
-        
+
         <div>
-          <h3 className="font-semibold mb-2">Shipping Address</h3>
+          <h3 className="font-semibold mb-2">Billing Info</h3>
           <div className="text-sm space-y-1">
-            <p>{order.shippingAddress.fullName}</p>
-            <p>{order.shippingAddress.street}</p>
-            <p>
-              {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}
-            </p>
-            <p>{order.shippingAddress.country}</p>
-            <p>Phone: {order.shippingAddress.phone}</p>
+            <p>{order.billing.name}</p>
+            <p>{order.billing.address1}</p>
+            {order.billing.address2 && <p>{order.billing.address2}</p>}
+            <p>{order.billing.city}, {order.billing.state} {order.billing.zipCode}</p>
+            <p>{order.billing.country}</p>
+            <p>Phone: {order.billing.phone}</p>
+            <p>Email: {order.billing.email}</p>
           </div>
         </div>
       </div>
-      
+
       <Separator className="my-6" />
-      
+
       <h3 className="font-semibold mb-4">Order Items</h3>
       <div className="space-y-4">
         {order.items.map((item, index) => (
           <div key={index} className="flex justify-between">
             <div>
-              <div className="font-medium">Product #{item.productId}</div>
+              <div className="font-medium">{item.productName}</div>
               <div className="text-sm text-muted-foreground">Qty: {item.quantity}</div>
             </div>
-            <div className="font-medium">${(item.price * item.quantity).toFixed(2)}</div>
+            <div className="font-medium">LKR {(item.price * item.quantity).toFixed(2)}</div>
           </div>
         ))}
       </div>

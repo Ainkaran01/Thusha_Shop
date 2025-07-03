@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Circle, Package, Truck, MapPin, Clock } from "lucide-react";
-import { OrderStatus } from "@/types";
+import { OrderStatus } from "@/types/order";
 
 interface OrderProgressTimelineProps {
   currentStatus: OrderStatus;

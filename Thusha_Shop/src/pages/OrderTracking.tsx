@@ -4,7 +4,7 @@ import { Package } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CardFooter } from "@/components/ui/card";
 import { useUser } from "@/context/UserContext";
-import { Order } from "@/types";
+import { Order } from "@/types/order";
 import OrderSearch from "@/components/order/OrderSearch";
 import OrderDetails from "@/components/order/OrderDetails";
 import MyOrdersList from "@/components/order/MyOrdersList";
@@ -29,7 +29,7 @@ const OrderTracking = () => {
       
       <Tabs defaultValue={isAuthenticated ? "myOrders" : "trackOrder"}>
         <TabsList className="mb-6">
-          <TabsTrigger value="trackOrder">Track an Order</TabsTrigger>
+          {/* <TabsTrigger value="trackOrder">Track an Order</TabsTrigger> */}
           {isAuthenticated && (
             <TabsTrigger value="myOrders">My Orders</TabsTrigger>
           )}

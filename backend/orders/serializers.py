@@ -12,7 +12,7 @@ class BillingInfoSerializer(serializers.ModelSerializer):
         }
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    product_id = serializers.IntegerField(write_only=True)  # Frontend sends product_id
+    product_id = serializers.IntegerField(write_only=False)  # Frontend sends product_id
     product_name = serializers.CharField(read_only=True)
     price = serializers.DecimalField(
         max_digits=10,

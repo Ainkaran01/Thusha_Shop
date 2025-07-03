@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
-import { OrderStatus } from "@/types";
+import { OrderStatus } from "@/types/order";
 
 interface LiveTrackingCardProps {
   currentStatus: OrderStatus;
