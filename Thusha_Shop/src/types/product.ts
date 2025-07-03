@@ -91,6 +91,12 @@ export function normalizeProduct(apiProduct: ApiProduct): Product {
       ? (typeof apiProduct.frame_type === 'string'
         ? { id: 0, name: apiProduct.frame_type }
         : apiProduct.frame_type)
-      : null
+      : null,
+
+    frame_material: apiProduct.frame_material || "Unknown",
+    colors: apiProduct.colors || "No colors",
+    features: apiProduct.features || [],
+    face_shapes: apiProduct.face_shapes || [],
+    vision_problems: apiProduct.vision_problems || [],
   };
 }

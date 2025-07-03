@@ -105,6 +105,7 @@ INSTALLED_APPS = [
     # 'reviews',
    'face_shape',
    'wishlist',
+   'cart',
    'adminprofile',
    
 
