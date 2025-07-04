@@ -44,6 +44,7 @@ class ProductSerializer(serializers.ModelSerializer):
         queryset=FrameType.objects.all(),
         source='frame_type',
         write_only=True,
+        required=False,
         allow_null=True
     )
     images = serializers.ListField(
@@ -60,6 +61,18 @@ class ProductSerializer(serializers.ModelSerializer):
             'category': {'required': False},
             'frame_type': {'required': False},
         }
+
+    def validate(self, data):
+        # If category is accessory, ensure frame_type is None
+        category = data.get('category')
+        frame_type = data.get('frame_type')
+        
+        if category and category.name.lower() == 'accessory' and frame_type:
+            raise serializers.ValidationError({
+                'frame_type_id': 'Accessories should not have a frame type'
+            })
+            
+        return data
     
     def to_representation(self, instance):
         rep = super().to_representation(instance)
