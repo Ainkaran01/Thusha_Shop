@@ -4,9 +4,9 @@ import React, {
   useEffect,
   useState,
   ReactNode,
+  useCallback,
 } from "react";
 import { OrderStatus } from "@/types";
-import { mockOrders, mockAppointments } from "@/components/admin/mockData";
 import {
   getFrameTypes,
   createFrameType,
@@ -31,13 +31,6 @@ import {
   setPrimaryImage as apiSetPrimaryImage,
 } from "@/api/products";
 import {
-  fetchAccessories,
-  addAccessory as apiAddAccessory,
-  updateAccessory as apiUpdateAccessory,
-  deleteAccessory as apiDeleteAccessory,
-  updateAccessoryStock as apiUpdateAccessoryStock,
-} from "@/api/accessories";
-import {
   fetchAdminProfile as apiFetchAdminProfile,
   updateAdminProfile as apiUpdateAdminProfile,
   AdminProfile,
@@ -52,15 +45,22 @@ import {
   deactivateCustomer,
   activateCustomer,
   Customer,
+  fetchCustomerCount
 } from "@/api/customers";
+import {
+  fetchOrders,
+  updateOrderStatus as apiUpdateOrderStatus,
+  assignDelivery as apiAssignDelivery,
+  fetchDeliveryPersons as apiFetchDeliveryPersons,
+  Order,
+  fetchPendingOrderCount
+} from "@/api/orders"
 import { useToast } from "@/hooks/use-toast";
 import { Product } from "@/types/product";
 import { Accessory } from "@/types/accessory";
 
 interface AdminContextType {
-  orders: typeof mockOrders;
   products: Product[];
-  accessories: Accessory[];
 
   stats: {
     totalSales: number;
@@ -92,8 +92,10 @@ interface AdminContextType {
   deleteCategory: (id: number) => Promise<void>;
 
   // Orders
-  updateOrderStatus: (orderId: string, newStatus: OrderStatus) => void;
-  deleteOrder: (orderId: string) => void;
+  orders: Order[];
+  updateOrderStatus: (orderNumber: string, newStatus: OrderStatus) => void;
+  assignDelivery: (orderId: number, deliveryPersonId: number) => Promise<void>;
+  fetchDeliveryPersons: () => Promise<{ id: number; name: string; email: string }[]>;
 
   // Appointments
   appointments: Appointment[];
@@ -109,16 +111,6 @@ interface AdminContextType {
   // Product Image Management
   deleteProductImage: (productId: number, imageId: number) => Promise<void>;
   setPrimaryProductImage: (productId: number, imageId: number) => Promise<void>;
-
-  // Accessories
-  addAccessory: (accessoryData: FormData) => Promise<Accessory>;
-  updateAccessory: (id: number, accessoryData: FormData) => Promise<Accessory>;
-  deleteAccessory: (id: number) => Promise<void>;
-  updateAccessoryStock: (
-    accessoryId: number,
-    newStock: number
-  ) => Promise<void>;
-  refreshAccessories: () => Promise<void>;
 
   adminProfile: AdminProfile | null;
   fetchAdminProfile: () => Promise<void>;
@@ -148,16 +140,15 @@ interface AdminDashboardProviderProps {
 export const AdminDashboardProvider: React.FC<AdminDashboardProviderProps> = ({
   children,
 }) => {
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [accessories, setAccessories] = useState<Accessory[]>([]);
   const { toast } = useToast();
   const [stats, setStats] = useState({
     totalSales: 25890.75,
     monthlyRevenue: 4560.25,
-    totalCustomers: 235,
+    totalCustomers: 0,
     totalOrders: 412,
-    pendingOrders: 23,
+    pendingOrders: 0,
     conversion: 3.2,
   });
 
@@ -166,6 +157,8 @@ export const AdminDashboardProvider: React.FC<AdminDashboardProviderProps> = ({
   const [adminProfile, setAdminProfile] = useState<AdminProfile | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
   // Load initial data
   useEffect(() => {
     const loadData = async () => {
@@ -174,23 +167,29 @@ export const AdminDashboardProvider: React.FC<AdminDashboardProviderProps> = ({
           frameTypesData,
           categoriesData,
           productsData,
-          accessoriesData,
           appointmentData,
           customersData,
+          customerCount,
+          pendingOrderCount,
         ] = await Promise.all([
           getFrameTypes(),
           getCategories(),
           fetchProducts(),
-          fetchAccessories(),
           fetchAppointments(),
           fetchActiveCustomers(),
+          fetchCustomerCount(),
+          fetchPendingOrderCount(),
         ]);
         setFrameTypes(frameTypesData);
         setCategories(categoriesData);
         setProducts(productsData);
-        setAccessories(accessoriesData);
         setAppointments(appointmentData);
         setCustomers(customersData);
+        setStats((prev) => ({
+        ...prev,
+        totalCustomers: customerCount,
+        pendingOrders: pendingOrderCount,
+        }));
         console.log("✅ Customers fetch response va:", customersData); // ✅ step 2
       } catch (error) {
         console.error("Failed to load initial data:", error);
@@ -219,39 +218,87 @@ export const AdminDashboardProvider: React.FC<AdminDashboardProviderProps> = ({
     }
   };
 
-  const refreshAccessories = async (): Promise<void> => {
+  // Order functions
+
+   useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        const ordersData = await fetchOrders();
+        setOrders(ordersData);
+      } catch (error) {
+        console.error("Failed to load orders:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load initial data",
+          variant: "destructive",
+        });
+      }
+    };
+
+    loadOrders();
+  }, [toast]);
+
+  const updateOrderStatus = async (orderNumber: string, newStatus: OrderStatus) => {
+  try {
+    const updatedOrder = await apiUpdateOrderStatus(orderNumber, newStatus);
+    setOrders(prev =>
+  prev.map(order =>
+    order.order_number === orderNumber
+      ? { ...order, status: newStatus }  
+      : order
+  )
+);
+
+    toast({
+      title: "Success",
+      description: "Order status updated successfully",
+    });
+  } catch (error) {
+    console.error("Failed to update order status:", error);
+    toast({
+      title: "Error",
+      description: "Failed to update order status",
+      variant: "destructive",
+    });
+  }
+};
+
+// Assign Delivery to Order
+  const assignDelivery = async (orderId: number, deliveryPersonId: number) => {
     try {
-      const data = await fetchAccessories();
-      setAccessories(data);
+      await apiAssignDelivery(orderId, deliveryPersonId);
+      toast({
+        title: "Success",
+        description: `Order ${orderId} assigned successfully`,
+      });
+      const updatedOrders = await fetchOrders();
+      setOrders(updatedOrders);
     } catch (error) {
-      console.error("Failed to fetch accessories:", error);
+      console.error("Failed to assign delivery:", error);
       toast({
         title: "Error",
-        description: "Failed to load accessories",
+        description: "Failed to assign delivery",
         variant: "destructive",
       });
     }
   };
 
-  // Order functions
-  const updateOrderStatus = (orderId: string, newStatus: OrderStatus) => {
-    setOrders((prev) =>
-      prev.map((order) =>
-        order.id === orderId
-          ? {
-              ...order,
-              status: newStatus,
-              updatedAt: new Date().toISOString(),
-              updatedBy: "Admin",
-            }
-          : order
-      )
-    );
+  // Fetch delivery persons (active only)
+  const fetchDeliveryPersons = async (): Promise<{ id: number; name: string; email: string }[]> => {
+    try {
+      const persons = await apiFetchDeliveryPersons();
+      return persons;
+    } catch (error) {
+      console.error("Failed to fetch delivery persons:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load delivery personnel",
+        variant: "destructive",
+      });
+      return [];
+    }
   };
 
-  const deleteOrder = (orderId: string) => {
-    setOrders(orders.filter((order) => order.id !== orderId));
-  };
 
   // Appointment functions
 
@@ -527,107 +574,28 @@ export const AdminDashboardProvider: React.FC<AdminDashboardProviderProps> = ({
     }
   };
 
-  // ADD accessory
-  const addAccessory = async (accessoryData: FormData): Promise<Accessory> => {
+
+  // Optimized admin profile fetching
+  const fetchAdminProfile = useCallback(async () => {
+    if (profileLoaded && adminProfile) return; // Skip if already loaded
+    
     try {
-      const newAccessory = await apiAddAccessory(accessoryData);
-      setAccessories((prev) => [...prev, newAccessory]);
-      toast({
-        title: "Success",
-        description: "Accessory added successfully",
-      });
-      return newAccessory;
+      setProfileLoading(true);
+      const profile = await apiFetchAdminProfile();
+      setAdminProfile(profile);
+      setProfileLoaded(true);
     } catch (error) {
-      console.error("Failed to add accessory:", error);
+      console.error("Failed to fetch admin profile:", error);
       toast({
         title: "Error",
-        description: "Failed to add accessory",
+        description: "Failed to load admin profile",
         variant: "destructive",
       });
-      throw error;
+    } finally {
+      setProfileLoading(false);
     }
-  };
+  }, [adminProfile, profileLoaded, toast]);
 
-  // UPDATE accessory
-  const updateAccessory = async (
-    id: number,
-    accessoryData: FormData
-  ): Promise<Accessory> => {
-    try {
-      const updatedAccessory = await apiUpdateAccessory(id, accessoryData);
-      setAccessories((prev) =>
-        prev.map((accessory) =>
-          accessory.id === id ? updatedAccessory : accessory
-        )
-      );
-      toast({
-        title: "Success",
-        description: "Accessory updated successfully",
-      });
-      return updatedAccessory;
-    } catch (error) {
-      console.error("Failed to update accessory:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update accessory",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  // DELETE accessory
-  const deleteAccessory = async (id: number): Promise<void> => {
-    try {
-      await apiDeleteAccessory(id);
-      setAccessories((prev) => prev.filter((accessory) => accessory.id !== id));
-      toast({
-        title: "Success",
-        description: "Accessory deleted successfully",
-      });
-    } catch (error) {
-      console.error("Failed to delete accessory:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete accessory",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  // UPDATE AccessoryStock
-  const updateAccessoryStock = async (
-    accessoryId: number,
-    newStock: number
-  ): Promise<void> => {
-    try {
-      await apiUpdateAccessoryStock(accessoryId, newStock);
-      const updated = accessories.map((acc) =>
-        acc.id === accessoryId ? { ...acc, stock: newStock } : acc
-      );
-      setAccessories(updated);
-      toast({
-        title: "Success",
-        description: "Stock updated successfully",
-      });
-    } catch (error) {
-      console.error("Failed to update accessory stock:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update accessory stock",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  // Update AdminProfile
-
-  const fetchAdminProfile = async () => {
-    const profile = await apiFetchAdminProfile();
-    setAdminProfile(profile);
-  };
 
   const updateAdminProfile = async (profileData: FormData) => {
     try {
@@ -691,11 +659,12 @@ export const AdminDashboardProvider: React.FC<AdminDashboardProviderProps> = ({
   return (
     <AdminContext.Provider
       value={{
-        orders,
-
         stats,
+
+        orders,
         updateOrderStatus,
-        deleteOrder,
+        assignDelivery,
+        fetchDeliveryPersons,
 
         appointments,
         deleteAppointment,
@@ -708,13 +677,6 @@ export const AdminDashboardProvider: React.FC<AdminDashboardProviderProps> = ({
         refreshProducts,
         setPrimaryProductImage,
         deleteProductImage,
-
-        accessories,
-        updateAccessory,
-        addAccessory,
-        deleteAccessory,
-        updateAccessoryStock,
-        refreshAccessories,
 
         frameTypes,
         addFrameType,

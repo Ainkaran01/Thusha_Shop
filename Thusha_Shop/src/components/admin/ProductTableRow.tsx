@@ -1,26 +1,19 @@
-import React, { useState } from "react";
-import { TableCell, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { AlertTriangle, MoreHorizontal } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash } from "lucide-react";
-import EditProductForm from "./EditProductForm";
-import { Product } from "@/types/product";
-
-// Adjusted type to fix category error
+import type React from "react"
+import { useState } from "react"
+import { TableCell, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { AlertTriangle } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { Pencil, Trash } from "lucide-react"
+import EditProductForm from "./EditProductForm"
+import type { Product } from "@/types/product"
 
 interface ProductTableRowProps {
-  product: Product;
-  index: number;
-  onUpdateStock: (productId: number, newStock: number) => Promise<void> | void;
-  onDeleteProduct: (productId: number) => Promise<void> | void;
-  onUpdateProduct: (id: number, productData: FormData) => Promise<Product>;
+  product: Product
+  index: number
+  onUpdateStock: (productId: number, newStock: number) => Promise<void> | void
+  onDeleteProduct: (productId: number) => Promise<void> | void
+  onUpdateProduct: (id: number, productData: FormData) => Promise<Product>
 }
 
 const ProductTableRow: React.FC<ProductTableRowProps> = ({
@@ -30,9 +23,10 @@ const ProductTableRow: React.FC<ProductTableRowProps> = ({
   onDeleteProduct,
   onUpdateProduct,
 }) => {
-  const { toast } = useToast();
-  const [isEditing, setIsEditing] = useState(false);
-  const MEDIA_URL = "http://localhost:8000/media/";
+  const { toast } = useToast()
+  const [isEditing, setIsEditing] = useState(false)
+  const MEDIA_URL = "http://localhost:8000/media/"
+
   const handleDelete = () => {
     toast({
       title: "Confirm Deletion",
@@ -43,39 +37,37 @@ const ProductTableRow: React.FC<ProductTableRowProps> = ({
           variant="destructive"
           size="sm"
           onClick={() => {
-            onDeleteProduct(product.id);
+            onDeleteProduct(product.id)
             toast({
               title: "Product Deleted",
               description: "The product has been removed.",
-            });
+            })
           }}
         >
           Confirm
         </Button>
       ),
-    });
-  };
+    })
+  }
 
   const handleEditSuccess = () => {
-    setIsEditing(false);
+    setIsEditing(false)
     toast({
       title: "Success",
       description: "Product updated successfully",
-    });
-  };
+    })
+  }
 
   if (isEditing) {
     return (
       <TableRow>
-        <TableCell colSpan={9}>
-          <EditProductForm
-            product={product}
-            onCancel={() => setIsEditing(false)}
-            onSuccess={handleEditSuccess}
-          />
+        <TableCell colSpan={9} className="p-0">
+          <div className="p-4 bg-muted/20">
+            <EditProductForm product={product} onCancel={() => setIsEditing(false)} onSuccess={handleEditSuccess} />
+          </div>
         </TableCell>
       </TableRow>
-    );
+    )
   }
 
   const formatPrice = (price: number) => {
@@ -84,79 +76,86 @@ const ProductTableRow: React.FC<ProductTableRowProps> = ({
       currency: "LKR",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(price);
-  };
+    }).format(price)
+  }
 
-  console.log("Full product data:", product);
-  console.log("Images array:", product.images);
   return (
-    <TableRow key={product.id}>
-      <TableCell className="font-medium">{index + 1}</TableCell>
-      <TableCell className="whitespace-nowrap">{product.name}</TableCell>
-
-      <TableCell className="whitespace-nowrap">
-        <div className="flex items-center space-x-3">
-          {product.images?.length > 0 && (
-            <img
-              src={
-                product.images[0].startsWith("http")
-                  ? product.images[0]
-                  : `${MEDIA_URL}${product.images[0]}`
-              }
-              alt={product.name}
-              className="w-10 h-10 object-cover rounded"
-            />
+    <TableRow className="hover:bg-muted/50 transition-colors">
+      <TableCell className="font-medium text-sm">#{String(index + 1).padStart(3, "0")}</TableCell>
+      <TableCell className="font-medium">
+        <div className="max-w-[200px] truncate" title={product.name}>
+          {product.name}
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center">
+          {product.images?.length > 0 ? (
+            <div className="relative">
+              <img
+                src={product.images[0].startsWith("http") ? product.images[0] : `${MEDIA_URL}${product.images[0]}`}
+                alt={product.name}
+                className="w-12 h-12 object-cover rounded-md border border-border shadow-sm"
+              />
+              {product.images.length > 1 && (
+                <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  +{product.images.length - 1}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="w-12 h-12 bg-muted rounded-md border border-border flex items-center justify-center">
+              <span className="text-xs text-muted-foreground">No img</span>
+            </div>
           )}
         </div>
       </TableCell>
-      <TableCell>{product.category?.name}</TableCell>
-      <TableCell>{formatPrice(product.price)}</TableCell>
       <TableCell>
-        <div className="flex items-center">
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
+          {product.category?.name || "Uncategorized"}
+        </span>
+      </TableCell>
+      <TableCell className="font-semibold">{formatPrice(product.price)}</TableCell>
+      <TableCell>
+        <div className="flex items-center space-x-2">
           <span
-            className={product.stock < 10 ? "text-destructive font-medium" : ""}
+            className={`font-medium ${
+              product.stock < 10 ? "text-destructive" : product.stock < 50 ? "text-yellow-600" : "text-green-600"
+            }`}
           >
             {product.stock}
           </span>
-          {product.stock < 10 && (
-            <AlertTriangle className="h-4 w-4 text-destructive ml-2" />
-          )}
+          {product.stock < 10 && <AlertTriangle className="h-4 w-4 text-destructive" />}
         </div>
       </TableCell>
-      <TableCell>0{product.sold}</TableCell>
-      <TableCell className="text-right">
-        <div className="flex justify-end space-x-2">
+      <TableCell className="text-muted-foreground">{product.sold || 0}</TableCell>
+      <TableCell>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onUpdateStock(product.id, product.stock + 10)}
+          disabled={product.stock >= 1000}
+          className="text-xs"
+        >
+          +10 Stock
+        </Button>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center justify-center space-x-1">
+          <Button size="sm" variant="outline" onClick={() => setIsEditing(true)} className="h-8 w-8 p-0">
+            <Pencil className="h-3 w-3" />
+          </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onUpdateStock(product.id, product.stock + 10)}
-            disabled={product.stock >= 1000}
+            onClick={handleDelete}
+            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 bg-transparent"
           >
-            Add Stock
+            <Trash className="h-3 w-3" />
           </Button>
         </div>
       </TableCell>
-      <TableCell className="text-right">
-        <div className="flex justify-end space-x-2">
-          <div className="flex justify-end space-x-2 ">
-            <Button
-              size="sm"
-              onClick={() => setIsEditing(true)}
-              className="flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition"
-            >
-              <Pencil className="w-3 h-4" />
-              Edit
-            </Button>
-
-            <Button variant="destructive" size="sm" onClick={handleDelete}>
-              <Trash className="w-2 h-4 " />
-              Delete
-            </Button>
-          </div>
-        </div>
-      </TableCell>
     </TableRow>
-  );
-};
+  )
+}
 
-export default ProductTableRow;
+export default ProductTableRow

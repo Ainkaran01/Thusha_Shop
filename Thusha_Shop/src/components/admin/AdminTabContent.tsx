@@ -41,11 +41,12 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
 }) => {
   const { user } = useUser();
   const {
-    orders,
-    
     stats,
+
+    orders,
     updateOrderStatus,
-    deleteOrder,
+    assignDelivery,
+    fetchDeliveryPersons,
     
     appointments,
     deleteAppointment,
@@ -55,12 +56,6 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
     deleteProduct,
     addProduct,
     updateProduct,
-
-    accessories,
-    updateAccessory,
-    addAccessory,
-    deleteAccessory,
-    updateAccessoryStock,
 
     customers,
     deactivateCustomer,
@@ -85,9 +80,13 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
   }, []);
 
 
-  const handleAssignDelivery = (orderId: string, deliveryPerson: string) => {
-    // Handle delivery assignment logic here
-    console.log(`Assigning order ${orderId} to ${deliveryPerson}`);
+  const handleAssignDelivery = async (orderId: number, deliveryPersonId: number) => {
+    try {
+      await assignDelivery(orderId, deliveryPersonId);
+      console.log(`Assigned order ${orderId} to delivery person ${deliveryPersonId}`);
+    } catch (error) {
+      console.error("Failed to assign delivery:", error);
+    }
   };
 
   return (
@@ -109,7 +108,6 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
         <OrdersTable
           orders={orders}
           onUpdateOrderStatus={updateOrderStatus}
-          onDeleteOrder={deleteOrder}
           onAssignDelivery={handleAssignDelivery}
         />
       </TabsContent>
@@ -121,12 +119,6 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
           onDeleteProduct={deleteProduct}
           onAddProduct={addProduct}
           onUpdateProduct={updateProduct}
-
-          accessories={accessories}
-          onUpdateAccessoryStock={updateAccessoryStock}
-          onDeleteAccessory={deleteAccessory}
-          onAddAccessory={addAccessory}
-          onUpdateAccessory={updateAccessory}
         />
       </TabsContent>
 

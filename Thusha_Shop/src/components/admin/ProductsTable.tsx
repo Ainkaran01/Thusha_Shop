@@ -1,42 +1,22 @@
-import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
-import AddProductForm from "./AddProductForm";
-import ProductTableHeader from "./ProductTableHeader";
-import ProductTableRow from "./ProductTableRow";
-import CategoryTable from "./CategoryTable";
-import FrameTypesTable from "./FrameTypeTable";
-import AccessoryTable from "./AccessoryTable";
-import { Product } from "@/types/product";
-import { Accessory } from "@/types/accessory";
-
-
+import type React from "react"
+import { useState, useMemo } from "react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { useToast } from "@/hooks/use-toast"
+import AddProductForm from "./AddProductForm"
+import ProductTableHeader from "./ProductTableHeader"
+import ProductTableRow from "./ProductTableRow"
+import CategoryTable from "./CategoryTable"
+import FrameTypesTable from "./FrameTypeTable"
+import type { Product } from "@/types/product"
 
 interface ProductsTableProps {
-  products: Product[];
-  onUpdateStock: (productId: number, newStock: number) => void;
-  onDeleteProduct: (productId: number) => void;
-  onAddProduct: (productData: FormData) => Promise<Product>;
-  onUpdateProduct: (id: number, productData: FormData) => Promise<Product>;
-
-  accessories: Accessory[];
-  onUpdateAccessoryStock: (accessoryId: number, newStock: number) => void;
-  onDeleteAccessory: (accessoryId: number) => void;
-  onAddAccessory: (accessoryData: FormData) => Promise<Accessory>;
-  onUpdateAccessory: (id: number, accessoryData: FormData) => Promise<Accessory>;
-
+  products: Product[]
+  onUpdateStock: (productId: number, newStock: number) => void
+  onDeleteProduct: (productId: number) => void
+  onAddProduct: (productData: FormData) => Promise<Product>
+  onUpdateProduct: (id: number, productData: FormData) => Promise<Product>
 }
 
 const ProductsTable: React.FC<ProductsTableProps> = ({
@@ -45,69 +25,132 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
   onDeleteProduct,
   onAddProduct,
   onUpdateProduct,
-
-  accessories,
-  onUpdateAccessoryStock,
-  onDeleteAccessory,
-  onAddAccessory,
-  onUpdateAccessory
 }) => {
-  const { toast } = useToast();
-  const [showAddForm, setShowAddForm] = useState(false);
+  const { toast } = useToast()
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
 
-  
+  // Filter products based on search term
+  const filteredProducts = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return products
+    }
+
+    const searchLower = searchTerm.toLowerCase().trim()
+    return products.filter((product) => {
+      const nameMatch = product.name.toLowerCase().includes(searchLower)
+      const categoryMatch = product.category?.name?.toLowerCase().includes(searchLower)
+      const idMatch = product.id.toString().includes(searchLower)
+
+      return nameMatch || categoryMatch || idMatch
+    })
+  }, [products, searchTerm])
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value)
+  }
+
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader className="pb-2">
-        <CardTitle>Product Management</CardTitle>
-        <CardDescription>
-          Manage your product inventory, categories, and pricing
-        </CardDescription>
+        <CardTitle className="text-2xl font-bold">Product Management</CardTitle>
+        <CardDescription className="text-base">Manage your product inventory, categories, and pricing</CardDescription>
       </CardHeader>
 
       <Tabs defaultValue="products" className="w-full">
-        <TabsList className="mx-4 mt-2">
-          <TabsTrigger value="products">Products</TabsTrigger>
-          <TabsTrigger value="categories">Categories</TabsTrigger>
-          <TabsTrigger value="frames">Frames</TabsTrigger>
-           <TabsTrigger value="accessories">Accessories</TabsTrigger>
+        <TabsList className="mx-4 mt-2 grid w-full max-w-md grid-cols-3">
+          <TabsTrigger value="products" className="text-sm font-medium">
+            Products
+          </TabsTrigger>
+          <TabsTrigger value="categories" className="text-sm font-medium">
+            Categories
+          </TabsTrigger>
+          <TabsTrigger value="frames" className="text-sm font-medium">
+            Frames
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="products">
+        <TabsContent value="products" className="mt-0">
           {showAddForm ? (
-           <AddProductForm onCancel={() => setShowAddForm(false)} />
-
+            <div className="p-4">
+              <AddProductForm onCancel={() => setShowAddForm(false)} />
+            </div>
           ) : (
             <>
-              <ProductTableHeader onAddProduct={() => setShowAddForm(true)} />
-              <CardContent>
-                <div className="rounded-md border overflow-hidden">
+              <ProductTableHeader
+                onAddProduct={() => setShowAddForm(true)}
+                searchTerm={searchTerm}
+                onSearchChange={handleSearchChange}
+              />
+              <CardContent className="pt-0">
+                {/* Search Results Info */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <Badge variant="secondary" className="text-sm">
+                      {filteredProducts.length} of {products.length} products
+                    </Badge>
+                    {searchTerm && (
+                      <Badge variant="outline" className="text-sm">
+                        Filtered by: "{searchTerm}"
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-border overflow-hidden bg-card">
                   <div className="overflow-x-auto">
                     <table className="w-full">
-                      <thead>
-                        <tr>
-                          <th className="px-4 py-2 text-left">ID</th>
-                          <th className="px-4 py-2 text-left">Product</th>
-                          <th className="px-4 py-2 text-left">Image</th>
-                          <th className="px-4 py-2 text-left">Category</th>
-                          <th className="px-4 py-2 text-left">Price</th>
-                          <th className="px-4 py-2 text-left">Stock</th>
-                          <th className="px-4 py-2 text-left">Sold</th>
-                          <th className="px-4 py-2 text-left"></th>
-                          <th className="px-4 py-2 text-center">Actions</th>
+                      <thead className="bg-muted/50">
+                        <tr className="border-b border-border">
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">ID</th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Product</th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Image</th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Category</th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Price</th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Stock</th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Sold</th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
+                            Stock Actions
+                          </th>
+                          <th className="px-4 py-3 text-center text-sm font-semibold text-muted-foreground">Actions</th>
                         </tr>
                       </thead>
-                      <tbody>
-                        {products.map((product,index) => (
-                        <ProductTableRow
-                          key={product.id}
-                          product={product}
-                          index={index}
-                          onUpdateStock={onUpdateStock}
-                          onDeleteProduct={onDeleteProduct}
-                          onUpdateProduct={onUpdateProduct}
-                        />
-                        ))}
+                      <tbody className="divide-y divide-border">
+                        {filteredProducts.length > 0 ? (
+                          filteredProducts.map((product, index) => (
+                            <ProductTableRow
+                              key={product.id}
+                              product={product}
+                              index={index}
+                              onUpdateStock={onUpdateStock}
+                              onDeleteProduct={onDeleteProduct}
+                              onUpdateProduct={onUpdateProduct}
+                            />
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={9} className="px-4 py-8 text-center">
+                              <div className="flex flex-col items-center space-y-2">
+                                <div className="text-muted-foreground text-sm">
+                                  {searchTerm ? (
+                                    <>
+                                      No products found matching "{searchTerm}"
+                                      <br />
+                                      <button
+                                        onClick={() => setSearchTerm("")}
+                                        className="text-primary hover:underline mt-1"
+                                      >
+                                        Clear search to see all products
+                                      </button>
+                                    </>
+                                  ) : (
+                                    "No products available"
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -124,19 +167,9 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
         <TabsContent value="frames">
           <FrameTypesTable />
         </TabsContent>
-
-        <TabsContent value="accessories">
-          <AccessoryTable 
-            accessories={accessories}
-            onUpdateStock={onUpdateAccessoryStock}
-            onDeleteAccessory={onDeleteAccessory}
-            onAddAccessory={onAddAccessory}
-            onUpdateAccessory={onUpdateAccessory}
-          />
-        </TabsContent>
       </Tabs>
     </Card>
-  );
-};
+  )
+}
 
-export default ProductsTable;
+export default ProductsTable

@@ -3,16 +3,9 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { OrderStatus } from "@/types";
+import { Order } from "@/api/orders";
+import { OrderStatus } from "@/api/orders";
 
-interface Order {
-  id: string;
-  customer: string;
-  amount: number;
-  status: OrderStatus;
-  date: string;
-  items: number;
-}
 
 interface RecentOrdersProps {
   orders: Order[];
@@ -41,12 +34,12 @@ const RecentOrders: React.FC<RecentOrdersProps> = ({ orders, onViewAllOrders }) 
           {orders.slice(0, 5).map((order) => (
             <div key={order.id} className="flex items-center justify-between border-b pb-2">
               <div>
-                <p className="font-medium">{order.id}</p>
-                <p className="text-sm text-muted-foreground">{order.customer}</p>
+                <p className="font-medium">{order.order_number}</p>
+                <p className="text-sm text-muted-foreground">{order.billing.name}</p>
               </div>
               <div className="text-right">
-                <p className="font-medium">${order.amount}</p>
-                <Badge variant={getOrderBadgeVariant(order.status)}>
+                <p className="font-medium">${order.total_price}</p>
+                <Badge variant={getOrderBadgeVariant(order.status as OrderStatus)}>
                   {order.status}
                 </Badge>
               </div>

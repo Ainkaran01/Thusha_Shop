@@ -249,8 +249,10 @@ const EditProductForm: React.FC<EditProductFormProps> = ({
       formDataToSend.append("stock", formData.stock);
 
       if (formData.frame_type) {
-        formDataToSend.append("frame_type_id", formData.frame_type);
-      }
+      formDataToSend.append("frame_type_id", formData.frame_type);
+    } else {
+      formDataToSend.append("frame_type_id", "");
+    }
 
       if (formData.size) {
         formDataToSend.append("size", formData.size);

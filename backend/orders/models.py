@@ -57,3 +57,17 @@ class BillingInfo(models.Model):
 
     def __str__(self):
         return f"Billing Info for Order {self.order.order_number}"
+
+
+class Delivery(models.Model):
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='delivery')
+    delivery_person = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        limit_choices_to={'role': 'delivery', 'is_active': True},
+        related_name='deliveries'
+    )
+    assigned_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Delivery for Order {self.order.order_number} to {self.delivery_person.name}"

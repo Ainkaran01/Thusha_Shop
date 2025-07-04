@@ -239,8 +239,10 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onCancel }) => {
       });
 
       if (formData.frameType) {
-        formDataToSend.append("frame_type_id", formData.frameType);
-      }
+      formDataToSend.append("frame_type_id", formData.frameType);
+    } else {
+      formDataToSend.append("frame_type_id", ""); // Explicit empty
+    }
 
       if (formData.size) {
         formDataToSend.append("size", formData.size);
