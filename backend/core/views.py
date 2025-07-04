@@ -276,35 +276,7 @@ class ProfileView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-class LogoutView(APIView):
-    permission_classes = []  # Remove authentication requirement for logout
 
-    def post(self, request):
-        refresh_token = request.data.get("refresh")
-        
-        if not refresh_token:
-            return Response(
-                {"detail": "Refresh token is required"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            return Response(
-                {"detail": "Successfully logged out"},
-                status=status.HTTP_205_RESET_CONTENT
-            )
-        except TokenError as e:
-            return Response(
-                {"detail": f"Invalid token: {str(e)}"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            return Response(
-                {"detail": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
 
 class ChangePasswordView(APIView):
     authentication_classes = [JWTAuthentication]
@@ -361,8 +333,13 @@ def verify_token(request):
     if not request.user.is_authenticated:
         return Response({'valid': False}, status=status.HTTP_401_UNAUTHORIZED)
     
+    # Generate new tokens
+    refresh = RefreshToken.for_user(request.user)
+    
     return Response({
         'valid': True,
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
         'user': {
             'id': request.user.id,
             'email': request.user.email,
@@ -475,6 +452,12 @@ def activate_user(request, user_id):
             {'error': 'User not found'},
             status=status.HTTP_404_NOT_FOUND
         )
+    
+class CustomerCountView(APIView):
+    def get(self, request):
+        count = User.objects.filter(is_active=True, role='customer').count()
+        return Response({"count": count})
+
     
     #forgot password views
 class ForgotPasswordSendOTPView(APIView):
