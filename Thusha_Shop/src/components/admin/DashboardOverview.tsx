@@ -7,6 +7,7 @@ import ProductInventory from "./ProductInventory";
 import UpcomingAppointments from "./UpcomingAppointments";
 import { DollarSign, BarChart, Users, Package } from "lucide-react";
 import { Product } from "@/types/product";
+import { Order } from "@/api/orders";
 
 interface DashboardStats {
   totalSales: number;
@@ -16,16 +17,6 @@ interface DashboardStats {
   totalOrders: number;
   conversion: number;
 }
-
-interface Order {
-  id: string;
-  customer: string;
-  amount: number;
-  status: any; // Using OrderStatus from types
-  date: string;
-  items: number;
-}
-
 
 interface Appointment {
   id: number;

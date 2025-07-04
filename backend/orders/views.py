@@ -9,8 +9,10 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
-from .models import Order
+from .models import Order, OrderItem
+from products.models import Product
 from .serializers import OrderSerializer
+from rest_framework.decorators import api_view, permission_classes
 import json
 
 
@@ -127,3 +129,141 @@ class OrderStatusUpdateView(APIView):
             from django.core.mail import send_mail
             send_mail(subject, message, from_email, recipient_list)
 
+
+# from core.permission import IsAdmin
+
+# class AdminOrderListView(APIView):
+#     permission_classes = [IsAuthenticated, IsAdmin]
+
+#     def get(self, request):
+#         orders = Order.objects.all().order_by('-created_at')
+#         serializer = OrderSerializer(orders, many=True)
+#         return Response(serializer.data)
+
+
+# class AdminOrderDetailView(APIView):
+#     permission_classes = [IsAuthenticated, IsAdmin]
+
+#     def get(self, request, order_number):
+#         order = get_object_or_404(Order, order_number=order_number)
+#         serializer = OrderSerializer(order)
+#         return Response(serializer.data)
+
+
+# class AdminOrderStatusUpdateView(APIView):
+#     permission_classes = [IsAuthenticated, IsAdmin]
+
+#     def patch(self, request, order_number):
+#         order = get_object_or_404(Order, order_number=order_number)
+#         new_status = request.data.get("status")
+
+#         valid_statuses = [choice[0] for choice in Order.ORDER_STATUS]
+#         if new_status not in valid_statuses:
+#             return Response(
+#                 {"error": f"Invalid status. Choose from {valid_statuses}"},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+
+#         order.status = new_status
+#         order.save()
+#         return Response({
+#             "message": f"Order status updated to {new_status}",
+#             "order_number": order.order_number,
+#             "status": order.status
+#         }, status=status.HTTP_200_OK)
+
+from core.permission import IsAdmin, IsManufacturer, IsDelivery
+
+def get_orders_for_user(user):
+    if user.role == "admin":
+        return Order.objects.all().order_by('-created_at')
+    
+    elif user.role == "manufacturer":
+        products = Product.objects.filter(manufacturer=user)
+        order_items = OrderItem.objects.filter(product__in=products)
+        order_ids = order_items.values_list('order_id', flat=True).distinct()
+        return Order.objects.filter(id__in=order_ids).order_by('-created_at')
+    
+    elif user.role == "delivery":
+        # Future logic: if orders are assigned to delivery user, filter by that
+        return Order.objects.all().order_by('-created_at')  # or add filter later
+
+    return Order.objects.none()
+
+
+class RoleBasedOrderListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        orders = get_orders_for_user(request.user)
+        serializer = OrderSerializer(orders, many=True)
+        return Response(serializer.data)
+    
+class RoleBasedOrderStatusUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, order_number):
+        order = get_object_or_404(Order, order_number=order_number)
+        new_status = request.data.get("status")
+
+        if new_status not in [choice[0] for choice in Order.ORDER_STATUS]:
+            return Response({"error": "Invalid status"}, status=400)
+
+        # Permission check (can improve per role)
+        if request.user.role == 'manufacturer':
+            # Only allow status change if any order item belongs to this manufacturer
+            products = Product.objects.filter(manufacturer=request.user)
+            if not OrderItem.objects.filter(order=order, product__in=products).exists():
+                return Response({"error": "Permission denied"}, status=403)
+
+        elif request.user.role == 'delivery':
+            # Add delivery logic later (e.g., check assigned delivery)
+            pass
+
+        elif request.user.role == 'admin':
+            pass  # Admin can always edit
+
+        else:
+            return Response({"error": "Permission denied"}, status=403)
+
+        order.status = new_status
+        order.save()
+        return Response({
+            "message": f"Status updated to {new_status}",
+            "order_number": order.order_number
+        })
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdmin])
+def pending_order_count(request):
+    count = Order.objects.filter(status="pending").count()
+    return Response({"pending_orders": count})        
+
+from .serializers import DeliverySerializer
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+class AssignDeliveryView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request):
+        serializer = DeliverySerializer(data=request.data)
+        if serializer.is_valid():
+            order = serializer.validated_data['order']
+            if hasattr(order, 'delivery'):
+                return Response({"error": "Delivery already assigned for this order."}, status=400)
+            delivery = serializer.save()
+            order.status = "shipped"
+            order.save()
+            return Response(DeliverySerializer(delivery).data, status=201)
+        return Response(serializer.errors, status=400)
+
+
+class ActiveDeliveryPersons(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        users = User.objects.filter(role='delivery', is_active=True)
+        data = [{'id': u.id, 'name': u.name, 'email': u.email} for u in users]
+        return Response(data, status=200)

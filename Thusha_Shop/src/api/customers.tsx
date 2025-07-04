@@ -22,3 +22,8 @@ export const deactivateCustomer = async (id: number): Promise<void> => {
 export const activateCustomer = async (id: number): Promise<void> => {
   await apiClient.patch(`${endpoint}${id}/activate/`);
 };
+
+export const fetchCustomerCount = async (): Promise<number> => {
+  const {data} = await apiClient.get(`${endpoint}count/`);
+  return data.count;
+};

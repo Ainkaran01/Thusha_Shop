@@ -256,14 +256,19 @@ const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
                       <TableCell className="py-4 text-center">
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-9 w-9 p-0 bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 border-blue-200 transition-all duration-200 rounded-lg"
+                            <span
                               onClick={() => setSelectedAppointment(apt)}
+                              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full 
+                 bg-green-100 text-green-800 border border-green-200 
+                 hover:bg-green-200 hover:text-green-900 
+                 active:bg-green-300 active:text-green-900 
+                 active:border-yellow-400 focus:ring-3 focus:ring-yellow-300 
+                 hover:border-yellow-400 focus:ring-3 focus:ring-yellow-300
+                 cursor-pointer transition-all duration-150 outline-none"
                             >
-                              <Eye className="h-4 w-4" />
-                            </Button>
+                              <Eye className="h-3.5 w-3.5" />
+                              View
+                            </span>
                           </DialogTrigger>
                           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto rounded-lg shadow-xl bg-white border">
                             <DialogHeader className="pb-4 border-b">

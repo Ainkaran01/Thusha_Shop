@@ -2,7 +2,7 @@
 from django.urls import path
 from .views import RegisterView, VerifyOTPView, ResendOTPView,  LoginView,ProfileView,LogoutView,ChangePasswordView,verify_token ,get_active_users_by_role, deactivate_user,activate_user
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import ForgotPasswordSendOTPView,ForgotPasswordVerifyOTPView,ForgotPasswordResetView
+from .views import ForgotPasswordSendOTPView,ForgotPasswordVerifyOTPView,ForgotPasswordResetView,CustomerCountView
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('verify-otp/', VerifyOTPView.as_view(), name='verify-otp'),
@@ -21,4 +21,5 @@ urlpatterns = [
     path('users/', get_active_users_by_role, name='get_active_users'),
     path('users/<int:user_id>/deactivate/', deactivate_user, name='deactivate_user'),
     path('users/<int:user_id>/activate/', activate_user, name='activate_user'),
+     path("users/count/", CustomerCountView.as_view(), name="customer-count"),
 ]

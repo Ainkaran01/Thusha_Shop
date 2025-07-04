@@ -1,7 +1,10 @@
 from rest_framework import serializers
-from .models import Order, OrderItem, BillingInfo
+from .models import Order, OrderItem, BillingInfo, Delivery
 from products.models import Product
 from decimal import Decimal
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class BillingInfoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -44,6 +47,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
     billing = BillingInfoSerializer()
+    assigned_delivery_person = serializers.SerializerMethodField()
     order_number = serializers.CharField(required=True)
 
     class Meta:
@@ -58,13 +62,20 @@ class OrderSerializer(serializers.ModelSerializer):
             'status',
             'items',
             'billing',
-            'created_at'
+            'created_at',
+            'assigned_delivery_person',
         ]
         read_only_fields = ['created_at', 'status']
         extra_kwargs = {
             'user': {'required': False},
             'total_price': {'min_value': Decimal('0.01')}
         }
+    
+    def get_assigned_delivery_person(self, obj):
+        if hasattr(obj, "delivery") and obj.delivery and obj.delivery.delivery_person:
+            return obj.delivery.delivery_person.name
+        return None
+
 
     def validate(self, data):
         # Additional validation for items
@@ -108,3 +119,15 @@ class OrderSerializer(serializers.ModelSerializer):
         OrderItem.objects.bulk_create(order_items)
         
         return order
+    
+class DeliverySerializer(serializers.ModelSerializer):
+    delivery_person = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.filter(role='delivery', is_active=True)
+    )
+    order_id = serializers.PrimaryKeyRelatedField(queryset=Order.objects.all(), source='order')
+    delivery_person_name = serializers.CharField(source='delivery_person.name', read_only=True)
+
+    class Meta:
+        model = Delivery
+        fields = ['id', 'order_id', 'delivery_person', 'delivery_person_name', 'assigned_at']
+        read_only_fields = ['assigned_at']

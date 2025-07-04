@@ -476,6 +476,12 @@ def activate_user(request, user_id):
             status=status.HTTP_404_NOT_FOUND
         )
     
+class CustomerCountView(APIView):
+    def get(self, request):
+        count = User.objects.filter(is_active=True, role='customer').count()
+        return Response({"count": count})
+
+    
     #forgot password views
 class ForgotPasswordSendOTPView(APIView):
     def post(self, request):
