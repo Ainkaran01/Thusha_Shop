@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardFooter } from "@/components/ui/card";
@@ -7,22 +7,54 @@ import OrderComplete from "@/components/checkout/OrderComplete";
 import CheckoutSummary from "@/components/checkout/CheckoutSummary";
 import { useCheckoutLogic } from "@/hooks/useCheckoutLogic";
 import { useCart } from "@/context/CartContext";
+import { useNavigate } from "react-router-dom";
 
 const LENS_OPTIONS = {
   standard: [
-    { id: "basic", name: "Basic", price: 50, description: "Standard lenses with no additional features" },
-    { id: "antiBlue", name: "Anti-Blue Light", price: 95, description: "Lenses with blue light filtering technology" },
-    { id: "premium", name: "Premium", price: 150, description: "High-quality lenses with advanced features" },
+    {
+      id: "basic",
+      name: "Basic",
+      price: 50,
+      description: "Standard lenses with no additional features",
+    },
+    {
+      id: "antiBlue",
+      name: "Anti-Blue Light",
+      price: 95,
+      description: "Lenses with blue light filtering technology",
+    },
+    {
+      id: "premium",
+      name: "Premium",
+      price: 150,
+      description: "High-quality lenses with advanced features",
+    },
   ],
   prescription: [
-    { id: "basicRx", name: "Basic Powered", price: 100, description: "Standard prescription lenses" },
-    { id: "antiBlueRx", name: "Anti-Blue Light Powered", price: 145, description: "Prescription lenses with blue light filtering" },
-    { id: "premiumRx", name: "Premium Powered", price: 200, description: "High-quality prescription lenses with all features" },
+    {
+      id: "basicRx",
+      name: "Basic Powered",
+      price: 100,
+      description: "Standard prescription lenses",
+    },
+    {
+      id: "antiBlueRx",
+      name: "Anti-Blue Light Powered",
+      price: 145,
+      description: "Prescription lenses with blue light filtering",
+    },
+    {
+      id: "premiumRx",
+      name: "Premium Powered",
+      price: 200,
+      description: "High-quality prescription lenses with all features",
+    },
   ],
 };
 
 const Checkout = () => {
-  const { cartItems } = useCart();
+  const { cartItems, clearCart } = useCart();
+  const navigate = useNavigate();
 
   const {
     currentStep,
@@ -47,48 +79,70 @@ const Checkout = () => {
     handlePaymentSuccess,
   } = useCheckoutLogic();
 
-  const goToOrderTracking = () => window.location.href = "/order-tracking";
-
-  const handleBillingInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setBillingInfo(prev => ({ ...prev, [name]: value }));
+  const goToOrderTracking = () => {
+    clearCart();
+    window.location.href = "/order-tracking";
   };
 
-  const handleSameAsBillingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleContinueShopping = () => {
+    clearCart();
+    navigate("/catalog");
+  };
+
+  const handleBillingInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { name, value } = e.target;
+  setBillingInfo((prev) => {
+    const updated = { ...prev, [name]: value };
+    console.log("Updated billingInfo:", updated);
+    return updated;
+  });
+};
+
+
+  const handleSameAsBillingChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setSameAsBilling(e.target.checked);
   };
 
-  const handleLensTypeSelect = (productId: number, lensType: "standard" | "prescription") => {
+  const handleLensTypeSelect = (
+    productId: number,
+    lensType: "standard" | "prescription"
+  ) => {
     const defaultOption = LENS_OPTIONS[lensType][0];
     updateLensOption(productId, {
       type: lensType,
       option: defaultOption.name,
-      price: defaultOption.price
+      price: defaultOption.price,
     });
   };
 
-  const handleLensOptionSelect = (productId: number, lensType: "standard" | "prescription", optionId: string) => {
-    const option = LENS_OPTIONS[lensType].find(opt => opt.id === optionId);
+  const handleLensOptionSelect = (
+    productId: number,
+    lensType: "standard" | "prescription",
+    optionId: string
+  ) => {
+    const option = LENS_OPTIONS[lensType].find((opt) => opt.id === optionId);
     if (option) {
       updateLensOption(productId, {
         type: lensType,
         option: option.name,
-        price: option.price
+        price: option.price,
       });
     }
   };
 
   const handlePrescriptionVerified = (id: string) => {
-    // Handle prescription verification
     nextStep();
   };
 
   const handleSkipPrescription = () => {
-    // Handle skipping prescription
     nextStep();
   };
 
-  const eyeglassesItems = cartItems.filter(item => item.product.category.name === "Eyeglasses");
+  const eyeglassesItems = cartItems.filter(
+    (item) => item.product.category.name === "Eyeglasses"
+  );
   const hasEyeglasses = eyeglassesItems.length > 0;
   const totalSteps = hasEyeglasses ? 5 : 3;
 
@@ -103,6 +157,7 @@ const Checkout = () => {
         tax={tax}
         orderTotal={orderTotal}
         onTrackOrder={goToOrderTracking}
+        onContinueShopping={handleContinueShopping}
       />
     );
   }
@@ -145,8 +200,8 @@ const Checkout = () => {
                 Next <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             ) : (
-              <Button onClick={nextStep} className="flex items-center">
-                Proceed to Payment <ArrowRight className="ml-2 h-4 w-4" />
+              <Button onClick={() => handlePaymentSuccess()}>
+                Proceed to Payment
               </Button>
             )}
           </CardFooter>

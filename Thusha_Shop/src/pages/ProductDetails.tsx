@@ -16,22 +16,21 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Product } from "@/types";
+import { Product } from "@/types/product";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { toast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
 import ProductReviews from "@/components/ProductReviews";
 import RelatedProducts from "@/components/RelatedProducts";
-import LensSelector from "@/components/LensSelector";
 import VirtualTryOn from "@/components/VirtualTryOn";
-import AccessoriesSection from "@/components/AccessoriesSection";
 import { useMemo } from "react";
 import { Review } from "@/types/review";
+import { useUser } from "@/context/UserContext";
 // Extend Product type for cart items
 interface CartProduct extends Product {
   quantity: number;
-  selectedLens?: any;
+ 
 }
 
 const API_BASE_URL = "http://localhost:8000/api";
@@ -48,7 +47,6 @@ const ProductDetails = () => {
   const [showVirtualTryOn, setShowVirtualTryOn] = useState(false);
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist, removeFromWishlist } = useWishlist();
-
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -86,15 +84,13 @@ const ProductDetails = () => {
     }
   }, [id, navigate]);
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addToCart(product);
-    toast({
-      title: "Added to Cart",
-      description: `${product.name} has been added to your cart.`,
-    });
-  };
+  const handleAddToCart = () => {
+  if (product) {
+    addToCart(product, quantity); 
+  }
+};
+
+
 
   const handleQuantityChange = (value: number) => {
     if (value >= 1) {
@@ -257,69 +253,74 @@ const ProductDetails = () => {
             <p className="text-muted-foreground mb-6">{product.description}</p>
           </div>
 
-          <div className="space-y-4 mb-6">
-            {product.frameType && (
-              <div className="flex justify-between">
-                <span className="font-medium">Frame Type:</span>
-                <span className="capitalize">{product.frameType}</span>
-              </div>
-            )}
-            {product.frameMaterial && (
-              <div className="flex justify-between">
-                <span className="font-medium">Material:</span>
-                <span className="capitalize">{product.frameMaterial}</span>
-              </div>
-            )}
-            {product.color && (
-              <div className="flex justify-between">
-                <span className="font-medium">Color:</span>
-                <span className="capitalize">{product.color}</span>
-              </div>
-            )}
-            {(product.recommendedFaceShapes?.length ||
-              product.recommendedVisionProblems?.length) && (
-              <div className="flex justify-between">
-                <span className="font-medium">Recommended For:</span>
-                <div className="text-right">
-                  {product.recommendedFaceShapes?.length ? (
-                    <div>
-                      {product.recommendedFaceShapes.map((shape, index) => (
-                        <Badge
-                          key={shape}
-                          variant="outline"
-                          className="capitalize mr-1 mb-1"
-                        >
-                          {shape}{" "}
-                          {index < product.recommendedFaceShapes.length - 1
-                            ? ""
-                            : ""}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : null}
-                  {product.recommendedVisionProblems?.length ? (
-                    <div className="mt-1">
-                      {product.recommendedVisionProblems.map(
-                        (problem, index) => (
-                          <Badge
-                            key={problem}
-                            variant="outline"
-                            className="capitalize mr-1"
-                          >
-                            {problem}{" "}
-                            {index <
-                            product.recommendedVisionProblems.length - 1
-                              ? ""
-                              : ""}
-                          </Badge>
-                        )
-                      )}
-                    </div>
-                  ) : null}
+          {product.category.name === "Eyeglasses" && (
+            <div className="space-y-4 mb-6">
+              {product.frame_type && (
+                <div className="flex justify-between">
+                  <span className="font-medium">Frame Type:</span>
+                  <span className="capitalize">{product.frame_type.name}</span>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+              {product.frame_material && (
+                <div className="flex justify-between">
+                  <span className="font-medium">Material:</span>
+                  <span className="capitalize">{product.frame_material}</span>
+                </div>
+              )}
+              {product.colors && (
+                <div className="flex justify-between">
+                  <span className="font-medium">Color:</span>
+                  <span className="capitalize">{product.colors}</span>
+                </div>
+              )}
+              {product.size && (
+                <div className="flex justify-between">
+                  <span className="font-medium">Size:</span>
+                  <span className="capitalize">{product.size}</span>
+                </div>
+              )}
+               {product.weight && (
+                <div className="flex justify-between">
+                  <span className="font-medium">Weight:</span>
+                  <span className="capitalize">{product.weight}</span>
+                </div>
+              )}
+              {(product.face_shapes?.length ||
+                product.vision_problems?.length) && (
+                <div className="flex justify-between">
+                  <span className="font-medium">Recommended For:</span>
+                  <div className="text-right">
+                    {product.face_shapes?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 justify-end">
+                        {product.face_shapes.map((shape) => (
+                          <Badge
+                            key={shape}
+                            variant="outline"
+                            className="capitalize"
+                          >
+                            {shape}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    {product.vision_problems?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 justify-end mt-1">
+                        {product.vision_problems.map((vp) => (
+                          <Badge
+                            key={vp}
+                            variant="outline"
+                            className="capitalize"
+                          >
+                            {vp}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <Separator className="my-6" />
 
@@ -345,7 +346,7 @@ const ProductDetails = () => {
                   disabled={
                     "stock" in product
                       ? product.stock <= quantity
-                      : !product.inStock
+                      : !product.stock
                   }
                   className="h-10 px-3"
                 >
@@ -363,7 +364,7 @@ const ProductDetails = () => {
                     ) : (
                       <span className="text-red-600">Out of Stock</span>
                     )
-                  ) : product.inStock ? (
+                  ) : product.stock ? (
                     <span className="text-green-600 flex items-center">
                       <Check className="h-4 w-4 mr-1" /> In Stock
                     </span>
@@ -378,7 +379,7 @@ const ProductDetails = () => {
               <Button
                 onClick={handleAddToCart}
                 disabled={
-                  "stock" in product ? product.stock <= 0 : !product.inStock
+                  "stock" in product ? product.stock <= 0 : !product.stock
                 }
                 className="flex-1"
                 size="lg"
@@ -406,8 +407,15 @@ const ProductDetails = () => {
             </div>
           </div>
 
-          {/* Virtual Try-On Button */}
-          {product.frameType && (
+          {showVirtualTryOn && (
+            <VirtualTryOn
+              product={product}
+              onClose={() => setShowVirtualTryOn(false)}
+              isOpen={true} // Changed from false to true
+            />
+          )}
+
+          {product.category.name === "Eyeglasses" && (
             <div className="mb-6">
               <Button
                 onClick={() => setShowVirtualTryOn(true)}
@@ -420,7 +428,6 @@ const ProductDetails = () => {
               </Button>
             </div>
           )}
-
           {/* Product Benefits */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="flex items-center">
@@ -528,66 +535,77 @@ const ProductDetails = () => {
           <TabsContent value="details" className="p-4">
             <div>
               <h3 className="text-xl font-semibold mb-4">Product Details</h3>
+
+              {/* Always show product description */}
               <p className="mb-4">{product.description}</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <h4 className="font-medium mb-2">Specifications</h4>
-                  <ul className="space-y-2">
-                    {product.frameType && (
+
+              {/* Only show this part for Eyeglasses */}
+              {product.category.name === "Eyeglasses" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div>
+                    <h4 className="font-medium mb-2">Specifications</h4>
+                    <ul className="space-y-2">
+                      {product.frame_type && (
+                        <li>
+                          <strong>Frame Type:</strong> {product.frame_type.name}
+                        </li>
+                      )}
+                      {product.frame_material && (
+                        <li>
+                          <strong>Frame Material:</strong>{" "}
+                          {product.frame_material}
+                        </li>
+                      )}
+                      {product.colors && (
+                        <li>
+                          <strong>Color:</strong> {product.colors}
+                        </li>
+                      )}
                       <li>
-                        <strong>Frame Type:</strong> {product.frameType}
+                        <strong>UV Protection:</strong> Yes
                       </li>
-                    )}
-                    {product.frameMaterial && (
                       <li>
-                        <strong>Frame Material:</strong> {product.frameMaterial}
+                        <strong>Prescription Compatible:</strong> Yes
                       </li>
-                    )}
-                    {product.color && (
-                      <li>
-                        <strong>Color:</strong> {product.color}
-                      </li>
-                    )}
-                    <li>
-                      <strong>UV Protection:</strong> Yes
-                    </li>
-                    <li>
-                      <strong>Prescription Compatible:</strong> Yes
-                    </li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">Recommended For</h4>
-                  {product.face_shapes?.length ? (
-                    <div className="mb-4">
-                      <p className="font-medium">Face Shapes:</p>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {product.face_shapes.map((shape) => (
-                          <Badge key={shape} className="capitalize">
-                            {shape}
-                          </Badge>
-                        ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-2">Recommended For</h4>
+                    {product.face_shapes?.length > 0 && (
+                      <div className="mb-4">
+                        <p className="font-medium">Face Shapes:</p>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {product.face_shapes.map((shape) => (
+                            <Badge key={shape} className="capitalize">
+                              {shape}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ) : null}
-                  {product.vision_problems?.length ? (
-                    <div>
-                      <p className="font-medium">Vision Problems:</p>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {product.vision_problems.map((problem) => (
-                          <Badge key={problem} className="capitalize">
-                            {problem}
-                          </Badge>
-                        ))}
+                    )}
+                    {product.vision_problems?.length > 0 && (
+                      <div>
+                        <p className="font-medium">Vision Problems:</p>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {product.vision_problems.map((problem) => (
+                            <Badge key={problem} className="capitalize">
+                              {problem}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ) : null}
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </TabsContent>
           <TabsContent value="reviews" className="p-4">
-            <ProductReviews productId={product.id} reviews={productReviews} setReviews={setProductReviews} />
+            <ProductReviews
+              productId={product.id}
+              reviews={productReviews}
+              setReviews={setProductReviews}
+            />
           </TabsContent>
           <TabsContent value="shipping" className="p-4">
             <div>
@@ -646,44 +664,32 @@ const ProductDetails = () => {
         </Tabs>
       </div>
 
-      {/* Accessories Section - Only show for eyeglasses */}
-      {product.category === "eyeglasses" && (
-        <div className="mb-16">
-          <h2 className="text-2xl font-bold mb-6">Complete Your Eyewear</h2>
-          <AccessoriesSection />
-        </div>
-      )}
-
       {/* Related Products - Enhanced with category-specific recommendations */}
       <div className="mb-16">
-        {product.category === "eyeglasses" && (
+        {product.category.name === "Eyeglasses" && (
           <>
             <RelatedProducts
               currentProductId={product.id}
-              category="eyeglasses"
+              currentProduct={product}
+              category={product.category.name}
             />
-            <div className="mt-12">
-              <h2 className="text-2xl font-bold mb-6">Essential Accessories</h2>
-              <RelatedProducts
-                currentProductId={product.id}
-                category="accessories"
-              />
-            </div>
           </>
         )}
 
-        {product.category === "sunglasses" && (
+        {product.category.name === "sunglasses" && (
           <RelatedProducts
             currentProductId={product.id}
-            category="sunglasses"
+            currentProduct={product}
+            category={product.category.name}
           />
         )}
 
-        {product.category === "accessories" && (
+        {product.category.name === "accessories" && (
           <>
             <RelatedProducts
               currentProductId={product.id}
-              category="accessories"
+              currentProduct={product}
+              category={product.category.name}
             />
             <div className="mt-12">
               <h2 className="text-2xl font-bold mb-6">
@@ -691,7 +697,8 @@ const ProductDetails = () => {
               </h2>
               <RelatedProducts
                 currentProductId={product.id}
-                category="eyeglasses"
+                currentProduct={product}
+                category={product.category.name}
               />
             </div>
           </>

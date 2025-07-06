@@ -16,19 +16,9 @@ const CartItem: React.FC<CartItemProps> = ({
   onQuantityChange,
   onRemoveItem,
 }) => {
-  const product = item?.product;
-
-  if (!product) {
-    return (
-      <div className="p-4 border rounded-md text-sm text-red-500">
-        ⚠️ Product information not available.
-      </div>
-    );
-  }
-
   return (
     <motion.div
-      key={product.id}
+      key={item.product.id}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
@@ -40,24 +30,21 @@ const CartItem: React.FC<CartItemProps> = ({
         <div className="flex items-start">
           <div className="w-20 h-20 mr-4 flex-shrink-0">
             <img
-              src={product.images?.[0] || "/placeholder.jpg"}
-              alt={product.name || "Unnamed Product"}
+              src={item.product.images[0]}
+              alt={item.product.name}
               className="w-full h-full object-cover rounded-md"
             />
           </div>
           <div className="flex-1">
             <Link
-              to={`/product/${product.id}`}
+              to={`/product/${item.product.id}`}
               className="font-medium hover:underline mb-1 block"
             >
-              {product.name || "Unnamed Product"}
+              {item.product.name}
             </Link>
             <p className="text-sm text-muted-foreground mb-2">
-              {product.frame_type?.name || "Unknown Type"},{" "}
-              {product.frame_material || "Unknown Material"},{" "}
-              {Array.isArray(product.colors)
-                ? product.colors.join(", ")
-                : product.colors || "No colors"}
+              {item.product.frame_type.name}, {item.product.frame_material},
+              {item.product.colors}
             </p>
 
             {/* Prescription lens option */}
@@ -70,6 +57,7 @@ const CartItem: React.FC<CartItemProps> = ({
                     : "Standard Lens"}
                   : {item.lensOption.option}
                 </div>
+
                 {item.lensOption.type === "prescription" &&
                   item.lensOption.prescriptionId && (
                     <div className="text-xs text-muted-foreground pl-5">
@@ -85,7 +73,7 @@ const CartItem: React.FC<CartItemProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onRemoveItem(product.id)}
+              onClick={() => onRemoveItem(item.product.id)}
               className="text-destructive hover:text-destructive/90 p-0 h-auto text-xs flex items-center"
             >
               <Trash2 className="h-3 w-3 mr-1" /> Remove
@@ -98,7 +86,7 @@ const CartItem: React.FC<CartItemProps> = ({
       <div className="md:col-span-2 flex justify-between md:block">
         <span className="md:hidden text-sm text-muted-foreground">Price:</span>
         <span className="text-center block w-full">
-          LKR {Number(product.price).toFixed(2)}
+          LKR {Number(item.product.price).toFixed(2)}
         </span>
       </div>
 
@@ -111,9 +99,7 @@ const CartItem: React.FC<CartItemProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() =>
-              onQuantityChange(product.id, Math.max(1, item.quantity - 1))
-            }
+            onClick={() => onQuantityChange(item.product.id, item.quantity - 1)}
             disabled={item.quantity <= 1}
             className="h-8 w-8 p-0"
           >
@@ -123,7 +109,7 @@ const CartItem: React.FC<CartItemProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onQuantityChange(product.id, item.quantity + 1)}
+            onClick={() => onQuantityChange(item.product.id, item.quantity + 1)}
             className="h-8 w-8 p-0"
           >
             <Plus className="h-3 w-3" />
@@ -135,7 +121,7 @@ const CartItem: React.FC<CartItemProps> = ({
       <div className="md:col-span-2 flex justify-between md:block">
         <span className="md:hidden text-sm text-muted-foreground">Total:</span>
         <div className="text-right font-semibold block w-full">
-          LKR {(Number(product.price) * item.quantity).toFixed(2)}
+          LKR {(item.product.price * item.quantity).toFixed(2)}
           {item.lensOption && (
             <div className="text-xs text-muted-foreground">
               + LKR{(item.lensOption.price * item.quantity).toFixed(2)} (lens)
