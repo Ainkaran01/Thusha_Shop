@@ -1,10 +1,11 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star, Heart, ShoppingCart } from "lucide-react";
-import { Product } from "@/types";
+import { Product } from "@/types/product";
+import { Review } from "@/types/review";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 
@@ -12,9 +13,45 @@ interface ProductCardProps {
   product: Product;
 }
 
+const API_BASE_URL = "http://localhost:8000/api"; // Change to your actual API base URL
+
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+
+  const [productReviews, setProductReviews] = useState<Review[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch reviews after component mounts
+  useEffect(() => {
+    async function fetchReviews() {
+      setLoadingReviews(true);
+      setError(null);
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/products/${product.id}/reviews/`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch reviews: ${response.statusText}`);
+        }
+        const data: Review[] = await response.json();
+        setProductReviews(data);
+      } catch (err: any) {
+        setError(err.message || "Unknown error");
+      } finally {
+        setLoadingReviews(false);
+      }
+    }
+
+    fetchReviews();
+  }, [product.id]);
+
+  // Calculate average rating and review count from fetched reviews
+  const reviewCount = productReviews.length;
+  const averageRating =
+    reviewCount > 0
+      ? productReviews.reduce((acc, r) => acc + r.rating, 0) / reviewCount
+      : 0;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -32,11 +69,25 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
   };
 
-  // Check if product is out of stock (stock < 1)
-const isOutOfStock =
-  typeof product.stock === 'number'
-    ? product.stock < 1
-    : !product.inStock;
+  const isOutOfStock =
+    typeof product.stock === "number" ? product.stock < 1 : !product.stock;
+
+  // Render stars for average rating
+  const MAX_STARS = 5;
+  const renderStars = (rating: number) => {
+    const stars = [];
+    for (let i = 1; i <= MAX_STARS; i++) {
+      stars.push(
+        <Star
+          key={i}
+          className={`h-4 w-4 ${
+            i <= Math.round(rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+          }`}
+        />
+      );
+    }
+    return stars;
+  };
 
   return (
     <Link to={`/product/${product.id}`}>
@@ -58,24 +109,25 @@ const isOutOfStock =
             className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={handleWishlistToggle}
           >
-            <Heart 
-              className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`} 
+            <Heart
+              className={`h-4 w-4 ${isInWishlist(product.id) ? "fill-red-500 text-red-500" : ""}`}
             />
           </Button>
         </div>
         <CardContent className="p-4">
           <div className="space-y-2">
             <h3 className="font-semibold text-lg line-clamp-1">{product.name}</h3>
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {product.description}
-            </p>
+            <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>
+
             <div className="flex items-center gap-1">
-              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm">{product.ratings}</span>
-              <span className="text-sm text-muted-foreground">
-                ({product.reviewCount} reviews)
-              </span>
+              {renderStars(averageRating)}
+              <span className="text-sm">{averageRating.toFixed(1)}</span>
+              <span className="text-sm text-muted-foreground">({reviewCount} reviews)</span>
             </div>
+
+            {loadingReviews && <p className="text-xs text-muted-foreground">Loading reviews...</p>}
+            {error && <p className="text-xs text-destructive">{error}</p>}
+
             <div className="flex items-center justify-between">
               <span className="text-xl font-bold">LKR {product.price}</span>
               {!isOutOfStock && (
