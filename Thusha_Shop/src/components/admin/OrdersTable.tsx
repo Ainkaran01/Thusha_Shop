@@ -33,16 +33,41 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
 import type { Order, OrderStatus } from "@/api/orders";
-import { Truck, User, Search, Eye, X } from "lucide-react";
+import {
+  Truck,
+  User,
+  Search,
+  Eye,
+  X,
+  Package,
+  CheckCircle,
+  Filter,
+  Clock,
+} from "lucide-react";
 import { format } from "date-fns";
 import { useAdminDashboard } from "@/context/AdminDashboardContext";
+import { useToast } from "@/components/ui/use-toast";
 
 interface OrdersTableProps {
   orders: Order[];
-  onUpdateOrderStatus: (orderNumber: string, newStatus: OrderStatus) => void;
-  onAssignDelivery: (orderId: number, deliveryPerson: number) => void;
+  onUpdateOrderStatus: (
+    orderNumber: string,
+    newStatus: OrderStatus
+  ) => Promise<void>;
+  onAssignDelivery: (orderId: number, deliveryPerson: number) => Promise<void>;
 }
 
 const OrdersTable: React.FC<OrdersTableProps> = ({
@@ -51,6 +76,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   onAssignDelivery,
 }) => {
   const { fetchDeliveryPersons } = useAdminDashboard();
+  const { toast } = useToast();
   const [selectedOrder, setSelectedOrder] = useState<number | null>(null);
   const [deliveryPerson, setDeliveryPerson] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -59,6 +85,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   const [deliveryPersonnel, setDeliveryPersonnel] = useState<
     { id: number; name: string; email: string }[]
   >([]);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   useEffect(() => {
     const loadDeliveryPersonnel = async () => {
@@ -93,6 +120,32 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
     });
   }, [orders, searchTerm, statusFilter]);
 
+  const getStatusIcon = (status: OrderStatus) => {
+    switch (status) {
+      case "pending":
+        return <Clock className="h-4 w-4" />;
+      case "processing":
+        return <Package className="h-4 w-4" />;
+      default:
+        return <Clock className="h-4 w-4" />;
+    }
+  };
+
+  const getStatusColor = (status: OrderStatus) => {
+    switch (status) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "processing":
+        return "bg-blue-100 text-blue-800";
+      case "shipped":
+        return "bg-green-100 text-green-800";
+      case "delivered":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
   const getOrderBadgeVariant = (status: OrderStatus) => {
     switch (status) {
       case "delivered":
@@ -110,11 +163,45 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
     }
   };
 
-  const handleAssignDelivery = () => {
+  const handleAssignDelivery = async () => {
     if (selectedOrder && deliveryPerson) {
-      onAssignDelivery(selectedOrder, parseInt(deliveryPerson));
-      setSelectedOrder(null);
-      setDeliveryPerson("");
+      try {
+        await onAssignDelivery(selectedOrder, parseInt(deliveryPerson));
+        setSelectedOrder(null);
+        setDeliveryPerson("");
+        toast({
+          title: "Delivery assigned",
+          description: "The delivery person has been assigned successfully.",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to assign delivery person.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleStatusUpdate = async (
+    orderNumber: string,
+    newStatus: OrderStatus
+  ) => {
+    setIsUpdatingStatus(true);
+    try {
+      await onUpdateOrderStatus(orderNumber, newStatus);
+      toast({
+        title: "Status updated",
+        description: `Order status has been changed to ${newStatus}.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update order status.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -208,11 +295,14 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                       <TableCell>{countItems(order)}</TableCell>
                       <TableCell>
                         <Badge
-                          variant={getOrderBadgeVariant(
+                          className={`${getStatusColor(
                             order.status as OrderStatus
-                          )}
+                          )} font-medium`}
                         >
-                          {order.status.replace("_", " ")}
+                          {getStatusIcon(order.status as OrderStatus)}
+                          <span className="ml-2 capitalize">
+                            {order.status.replace("_", " ")}
+                          </span>
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -232,65 +322,158 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                       <TableCell>{formatDate(order.created_at)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex gap-2 justify-end">
-                          {order.status === "processing" && (
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  onClick={() => setSelectedOrder(order.id)}
-                                >
-                                  <Truck className="h-4 w-4 mr-1" />
-                                  Assign
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-md">
-                                <DialogHeader>
-                                  <DialogTitle>
-                                    Assign Delivery Person
-                                  </DialogTitle>
-                                </DialogHeader>
-                                <div className="space-y-4">
-                                  <div>
-                                    <Label>Order : {order.order_number}</Label>
-                                    <p className="text-sm text-muted-foreground truncate">
-                                      Customer:{" "}
-                                      {order.billing?.name || "Unknown"}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <Label htmlFor="delivery-person">
-                                      Select Delivery Person
-                                    </Label>
-                                    <Select
-                                      value={deliveryPerson}
-                                      onValueChange={setDeliveryPerson}
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Choose delivery person" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {deliveryPersonnel.map((person) => (
-                                          <SelectItem
-                                            key={person.id}
-                                            value={person.id.toString()}
-                                          >
-                                            {person.name} ({person.email})
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
+                          {order.status === "processing" &&
+                            order.delivery_option === "home" && (
+                              <Dialog>
+                                <DialogTrigger asChild>
                                   <Button
-                                    onClick={handleAssignDelivery}
-                                    disabled={!deliveryPerson}
-                                    className="w-full"
+                                    size="sm"
+                                    onClick={() => setSelectedOrder(order.id)}
                                   >
-                                    Assign and Mark as Shipped
+                                    <Truck className="h-4 w-4 mr-1" />
+                                    Assign
                                   </Button>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
-                          )}
+                                </DialogTrigger>
+                                <DialogContent className="max-w-md">
+                                  <DialogHeader>
+                                    <DialogTitle>
+                                      Assign Delivery Person
+                                    </DialogTitle>
+                                  </DialogHeader>
+                                  <div className="space-y-4">
+                                    <div>
+                                      <Label>
+                                        Order : {order.order_number}
+                                      </Label>
+                                      <p className="text-sm text-muted-foreground truncate">
+                                        Customer:{" "}
+                                        {order.billing?.name || "Unknown"}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="delivery-person">
+                                        Select Delivery Person
+                                      </Label>
+                                      <Select
+                                        value={deliveryPerson}
+                                        onValueChange={setDeliveryPerson}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Choose delivery person" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {deliveryPersonnel.map((person) => (
+                                            <SelectItem
+                                              key={person.id}
+                                              value={person.id.toString()}
+                                            >
+                                              {person.name} ({person.email})
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <Button
+                                      onClick={handleAssignDelivery}
+                                      disabled={!deliveryPerson}
+                                      className="w-full"
+                                    >
+                                      Assign and Mark as Shipped
+                                    </Button>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                            )}
+
+                          {order.status === "processing" &&
+                            order.delivery_option === "pickup" && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    className="bg-blue-600 text-white hover:bg-blue-700"
+                                    disabled={isUpdatingStatus}
+                                  >
+                                    <Package className="h-4 w-4 mr-1" />
+                                    {isUpdatingStatus
+                                      ? "Updating..."
+                                      : "Ready"}
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Confirm Ready for Pickup
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to mark this order
+                                      as ready for pickup? The customer will be
+                                      notified.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() =>
+                                        handleStatusUpdate(
+                                          order.order_number,
+                                          "shipped"
+                                        )
+                                      }
+                                    >
+                                      Confirm
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
+
+                          {order.status === "shipped" &&
+                            order.delivery_option === "pickup" && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    className="bg-green-600 text-white hover:bg-green-700"
+                                    disabled={isUpdatingStatus}
+                                  >
+                                    <CheckCircle className="h-4 w-4 mr-1" />
+                                    {isUpdatingStatus
+                                      ? "Updating..."
+                                      : "Pick Up"}
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Confirm Pickup
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure the customer picked up the
+                                      order? This will mark the order as
+                                      delivered.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() =>
+                                        handleStatusUpdate(
+                                          order.order_number,
+                                          "delivered"
+                                        )
+                                      }
+                                    >
+                                      Confirm
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
 
                           <Button
                             size="sm"
@@ -414,7 +597,10 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                 <Card className="shadow-sm">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base">
-                      Shipping Address
+                      {viewOrder.delivery_option === "home"
+                        ? "Shipping"
+                        : "Pickup"}{" "}
+                      Address
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -551,60 +737,116 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                 </CardContent>
               </Card>
 
-              {/* Delivery Assignment (if processing) */}
-              {viewOrder.status === "processing" && (
-                <Card className="shadow-sm border-orange-200 bg-orange-50/50">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base text-orange-800">
-                      Delivery Assignment
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
-                      <div className="flex-1 space-y-2">
-                        <Label htmlFor="delivery-assignment">
-                          Select Delivery Person
-                        </Label>
-                        <Select
-                          value={deliveryPerson}
-                          onValueChange={setDeliveryPerson}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Choose delivery person" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {deliveryPersonnel.map((person) => (
-                              <SelectItem
-                                key={person.id}
-                                value={person.id.toString()}
-                              >
-                                {person.name} ({person.email})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+              {/* Status Update Actions */}
+              {viewOrder.status === "processing" &&
+                viewOrder.delivery_option === "pickup" && (
+                  <Card className="shadow-sm border-blue-200 bg-blue-50/50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base text-blue-800">
+                        Order Ready for Pickup
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
                       <Button
-                        onClick={() => {
-                          if (deliveryPerson) {
-                            onAssignDelivery(
-                              viewOrder.id,
-                              parseInt(deliveryPerson)
-                            );
-                            setViewOrder(null);
-                            setDeliveryPerson("");
-                          }
-                        }}
-                        disabled={!deliveryPerson}
-                        className="w-full sm:w-auto"
+                        onClick={() =>
+                          handleStatusUpdate(viewOrder.order_number, "shipped")
+                        }
+                        disabled={isUpdatingStatus}
+                        className="w-full"
                       >
-                        <Truck className="h-4 w-4 mr-2" />
-                        Assign Delivery
+                        <Package className="h-4 w-4 mr-2" />
+                        {isUpdatingStatus
+                          ? "Updating..."
+                          : "Mark as Ready for Pickup"}
                       </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+                      <p className="text-sm text-muted-foreground mt-2">
+                        This will notify the customer that their order is ready
+                        for pickup.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+              {viewOrder.status === "shipped" &&
+                viewOrder.delivery_option === "pickup" && (
+                  <Card className="shadow-sm border-green-200 bg-green-50/50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base text-green-800">
+                        Order Picked Up
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Button
+                        onClick={() =>
+                          handleStatusUpdate(
+                            viewOrder.order_number,
+                            "delivered"
+                          )
+                        }
+                        disabled={isUpdatingStatus}
+                        className="w-full"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        {isUpdatingStatus ? "Updating..." : "Mark as Picked Up"}
+                      </Button>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Confirm that the customer has picked up their order.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+              {/* Delivery Assignment (only for home delivery) */}
+              {viewOrder.status === "processing" &&
+                viewOrder.delivery_option === "home" && (
+                  <Card className="shadow-sm border-orange-200 bg-orange-50/50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base text-orange-800">
+                        Delivery Assignment
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
+                        <div className="flex-1 space-y-2">
+                          <Label htmlFor="delivery-assignment">
+                            Select Delivery Person
+                          </Label>
+                          <Select
+                            value={deliveryPerson}
+                            onValueChange={setDeliveryPerson}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Choose delivery person" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {deliveryPersonnel.map((person) => (
+                                <SelectItem
+                                  key={person.id}
+                                  value={person.id.toString()}
+                                >
+                                  {person.name} ({person.email})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          onClick={async () => {
+                            if (deliveryPerson) {
+                              await handleAssignDelivery();
+                              setViewOrder(null);
+                            }
+                          }}
+                          disabled={!deliveryPerson}
+                          className="w-full sm:w-auto"
+                        >
+                          <Truck className="h-4 w-4 mr-2" />
+                          Assign Delivery
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
             </div>
           )}
         </DialogContent>

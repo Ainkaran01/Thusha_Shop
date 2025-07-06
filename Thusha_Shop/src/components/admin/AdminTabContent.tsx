@@ -13,6 +13,7 @@ import CustomersTable from "@/components/admin/CustomersTable";
 import ContactUsTable from "@/components/admin/ContactUsTable";
 import AccountSettings from "@/components/admin/AccountSettings";
 import { useState,useEffect } from "react";
+import { fetchProductCategoryCounts } from "@/api/products";
 
 interface ContactMessage {
   id: number;
@@ -26,7 +27,6 @@ interface ContactMessage {
 // Import mock data
 import {
   salesData,
-  categoryData,
 } from "@/components/admin/mockData";
 
 interface AdminTabContentProps extends StaffAccountReceiverProps {
@@ -64,6 +64,7 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
   } = useAdminDashboard();
 
   const [contacts, setContacts] = useState<ContactMessage[]>([]);
+  const [categoryData, setCategoryData] = useState<{ id: string; value: number }[]>([]);
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -78,6 +79,14 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
 
     fetchContacts();
   }, []);
+
+  useEffect(() => {
+  fetchProductCategoryCounts().then((data) => {
+    setCategoryData(data);
+  }).catch((err) => {
+    console.error("Failed to fetch category chart data:", err);
+  });
+}, []);
 
 
   const handleAssignDelivery = async (orderId: number, deliveryPersonId: number) => {
@@ -107,8 +116,14 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
       <TabsContent value="orders">
         <OrdersTable
           orders={orders}
-          onUpdateOrderStatus={updateOrderStatus}
-          onAssignDelivery={handleAssignDelivery}
+          onUpdateOrderStatus={async (orderNumber, newStatus) => {
+            try {
+              await updateOrderStatus(orderNumber, newStatus);
+            } catch (error) {
+              console.error("Failed to update status", error);
+            }
+          }}
+           onAssignDelivery={handleAssignDelivery}
         />
       </TabsContent>
 
