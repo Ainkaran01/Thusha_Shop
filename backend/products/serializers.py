@@ -77,7 +77,7 @@ class ProductSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         request = self.context.get('request')
-        
+
         if hasattr(instance, 'images'):
             rep['images'] = instance.images or [] 
             

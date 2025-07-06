@@ -61,30 +61,34 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   return (
     <div className="space-y-6">
       <div className={`grid ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4" : "grid-cols-1"} gap-6`}>
-        <StatCard 
-          title="Total Sales" 
-          value={`$${stats.totalSales.toLocaleString()}`} 
-          description="+12% from last month" 
-          icon={<DollarSign className="h-4 w-4 text-muted-foreground" />} 
-        />
-        <StatCard 
-          title="Monthly Revenue" 
-          value={`$${stats.monthlyRevenue.toLocaleString()}`} 
-          description="+5.2% from last month" 
-          icon={<BarChart className="h-4 w-4 text-muted-foreground" />} 
-        />
-        <StatCard 
-          title="Total Customers" 
-          value={stats.totalCustomers} 
-          description="+18 new customers" 
-          icon={<Users className="h-4 w-4 text-muted-foreground" />} 
-        />
-        <StatCard 
-          title="Pending Orders" 
-          value={stats.pendingOrders} 
-          description="Need processing" 
-          icon={<Package className="h-4 w-4 text-muted-foreground" />} 
-        />
+      <StatCard 
+        title="Total Sales" 
+        value={`LKR ${stats.totalSales.toLocaleString()}`} 
+        description="+12% from last month" 
+        icon={<DollarSign className="h-4 w-4" />} 
+        variant="green"
+      />
+      <StatCard 
+        title="Monthly Revenue" 
+        value={`LKR ${stats.monthlyRevenue.toLocaleString()}`} 
+        description="+5.2% from last month" 
+        icon={<BarChart className="h-4 w-4" />} 
+        variant="blue"
+      />
+      <StatCard 
+        title="Total Customers" 
+        value={stats.totalCustomers} 
+        description="+18 new customers" 
+        icon={<Users className="h-4 w-4" />} 
+        variant="yellow"
+      />
+      <StatCard 
+        title="Pending Orders" 
+        value={stats.pendingOrders} 
+        description="Need processing" 
+        icon={<Package className="h-4 w-4" />} 
+        variant="red"
+      />
       </div>
 
       <DashboardCharts salesData={salesData} categoryData={categoryData} />

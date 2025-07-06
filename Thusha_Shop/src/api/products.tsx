@@ -42,3 +42,11 @@ export const deleteProductImage = async (productId: number, imageId: number): Pr
 export const setPrimaryImage = async (productId: number, imageId: number): Promise<void> => {
   await apiClient.patch(`${endpoint}${productId}/images/${imageId}/set-primary/`);
 };
+
+export const fetchProductCategoryCounts = async (): Promise<{ id: string; value: number }[]> => {
+  const res = await apiClient.get("/api/products/category-counts/");
+  return res.data.map((item: any) => ({
+    id: item.category,
+    value: item.count,
+  }));
+};

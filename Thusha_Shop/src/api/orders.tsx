@@ -31,9 +31,48 @@ export interface OrderItem {
   product_name: string;
   quantity: number;
   price: string;
-  lens_option: any;
-  prescription: any;
+  lens_option: string[] | null;
+  prescription: Prescription | null;
+  product: {
+    id: number;
+    name: string;
+    price: string;
+    description: string;
+    size: string;
+    weight: number;
+    stock: number;
+    frame_material: string;
+    images: string[];
+    colors: string[];
+    frame_type: {
+      id: number;
+      name: string;
+      description: string;
+    } | null;
+    category: {
+      id: number;
+      name: string;
+      description: string;
+    } | null;
+  };
 }
+
+export interface Prescription {
+  id: number;
+  prescription_id: string;
+  right_sphere: number;
+  right_cylinder: number;
+  right_axis: number;
+  left_sphere: number;
+  left_cylinder: number;
+  left_axis: number;
+  pupillary_distance: number;
+  additional_notes?: string;
+  date_issued: string;
+  expiry_date: string;
+  status: string;
+}
+
 
 export interface BillingInfo {
   name: string;
