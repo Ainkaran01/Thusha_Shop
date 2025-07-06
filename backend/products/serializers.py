@@ -44,7 +44,6 @@ class ProductSerializer(serializers.ModelSerializer):
         queryset=FrameType.objects.all(),
         source='frame_type',
         write_only=True,
-        required=False,
         allow_null=True
     )
     images = serializers.ListField(
@@ -77,7 +76,7 @@ class ProductSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         request = self.context.get('request')
-        
+
         if hasattr(instance, 'images'):
             rep['images'] = instance.images or [] 
             

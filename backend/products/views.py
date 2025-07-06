@@ -15,7 +15,7 @@ from .serializers import (
 from django.contrib.auth import get_user_model
 from rest_framework.filters import SearchFilter  
 from rest_framework.exceptions import PermissionDenied  
-
+from django.db.models import Count
 User = get_user_model()
 
 @api_view(['GET'])
@@ -116,3 +116,21 @@ class AccessoryViewSet(viewsets.ModelViewSet):
             return Response({"message": "Stock updated successfully."})
         except ValueError:
             return Response({"error": "Invalid stock value."}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+@api_view(['GET'])
+def product_category_counts(request):
+    """
+    Return category name and number of products in each category
+    """
+    category_counts = (
+        Product.objects.values('category__name')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    # Format data for frontend chart
+    formatted_data = [
+        {'category': item['category__name'], 'count': item['count']}
+        for item in category_counts
+    ]
+    return Response(formatted_data)
