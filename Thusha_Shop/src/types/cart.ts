@@ -1,5 +1,5 @@
 
-import { Product} from "../types/product";
+import { Product } from "../types/product";
 
 export type CartItem = {
   product: Product;
@@ -14,7 +14,7 @@ export type CartItem = {
   notes?: string;
   giftWrapping?: boolean;
   prescriptionId?: string;
-  prescriptionVerified?: boolean;
+
 };
 
 export type CartSummary = {

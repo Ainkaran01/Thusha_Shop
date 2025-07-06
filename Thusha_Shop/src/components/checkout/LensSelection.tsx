@@ -96,7 +96,7 @@ const LensSelection: React.FC<LensSelectionProps> = ({
               <div>
                 <h3 className="font-semibold">{item.product.name}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {[item.product.frameType, item.product.frameMaterial, item.product.color]
+                  {[item.product.frame_type, item.product.frame_material, item.product.colors]
                     .filter(Boolean)
                     .join(", ")}
                 </p>
@@ -219,7 +219,7 @@ const LensSelection: React.FC<LensSelectionProps> = ({
                     >
                       <div className="font-medium">{option.name}</div>
                       <div className="text-sm text-muted-foreground mb-2">{option.description}</div>
-                      <div className="text-sm font-semibold">${option.price.toFixed(2)}</div>
+                      <div className="text-sm font-semibold">LKR {option.price.toFixed(2)}</div>
                     </div>
                   ))}
                 </div>

@@ -1,10 +1,7 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import PrescriptionChecker from "@/components/PrescriptionChecker";
 import CartItemList from "@/components/cart/CartItemList";
 import OrderSummary from "@/components/cart/OrderSummary";
 import EmptyCart from "@/components/cart/EmptyCart";
@@ -14,22 +11,15 @@ const Cart = () => {
   const {
     cartItems,
     isProcessing,
-    showPrescriptionChecker,
-    verifiedPrescription,
     cartTotal,
     lensTotal,
     shippingCost,
     tax,
     orderTotal,
-    hasPrescriptionLenses,
     handleQuantityChange,
     handleRemoveItem,
     handleClearCart,
     handleCheckout,
-    handleVerifyPrescription,
-    handlePrescriptionVerified,
-    setShowPrescriptionChecker,
-    setPrescriptionDialogOpen,
   } = useCartLogic();
 
   return (
@@ -43,7 +33,7 @@ const Cart = () => {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            <CartItemList 
+            <CartItemList
               cartItems={cartItems}
               onQuantityChange={handleQuantityChange}
               onRemoveItem={handleRemoveItem}
@@ -67,26 +57,11 @@ const Cart = () => {
               tax={tax}
               orderTotal={orderTotal}
               isProcessing={isProcessing}
-              hasPrescriptionLenses={hasPrescriptionLenses}
-              verifiedPrescription={verifiedPrescription}
               onCheckout={handleCheckout}
-              onVerifyPrescription={handleVerifyPrescription}
-              onOpenPrescriptionDialog={() => setPrescriptionDialogOpen(true)}
             />
           </div>
         </div>
       )}
-
-      <Dialog open={showPrescriptionChecker} onOpenChange={setShowPrescriptionChecker}>
-        <DialogContent className="sm:max-w-md">
-          <PrescriptionChecker 
-            onPrescriptionVerified={handlePrescriptionVerified}
-            onCancel={() => setShowPrescriptionChecker(false)}
-          />
-        </DialogContent>
-      </Dialog>
-
-  
     </div>
   );
 };

@@ -5,11 +5,12 @@ import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/context/CartContext';
 import { useUser } from '@/context/UserContext';
 import { createOrder } from '@/services/apiService';
+import React from 'react';
 
 
 export const useCheckoutLogic = () => {
-  const { cartItems, getCartTotal, getLensTotal, updateLensOption, clearCart } = useCart();
-  const { user } = useUser();
+  const { cartItems, getCartTotal, getLensTotal, updateLensOption} = useCart();
+  const { user,fetchProfile } = useUser();
   const { toast } = useToast();
   const navigate = useNavigate();
  
@@ -20,26 +21,66 @@ export const useCheckoutLogic = () => {
   const [paymentMethod, setPaymentMethod] = useState<"card" | "cash">("card");
   const [deliveryOption, setDeliveryOption] = useState<"home" | "pickup">("home");
 
-  const [billingInfo, setBillingInfo] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    phone: user?.profile?.phone_number || "",
-    address1: user?.profile?.address_line1 || "",
-    address2: user?.profile?.address_line2 || "",
-    city: user?.profile?.city || "",
-    state: user?.profile?.state || "",
-    zipCode: user?.profile?.zip_code || "",
-    country: user?.profile?.country || "",
-  });
+ const [billingInfo, setBillingInfo] = useState({
+  name: "",
+  email: "",
+  phone: "",
+  address1: "",
+  address2: "",
+  city: "",
+  state: "",
+  zipCode: "",
+  country: "",
+});
+
+
+const hasInitializedProfile = React.useRef(false);
+
+useEffect(() => {
+  const loadProfileData = async () => {
+    if (hasInitializedProfile.current) return;
+
+    try {
+      if (!user?.profile) {
+        await fetchProfile();
+      }
+
+      if (user?.profile) {
+        setBillingInfo(prev => ({
+          ...prev, // preserve user-typed edits
+          name: user.name || "",
+          email: user.email || "",
+          phone: user.profile.phone_number || "",
+          address1: user.profile.address_line1 || "",
+          address2: user.profile.address_line2 || "",
+          city: user.profile.city || "",
+          state: user.profile.state || "",
+          zipCode: user.profile.zip_code || "",
+          country: user.profile.country || "",
+        }));
+        hasInitializedProfile.current = true;
+      }
+    } catch (error) {
+      toast({
+        title: "Failed to load profile",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
+  loadProfileData();
+}, [fetchProfile, toast, user]);
+
 
   const [sameAsBilling, setSameAsBilling] = useState(true);
 
   const hasEyeglasses = useMemo(() => 
-    cartItems.some(item => item.product.category.name === "Eyeglasses"),
+    cartItems.some(item => item?.product?.category?.name === "Eyeglasses"),
   [cartItems]);
 
-  const cartTotal = useMemo(() => getCartTotal(), [getCartTotal]);
-  const lensTotal = useMemo(() => getLensTotal(), [getLensTotal]);
+  const cartTotal = useMemo(() => getCartTotal(), [getCartTotal, cartItems]);
+  const lensTotal = useMemo(() => getLensTotal(), [getLensTotal, cartItems]);
   const subtotal = useMemo(() => cartTotal + lensTotal, [cartTotal, lensTotal]);
 
   const shippingCost = useMemo(() => {
@@ -58,7 +99,7 @@ export const useCheckoutLogic = () => {
   const validateLensSelections = () => {
     if (!hasEyeglasses) return true;
     return cartItems
-      .filter(item => item.product.category.name === "Eyeglasses")
+      .filter(item => item?.product?.category?.name === "Eyeglasses")
       .every(item => item.lensOption);
   };
 
@@ -106,54 +147,56 @@ export const useCheckoutLogic = () => {
   return `ORD-${datePart}-${randomPart}`;
 };
 
+
 const handlePaymentSuccess = async (paymentId?: string) => {
   try {
     const orderNumber = generateOrderNumber();
-    
+    const billing = billingInfo;
+
     // Validate cart items
     if (cartItems.length === 0) {
       throw new Error("Your cart is empty");
     }
 
     const orderData = {
-      order_number: orderNumber,
-      user: user?.id,
-      payment_method: paymentMethod,
-      delivery_option: deliveryOption,
-      total_price: orderTotal.toFixed(2),
-      items: cartItems.map(item => ({
-        product_id: item.product.id,
-        product_name: item.product.name,
-        quantity: item.quantity,
-        price: item.product.price,
-        lens_option: item.lensOption ? {
-          option: item.lensOption.option,
-          type: item.lensOption.type,
-          price: item.lensOption.price,
-          ...(item.lensOption.prescriptionId && {
-            prescriptionId: item.lensOption.prescriptionId
-          })
-        } : null,
-        prescription: item.lensOption?.prescriptionId || null
-      })),
-      billing: {
-        name: billingInfo.name,
-        email: billingInfo.email,
-        phone: billingInfo.phone,
-        address1: billingInfo.address1,
-        address2: billingInfo.address2 || null,
-        city: billingInfo.city,
-        state: billingInfo.state,
-        zip_code: billingInfo.zipCode,
-        country: billingInfo.country
-      }
-    };
+  order_number: orderNumber,
+  user: user?.id,
+  payment_method: paymentMethod,
+  delivery_option: deliveryOption,
+  total_price: orderTotal.toFixed(2),
+  items: cartItems.map(item => ({
+    product_id: item.product.id,
+    product_name: item.product.name,
+    quantity: item.quantity,
+    price: item.product.price,
+    lens_option: item.lensOption ? {
+      option: item.lensOption.option,
+      type: item.lensOption.type,
+      price: item.lensOption.price,
+      ...(item.lensOption.prescriptionId && {
+        prescriptionId: item.lensOption.prescriptionId
+      })
+    } : null,
+    prescription: item.lensOption?.prescriptionId || null
+  })),
+  billing: {
+    name: billing.name,
+    email: billing.email,
+    phone: billing.phone,
+    address1: billing.address1,
+    address2: billing.address2 || null,
+    city: billing.city,
+    state: billing.state,
+    zip_code: billing.zipCode,
+    country: billing.country
+  }
+};
 
     const createdOrder = await createOrder(orderData);
-    
+    console.log(orderData);
     setOrderNumber(createdOrder.order_number);
     setOrderComplete(true);
-    clearCart();
+    
     toast({
       title: "Order Placed Successfully",
       description: `Your order #${createdOrder.order_number} has been received. Confirmation sent to ${billingInfo.email}.`,
