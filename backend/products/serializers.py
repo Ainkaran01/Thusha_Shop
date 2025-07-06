@@ -44,6 +44,7 @@ class ProductSerializer(serializers.ModelSerializer):
         queryset=FrameType.objects.all(),
         source='frame_type',
         write_only=True,
+        required=False,
         allow_null=True
     )
     images = serializers.ListField(
