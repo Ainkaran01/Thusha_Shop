@@ -179,10 +179,7 @@ def get_orders_for_user(user):
         return Order.objects.all().order_by('-created_at')
     
     elif user.role == "manufacturer":
-        products = Product.objects.filter(manufacturer=user)
-        order_items = OrderItem.objects.filter(product__in=products)
-        order_ids = order_items.values_list('order_id', flat=True).distinct()
-        return Order.objects.filter(id__in=order_ids).order_by('-created_at')
+        return Order.objects.all().order_by('-created_at')
     
     elif user.role == "delivery":
         # Future logic: if orders are assigned to delivery user, filter by that
@@ -196,7 +193,7 @@ class RoleBasedOrderListView(APIView):
 
     def get(self, request):
         orders = get_orders_for_user(request.user)
-        serializer = OrderSerializer(orders, many=True)
+        serializer = OrderSerializer(orders, many=True, context={'request': request})
         return Response(serializer.data)
     
 class RoleBasedOrderStatusUpdateView(APIView):
@@ -211,11 +208,7 @@ class RoleBasedOrderStatusUpdateView(APIView):
 
         # Permission check (can improve per role)
         if request.user.role == 'manufacturer':
-            # Only allow status change if any order item belongs to this manufacturer
-            products = Product.objects.filter(manufacturer=request.user)
-            if not OrderItem.objects.filter(order=order, product__in=products).exists():
-                return Response({"error": "Permission denied"}, status=403)
-
+           pass
         elif request.user.role == 'delivery':
             # Add delivery logic later (e.g., check assigned delivery)
             pass
@@ -228,10 +221,35 @@ class RoleBasedOrderStatusUpdateView(APIView):
 
         order.status = new_status
         order.save()
+
+        self.send_status_update_email(order)
+
         return Response({
             "message": f"Status updated to {new_status}",
             "order_number": order.order_number
         })
+    
+    def send_status_update_email(self, order):
+        subject = f"Order Status Updated - {order.order_number}"
+        from_email = settings.DEFAULT_FROM_EMAIL
+        recipient_list = [order.billing.email]
+
+        try:
+            html_content = render_to_string('emails/status_update.html', {
+                'order': order,
+                'new_status': order.get_status_display()
+            })
+            text_content = strip_tags(html_content)
+
+            email = EmailMultiAlternatives(subject, text_content, from_email, recipient_list)
+            email.attach_alternative(html_content, "text/html")
+            email.send()
+        except TemplateDoesNotExist:
+            print("Email template not found at: emails/status_update.html")
+            message = f"Your order #{order.order_number} status has been updated to {order.get_status_display()}"
+            from django.core.mail import send_mail
+            send_mail(subject, message, from_email, recipient_list)
+    
     
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsAdmin])
