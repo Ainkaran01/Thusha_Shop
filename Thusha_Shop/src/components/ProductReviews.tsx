@@ -6,18 +6,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useUser } from "@/context/UserContext";
-import { Review } from "@/types";
+import { Review } from "@/types/review";
 
 interface ProductReviewsProps {
   productId: number;
+  reviews: Review[]; // 👈 new
+  setReviews: React.Dispatch<React.SetStateAction<Review[]>>;
 }
 
-const API_BASE_URL = 'http://localhost:8000/api'; // Update with your API base URL
+const API_BASE_URL = "http://localhost:8000/api"; // Update with your API base URL
 
-const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
+const ProductReviews: React.FC<ProductReviewsProps> = ({
+  productId,
+  reviews,
+  setReviews,
+}) => {
   const { user, isAuthenticated } = useUser();
   const { toast } = useToast();
-  const [reviews, setReviews] = useState<Review[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewFormData, setReviewFormData] = useState({
@@ -25,15 +31,16 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
     title: "",
     comment: "",
   });
-  const [helpfulReviews, setHelpfulReviews] = useState<number[]>([]);
 
   // Fetch reviews from database
   useEffect(() => {
     const fetchReviews = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_BASE_URL}/products/${productId}/reviews`);
-        if (!response.ok) throw new Error('Failed to fetch reviews');
+        const response = await fetch(
+          `${API_BASE_URL}/products/${productId}/reviews`
+        );
+        if (!response.ok) throw new Error("Failed to fetch reviews");
         const data = await response.json();
         setReviews(data);
       } catch (error) {
@@ -48,80 +55,86 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
     };
 
     fetchReviews();
-  }, [productId, toast]);
+  }, [productId, setReviews, toast]);
 
   // Submit review to database
   // Change the API endpoint URL to include trailing slash
-const handleReviewSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  if (!isAuthenticated) {
-    toast({
-      title: "Login Required",
-      description: "You must be logged in to leave a review",
-      variant: "destructive",
-    });
-    return;
-  }
-  
-  if (!reviewFormData.title || !reviewFormData.comment) {
-    toast({
-      title: "Incomplete Review",
-      description: "Please fill out all required fields",
-      variant: "destructive",
-    });
-    return;
-  }
-  
-  try {
-    const token = sessionStorage.getItem('access_token');
-    const response = await fetch(`${API_BASE_URL}/products/${productId}/reviews/`, { // Added trailing slash
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // Add if using authentication
-      },
-      body: JSON.stringify({
-        ...reviewFormData,
-        userId: user?.id,
-        productId
-      })
-    });
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    if (!response.ok) throw new Error('Failed to submit review');
+    if (!isAuthenticated) {
+      toast({
+        title: "Login Required",
+        description: "You must be logged in to leave a review",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    const newReview = await response.json();
-    setReviews(prev => [...prev, newReview]);
-    
-    toast({
-      title: "Review Submitted",
-      description: "Thank you for your feedback!",
-    });
-    
-    setReviewFormData({
-      rating: 5,
-      title: "",
-      comment: "",
-    });
-    setShowReviewForm(false);
-  } catch (error) {
-    toast({
-      title: "Error",
-      description: "Failed to submit review",
-      variant: "destructive",
-    });
-  }
-};
+    if (!reviewFormData.title || !reviewFormData.comment) {
+      toast({
+        title: "Incomplete Review",
+        description: "Please fill out all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    try {
+      const token = sessionStorage.getItem("access_token");
+      const response = await fetch(
+        `${API_BASE_URL}/products/${productId}/reviews/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            ...reviewFormData,
+            userId: user?.id,
+            productId,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to submit review");
+      }
+
+      const newReview = await response.json();
+      setReviews((prev) => [newReview, ...prev]);
+
+      toast({
+        title: "Review Submitted",
+        description: "Thank you for your feedback!",
+      });
+
+      setReviewFormData({
+        rating: 5,
+        title: "",
+        comment: "",
+      });
+      setShowReviewForm(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit review",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Calculate average rating
-  const averageRating = reviews.length > 0
-    ? reviews.reduce((acc, review) => acc + (review.rating || 0), 0) / reviews.length
-    : 0;
+  const averageRating =
+    reviews.length > 0
+      ? reviews.reduce((acc, review) => acc + (review.rating || 0), 0) /
+        reviews.length
+      : 0;
 
   // Calculate rating distribution
-  const ratingDistribution = [5, 4, 3, 2, 1].map(rating => {
-    const count = reviews.filter(review => review.rating === rating).length;
+  const ratingDistribution = [5, 4, 3, 2, 1].map((rating) => {
+    const count = reviews.filter((review) => review.rating === rating).length;
     const percentage = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
     return { rating, count, percentage };
   });
@@ -144,13 +157,16 @@ const handleReviewSubmit = async (e: React.FormEvent) => {
                 <Star
                   key={i}
                   className={`h-5 w-5 ${
-                    i < Math.floor(averageRating) ? "fill-yellow-500 text-yellow-500" : "fill-gray-200 text-gray-200"
+                    i < Math.floor(averageRating)
+                      ? "fill-yellow-500 text-yellow-500"
+                      : "fill-gray-200 text-gray-200"
                   }`}
                 />
               ))}
             </div>
             <div className="text-sm text-muted-foreground">
-              Based on {reviews?.length || 0} {reviews?.length === 1 ? "review" : "reviews"}
+              Based on {reviews?.length || 0}{" "}
+              {reviews?.length === 1 ? "review" : "reviews"}
             </div>
           </div>
 
@@ -172,7 +188,7 @@ const handleReviewSubmit = async (e: React.FormEvent) => {
 
         {/* Review Form */}
         <div className="md:w-2/3">
-          <Button 
+          <Button
             onClick={() => setShowReviewForm(!showReviewForm)}
             className="w-full mb-6"
           >
@@ -180,9 +196,14 @@ const handleReviewSubmit = async (e: React.FormEvent) => {
           </Button>
 
           {showReviewForm && (
-            <form onSubmit={handleReviewSubmit} className="bg-accent p-6 rounded-lg mb-6">
-              <h3 className="text-lg font-semibold mb-4">Share Your Experience</h3>
-              
+            <form
+              onSubmit={handleReviewSubmit}
+              className="bg-accent p-6 rounded-lg mb-6"
+            >
+              <h3 className="text-lg font-semibold mb-4">
+                Share Your Experience
+              </h3>
+
               <div className="mb-4">
                 <Label>Rating</Label>
                 <div className="flex">
@@ -190,7 +211,9 @@ const handleReviewSubmit = async (e: React.FormEvent) => {
                     <button
                       key={star}
                       type="button"
-                      onClick={() => setReviewFormData(prev => ({ ...prev, rating: star }))}
+                      onClick={() =>
+                        setReviewFormData((prev) => ({ ...prev, rating: star }))
+                      }
                       className="p-1"
                     >
                       <Star
@@ -204,30 +227,40 @@ const handleReviewSubmit = async (e: React.FormEvent) => {
                   ))}
                 </div>
               </div>
-              
+
               <div className="mb-4">
                 <Label htmlFor="title">Review Title</Label>
                 <Input
                   id="title"
                   value={reviewFormData.title}
-                  onChange={(e) => setReviewFormData(prev => ({ ...prev, title: e.target.value }))}
+                  onChange={(e) =>
+                    setReviewFormData((prev) => ({
+                      ...prev,
+                      title: e.target.value,
+                    }))
+                  }
                   placeholder="Summarize your experience"
                   required
                 />
               </div>
-              
+
               <div className="mb-4">
                 <Label htmlFor="comment">Your Review</Label>
                 <Textarea
                   id="comment"
                   value={reviewFormData.comment}
-                  onChange={(e) => setReviewFormData(prev => ({ ...prev, comment: e.target.value }))}
+                  onChange={(e) =>
+                    setReviewFormData((prev) => ({
+                      ...prev,
+                      comment: e.target.value,
+                    }))
+                  }
                   rows={4}
                   placeholder="Share your thoughts"
                   required
                 />
               </div>
-              
+
               <Button type="submit">Submit Review</Button>
             </form>
           )}
@@ -245,49 +278,59 @@ const handleReviewSubmit = async (e: React.FormEvent) => {
             <p className="text-muted-foreground mb-4">
               Be the first to review this product
             </p>
-            <Button onClick={() => setShowReviewForm(true)}>Write a Review</Button>
+            <Button onClick={() => setShowReviewForm(true)}>
+              Write a Review
+            </Button>
           </div>
         ) : (
           <div className="space-y-6">
             {reviews.map((review) => (
-              <div key={review.id} className="border-b pb-6">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <div className="font-semibold">{review.userName || "Anonymous"}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {review.date ? new Date(review.date).toLocaleDateString() : ""}
-                      {review.verified && " • Verified Purchase"}
+              <div
+                key={review.id}
+                className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300 p-6"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  {/* User Info */}
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full font-semibold text-sm">
+                      {review.user?.[0]?.toUpperCase() || "U"}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-800">
+                        {review.user || "Anonymous"}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {review.created_at
+                          ? new Date(review.created_at).toLocaleDateString()
+                          : ""}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex">
+
+                  {/* Star Rating */}
+                  <div className="flex gap-0.5">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
                         className={`h-4 w-4 ${
-                          i < (review.rating || 0) ? "fill-yellow-500 text-yellow-500" : "fill-gray-200 text-gray-200"
+                          i < (review.rating || 0)
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "fill-gray-200 text-gray-200"
                         }`}
                       />
                     ))}
                   </div>
                 </div>
-                
-                <h4 className="font-medium mb-2">{review.title}</h4>
-                <p className="mb-4">{review.comment}</p>
-                
-                {review.images?.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {review.images.map((image, i) => (
-                      <img
-                        key={i}
-                        src={image}
-                        alt=""
-                        className="h-20 w-20 object-cover rounded-md"
-                      />
-                    ))}
-                  </div>
-                )}
-                
-            
+
+                {/* Review Text */}
+                <div className="pl-1">
+                  <h4 className="text-base font-semibold text-gray-900 mb-1">
+                    {review.title}
+                  </h4>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    {review.comment}
+                  </p>
+                </div>
               </div>
             ))}
           </div>

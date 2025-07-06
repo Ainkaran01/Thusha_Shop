@@ -24,6 +24,7 @@ def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
     serializer = ProductSerializer(product, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
+
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticatedOrReadOnly])
 def product_reviews(request, pk):

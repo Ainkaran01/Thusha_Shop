@@ -82,7 +82,7 @@ class Review(models.Model):
     title = models.CharField(max_length=100, blank=True, null=True)  # Optional
     comment = models.TextField(blank=True, null=True)  # Optional
     created_at = models.DateTimeField(auto_now_add=True)  # Auto-set on creation
-    updated_at = models.DateTimeField(auto_now=True)
+
 
     def __str__(self):
         return f"Review for {self.product.name} by {self.user.username}"
