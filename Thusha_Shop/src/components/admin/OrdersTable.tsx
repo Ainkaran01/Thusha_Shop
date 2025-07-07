@@ -86,6 +86,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
     { id: number; name: string; email: string }[]
   >([]);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isAssigningDelivery, setIsAssigningDelivery] = useState(false);
 
   useEffect(() => {
     const loadDeliveryPersonnel = async () => {
@@ -163,26 +164,6 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
     }
   };
 
-  const handleAssignDelivery = async () => {
-    if (selectedOrder && deliveryPerson) {
-      try {
-        await onAssignDelivery(selectedOrder, parseInt(deliveryPerson));
-        setSelectedOrder(null);
-        setDeliveryPerson("");
-        toast({
-          title: "Delivery assigned",
-          description: "The delivery person has been assigned successfully.",
-        });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to assign delivery person.",
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
   const handleStatusUpdate = async (
     orderNumber: string,
     newStatus: OrderStatus
@@ -218,6 +199,29 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
     return `${billing.address1}, ${
       billing.address2 ? billing.address2 + ", " : ""
     }${billing.city}, ${billing.state} ${billing.zip_code}, ${billing.country}`;
+  };
+
+  const handleAssignDelivery = async () => {
+    if (selectedOrder && deliveryPerson) {
+      setIsAssigningDelivery(true); // Start loading
+      try {
+        await onAssignDelivery(selectedOrder, parseInt(deliveryPerson));
+        setSelectedOrder(null);
+        setDeliveryPerson("");
+        toast({
+          title: "Delivery assigned",
+          description: "The delivery person has been assigned successfully.",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to assign delivery person.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsAssigningDelivery(false); // Stop loading
+      }
+    }
   };
 
   return (
@@ -310,7 +314,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                           <div className="flex items-center">
                             <User className="h-4 w-4 mr-1" />
                             <span className="text-sm truncate max-w-[120px]">
-                              {order.assigned_delivery_person}
+                              {order.assigned_delivery_person.name}
                             </span>
                           </div>
                         ) : (
@@ -375,10 +379,14 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                                     </div>
                                     <Button
                                       onClick={handleAssignDelivery}
-                                      disabled={!deliveryPerson}
+                                      disabled={
+                                        !deliveryPerson || isAssigningDelivery
+                                      }
                                       className="w-full"
                                     >
-                                      Assign and Mark as Shipped
+                                      {isAssigningDelivery
+                                        ? "Assigning..."
+                                        : "Assign and Mark as Shipped"}
                                     </Button>
                                   </div>
                                 </DialogContent>
@@ -395,9 +403,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                                     disabled={isUpdatingStatus}
                                   >
                                     <Package className="h-4 w-4 mr-1" />
-                                    {isUpdatingStatus
-                                      ? "Updating..."
-                                      : "Ready"}
+                                    {isUpdatingStatus ? "Updating..." : "Ready"}
                                   </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
@@ -647,7 +653,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                         Assigned Delivery
                       </Label>
                       <p className="text-sm">
-                        {viewOrder.assigned_delivery_person || "Not assigned"}
+                       {viewOrder.assigned_delivery_person?.name ?? "Not assigned"}
                       </p>
                     </div>
                   </div>
@@ -833,15 +839,23 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                         <Button
                           onClick={async () => {
                             if (deliveryPerson) {
+                              setIsAssigningDelivery(true);
                               await handleAssignDelivery();
                               setViewOrder(null);
+                              setIsAssigningDelivery(false);
                             }
                           }}
-                          disabled={!deliveryPerson}
+                          disabled={!deliveryPerson || isAssigningDelivery}
                           className="w-full sm:w-auto"
                         >
-                          <Truck className="h-4 w-4 mr-2" />
-                          Assign Delivery
+                          {isAssigningDelivery ? (
+                            "Assigning..."
+                          ) : (
+                            <>
+                              <Truck className="h-4 w-4 mr-2" />
+                              Assign Delivery
+                            </>
+                          )}
                         </Button>
                       </div>
                     </CardContent>

@@ -2,7 +2,7 @@
 import React from "react";
 import { Package, CheckCircle, Clock, User } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Order } from "@/types";
+import type { Order } from "@/api/orders";
 
 interface DeliveryStatsProps {
   deliveries: Order[];
