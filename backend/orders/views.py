@@ -228,12 +228,52 @@ class AssignDeliveryView(APIView):
             order = serializer.validated_data['order']
             if hasattr(order, 'delivery'):
                 return Response({"error": "Delivery already assigned for this order."}, status=400)
+
             delivery = serializer.save()
             order.status = "shipped"
             order.save()
+
+            # ✅ Send emails to both
+            self.send_assignment_emails(order, delivery)
+
             return Response(DeliverySerializer(delivery).data, status=201)
+
         return Response(serializer.errors, status=400)
 
+    def send_assignment_emails(self, order, delivery):
+        from_email = settings.DEFAULT_FROM_EMAIL
+        customer_email = order.billing.email
+        delivery_email = delivery.delivery_person.email
+
+        # 1. Email to customer
+        try:
+            subject = f"Order Status Update - #{order.order_number}"
+            html_customer = render_to_string("emails/status_update.html", {
+                "order": order,
+                "new_status": order.get_status_display(),
+            })
+            text_customer = strip_tags(html_customer)
+
+            email_customer = EmailMultiAlternatives(subject, text_customer, from_email, [customer_email])
+            email_customer.attach_alternative(html_customer, "text/html")
+            email_customer.send()
+        except Exception as e:
+            print("Failed to send customer email:", e)
+
+        # 2. Email to delivery person
+        try:
+            subject = f"New Delivery Assigned - Order #{order.order_number}"
+            html_delivery = render_to_string("emails/delivery_person_assignment.html", {
+                "order": order,
+                "delivery_person": delivery.delivery_person,
+            })
+            text_delivery = strip_tags(html_delivery)
+
+            email_delivery = EmailMultiAlternatives(subject, text_delivery, from_email, [delivery_email])
+            email_delivery.attach_alternative(html_delivery, "text/html")
+            email_delivery.send()
+        except Exception as e:
+            print("Failed to send delivery email:", e)
 
 class ActiveDeliveryPersons(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]

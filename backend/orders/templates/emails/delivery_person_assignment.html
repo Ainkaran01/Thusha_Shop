@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>New Delivery Assignment</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background-color: #ffffff;
+      padding: 32px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .header h2 {
+      margin: 0;
+      color: #1f2937;
+      font-size: 24px;
+    }
+
+    .body-content {
+      font-size: 16px;
+      color: #374151;
+      line-height: 1.6;
+    }
+
+    .assignment-details {
+      background-color: #f9fafb;
+      padding: 16px 20px;
+      border-left: 4px solid #2563eb;
+      border-radius: 6px;
+      margin: 20px 0;
+    }
+
+    .assignment-details ul {
+      list-style-type: none;
+      padding-left: 0;
+      margin: 0;
+    }
+
+    .assignment-details li {
+      margin-bottom: 10px;
+    }
+
+    .footer {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #6b7280;
+      text-align: center;
+    }
+
+    .highlight {
+      font-weight: 600;
+      color: #111827;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h2>New Delivery Assignment</h2>
+    </div>
+
+    <!-- Body -->
+    <div class="body-content">
+      <p>Dear <span class="highlight">{{ delivery_person.name }}</span>,</p>
+      <p>You have been assigned a new order for delivery. Please see the order details below:</p>
+
+      <div class="assignment-details">
+        <ul>
+          <li><strong>Order Number:</strong> {{ order.order_number }}</li>
+          <li><strong>Customer Name:</strong> {{ order.billing.name }}</li>
+          <li><strong>Delivery Option:</strong> {{ order.delivery_option|capfirst }}</li>
+        </ul>
+      </div>
+
+      <p>Please log in to your dashboard to view full order and delivery information.</p>
+
+      <div class="footer">
+        <p>Thank you,</p>
+        <p><strong>Thusha Opticals Team</strong></p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
