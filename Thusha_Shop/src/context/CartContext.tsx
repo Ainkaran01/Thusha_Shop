@@ -19,12 +19,13 @@ type LensOption = {
   type: "standard" | "prescription";
   option: string;
   price: number;
-  prescriptionId?: string;
+  prescriptionId?: string | null; 
+  prescription?: string | null;
 };
 
 type CartContextType = {
   cartItems: CartItem[];
-  addToCart: (product: Product) => Promise<void>;
+   addToCart: (product: Product, quantity?: number) => Promise<void>;
   removeFromCart: (productId: number) => Promise<void>;
   updateQuantity: (productId: number, quantity: number) => void;
   updateLensOption: (productId: number, lensOption: LensOption) => void;
@@ -48,7 +49,7 @@ const CART_ENDPOINTS = {
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const initialState: CartState = {
     cartItems: [],
-    prescriptionVerified: false,
+    
   };
 
   const [state, dispatch] = useReducer(cartReducer, initialState);
@@ -183,11 +184,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       if (!response.ok) throw new Error("Failed to add to cart");
 
-      dispatch({ type: "ADD_ITEM", product, quantity: 1 });
+      dispatch({ type: "ADD_ITEM", product, quantity });
 
       toast({
         title: "Added to cart",
-        description: `${product.name} has been added to your cart`,
+         description: `${product.name} (x${quantity}) has been added to your cart`,
       });
     } catch (err) {
       const errorMessage =

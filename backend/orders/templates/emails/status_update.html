@@ -1,39 +1,131 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Order Status Update</title>
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: #f8f9fa; padding: 20px; text-align: center; }
-        .content { padding: 20px; }
-        .status-update { margin: 20px 0; padding: 15px; background-color: #e9ecef; border-radius: 5px; }
-        .footer { margin-top: 20px; font-size: 0.9em; color: #6c757d; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .header {
+            background-color:rgb(188, 152, 11);
+            color: #ffffff;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .content {
+            padding: 24px;
+            color: #333333;
+        }
+
+        .status-update {
+            background-color: #f1f5f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .status-icon {
+            width: 40px;
+            height: 40px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 20px;
+        }
+
+        .status-text p {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #6c757d;
+            background-color: #f8f9fa;
+        }
+
+        .highlight {
+            font-weight: bold;
+            color:rgb(49, 44, 96);
+        }
+
+        .note {
+            margin-top: 10px;
+            font-size: 15px;
+            background-color: #e7f3ff;
+            padding: 12px;
+            border-radius: 6px;
+            color:rgb(19, 44, 113);
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
         <div class="header">
             <h1>Order Status Update</h1>
             <p>Your order status has changed</p>
         </div>
-        
+
+        <!-- Content -->
         <div class="content">
-            <p>Hello {{ customer_name }},</p>
-            
+            <p>Hello {{ order.billing.name }},</p>
+
             <div class="status-update">
-                <p>The status of your order <strong>#{{ order_number }}</strong> has been updated:</p>
-                <p><strong>From:</strong> {{ old_status }}</p>
-                <p><strong>To:</strong> {{ new_status }}</p>
-                <p><strong>Delivery Method:</strong> {{ delivery_option }}</p>
+                <div class="status-icon">📦</div>
+                <div class="status-text">
+                    <p>The status of your order <span class="highlight">#{{ order.order_number }}</span> has been updated to:</p>
+                    <p class="highlight">{{ new_status }}</p>
+                    <p><strong>Delivery Method:</strong> {{ order.delivery_option|capfirst }}</p>
+                </div>
             </div>
-            
-            <p>You can check your order details anytime by logging into your account.</p>
-            <p>If you have any questions about this update, please reply to this email.</p>
+
+            {% if order.delivery_option == "home" %}
+                <div class="note">
+                    🏠 Your order will be delivered to your home. Please expect delivery within a few days.
+                </div>
+            {% elif order.delivery_option == "pickup" %}
+                <div class="note">
+                    🏬 Your order is ready for in-store pickup. You can collect it from our shop during business hours.
+                </div>
+            {% endif %}
+
+            <p style="margin-top: 20px;">You can check your order details anytime by logging into your account.</p>
+            <p>If you have any questions about this update, feel free to reply to this email.</p>
         </div>
-        
+
+        <!-- Footer -->
         <div class="footer">
             <p>Thank you for shopping with us!</p>
+            <p>– Thusha Opticals Team</p>
         </div>
     </div>
 </body>

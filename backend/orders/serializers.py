@@ -3,6 +3,8 @@ from .models import Order, OrderItem, BillingInfo, Delivery
 from products.models import Product
 from decimal import Decimal
 from django.contrib.auth import get_user_model
+from prescriptions.serializers import PrescriptionSerializer
+from products.serializers import ProductSerializer
 
 User = get_user_model()
 
@@ -23,9 +25,23 @@ class OrderItemSerializer(serializers.ModelSerializer):
         min_value=Decimal('0.01')
     )
 
+    product = serializers.SerializerMethodField()
+    prescription = serializers.SerializerMethodField()
+
+    def get_product(self, obj):
+        from products.serializers import ProductSerializer
+        return ProductSerializer(obj.product, context=self.context).data
+
+    def get_prescription(self, obj):
+        if obj.prescription:
+            from prescriptions.serializers import PrescriptionSerializer
+            return PrescriptionSerializer(obj.prescription, context=self.context).data
+        return None
+    
     class Meta:
         model = OrderItem
         fields = [
+            'product',
             'product_id',
             'product_name',
             'quantity',

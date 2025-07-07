@@ -13,23 +13,22 @@ interface OrderCompleteProps {
   tax: number;
   orderTotal: number;
   onTrackOrder: () => void;
+  onContinueShopping: () => void; // Fixed type from string to function
 }
 
 const OrderComplete: React.FC<OrderCompleteProps> = ({
   orderNumber,
   billingEmail,
-  cartTotal = 0,
-  lensTotal = 0,
-  shippingCost = 0,
-  tax = 0,
-  orderTotal = 0,
+  cartTotal,
+  lensTotal,
+  shippingCost,
+  tax,
+  orderTotal,
   onTrackOrder,
+  onContinueShopping, // Now properly typed as a function
 }) => {
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'LKR',
-    }).format(amount);
+    return 'LKR ' + amount.toFixed(2); 
   };
 
   return (
@@ -89,10 +88,13 @@ const OrderComplete: React.FC<OrderCompleteProps> = ({
               >
                 <ShoppingBag className="mr-2 h-4 w-4" /> Track Your Order
               </Button>
-              <Button variant="outline" asChild>
-                <a href="/" className="flex items-center justify-center" aria-label="Continue shopping">
-                  Continue Shopping
-                </a>
+              <Button 
+                variant="outline" 
+                onClick={onContinueShopping} // Changed from <a href> to onClick
+                className="flex items-center justify-center" 
+                aria-label="Continue shopping"
+              >
+                Continue Shopping
               </Button>
             </div>
           </CardContent>

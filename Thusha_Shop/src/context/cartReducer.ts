@@ -1,21 +1,26 @@
-
-import { Product } from "../types";
+import { Product } from "../types/product";
 import { CartItem } from "../types/cart";
+
+export type LensOption = {
+  type: "standard" | "prescription";
+  option: string;
+  price: number;
+  prescriptionId?: string | null;
+  prescription?: string | null;
+};
 
 export type CartAction = 
   | { type: 'ADD_ITEM'; product: Product; quantity?: number }
   | { type: 'REMOVE_ITEM'; productId: number }
   | { type: 'UPDATE_QUANTITY'; productId: number; quantity: number }
-  | { type: 'UPDATE_LENS_OPTION'; productId: number; lensOption: { type: "standard" | "prescription"; option: string; price: number } }
+  | { type: 'UPDATE_LENS_OPTION'; productId: number; lensOption: LensOption | null }
   | { type: 'UPDATE_ITEM_NOTES'; productId: number; notes: string }
   | { type: 'TOGGLE_GIFT_WRAPPING'; productId: number; giftWrapping: boolean }
-  | { type: 'SET_PRESCRIPTION_ID'; productId: number; prescriptionId: string }
-  | { type: 'SET_PRESCRIPTION_VERIFIED'; productId?: number; verified: boolean }
-  | { type: 'CLEAR_CART' };
+  | { type: 'CLEAR_CART' }
+  | { type: 'REVERT_LENS_UPDATE'; productId: number; previousLensOption: LensOption | null };
 
 export type CartState = {
   cartItems: CartItem[];
-  prescriptionVerified: boolean;
 };
 
 export const cartReducer = (state: CartState, action: CartAction): CartState => {
@@ -36,21 +41,23 @@ export const cartReducer = (state: CartState, action: CartAction): CartState => 
           )
         };
       } else {
-        // For eyeglasses, automatically add with standard lens option
+        // Safely handle products with missing category
+        const isEyeglass = product.category?.name === "Eyeglasses";
+        
         const newItem: CartItem = { 
           product, 
           quantity,
-          addedAt: new Date()
+          addedAt: new Date(),
+          ...(isEyeglass && {
+            lensOption: {
+              type: "standard",
+              option: "Basic",
+              price: 0,
+              prescriptionId: null,
+              
+            }
+          })
         };
-        
-        // If it's eyeglasses, add a default standard lens option
-        if (product.category === 'eyeglasses') {
-          newItem.lensOption = {
-            type: 'standard',
-            option: 'Basic',
-            price: 50 // Default price for basic standard lenses
-          };
-        }
         
         return {
           ...state,
@@ -58,7 +65,6 @@ export const cartReducer = (state: CartState, action: CartAction): CartState => 
         };
       }
     }
-    
     case 'REMOVE_ITEM':
       return {
         ...state,
@@ -80,7 +86,15 @@ export const cartReducer = (state: CartState, action: CartAction): CartState => 
         ...state,
         cartItems: state.cartItems.map((item) =>
           item.product.id === action.productId 
-            ? { ...item, lensOption: action.lensOption } 
+            ? { 
+                ...item, 
+                lensOption: action.lensOption 
+                  ? { 
+                      ...item.lensOption, 
+                      ...action.lensOption 
+                    } 
+                  : null 
+              } 
             : item
         )
       };
@@ -105,31 +119,14 @@ export const cartReducer = (state: CartState, action: CartAction): CartState => 
         )
       };
     
-    case 'SET_PRESCRIPTION_ID':
+    case 'REVERT_LENS_UPDATE':
       return {
         ...state,
-        cartItems: state.cartItems.map((item) =>
-          item.product.id === action.productId 
-            ? { ...item, prescriptionId: action.prescriptionId } 
+        cartItems: state.cartItems.map(item =>
+          item.product.id === action.productId
+            ? { ...item, lensOption: action.previousLensOption }
             : item
         )
-      };
-    
-    case 'SET_PRESCRIPTION_VERIFIED':
-      if (action.productId) {
-        return {
-          ...state,
-          cartItems: state.cartItems.map((item) =>
-            item.product.id === action.productId 
-              ? { ...item, prescriptionVerified: action.verified } 
-              : item
-          )
-        };
-      }
-      
-      return {
-        ...state,
-        prescriptionVerified: action.verified
       };
     
     case 'CLEAR_CART':

@@ -74,29 +74,34 @@ export interface ProductFormData {
 
 
 export function normalizeProduct(apiProduct: ApiProduct): Product {
-  
   return {
-    ...apiProduct,
-      images: apiProduct.images.map((img) => {
-  const cleanPath = img.startsWith("/media/") ? img : `/media/${img}`;
-  return `http://localhost:8000${cleanPath}`;
-}),
+    id: apiProduct.id,
+    name: apiProduct.name,
+    description: apiProduct.description,
+    price: apiProduct.price,
+    stock: apiProduct.stock,
+    size: apiProduct.size,
+    weight: apiProduct.weight,
+    sold: apiProduct.sold,
+    images: apiProduct.images.map((img) => {
+      const cleanPath = img.startsWith("/media/") ? img : `/media/${img}`;
+      return `http://localhost:8000${cleanPath}`;
+    }),
 
-    category: apiProduct.category 
-      ? (typeof apiProduct.category === 'string'
-        ? { id: 0, name: apiProduct.category }
-        : apiProduct.category)
-      : null,
+    category: apiProduct.category
+      ? { id: apiProduct.category.id, name: apiProduct.category.name }
+      : { id: 0, name: "Unknown" },
+
     frame_type: apiProduct.frame_type
-      ? (typeof apiProduct.frame_type === 'string'
-        ? { id: 0, name: apiProduct.frame_type }
-        : apiProduct.frame_type)
-      : null,
+      ? { id: apiProduct.frame_type.id, name: apiProduct.frame_type.name }
+      : { id: 0, name: "Unknown" },
 
-    frame_material: apiProduct.frame_material || "Unknown",
-    colors: apiProduct.colors || "No colors",
+    frame_material: apiProduct.frame_material || "",
+    colors: apiProduct.colors || "",
     features: apiProduct.features || [],
     face_shapes: apiProduct.face_shapes || [],
     vision_problems: apiProduct.vision_problems || [],
+    created_at: apiProduct.created_at,
+    manufacturer_id: apiProduct.manufacturer,
   };
 }
