@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from prescriptions.models import Prescription
 from .models import Order, OrderItem, BillingInfo, Delivery
 from products.models import Product
 from decimal import Decimal
@@ -17,7 +18,7 @@ class BillingInfoSerializer(serializers.ModelSerializer):
         }
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    product_id = serializers.IntegerField(write_only=False)  # Frontend sends product_id
+    product_id = serializers.IntegerField(write_only=True)
     product_name = serializers.CharField(read_only=True)
     price = serializers.DecimalField(
         max_digits=10,
@@ -25,19 +26,18 @@ class OrderItemSerializer(serializers.ModelSerializer):
         min_value=Decimal('0.01')
     )
 
-    product = serializers.SerializerMethodField()
-    prescription = serializers.SerializerMethodField()
+    product = serializers.SerializerMethodField(read_only=True)
 
-    def get_product(self, obj):
-        from products.serializers import ProductSerializer
-        return ProductSerializer(obj.product, context=self.context).data
+    # Make prescription writable!
+    prescription = serializers.PrimaryKeyRelatedField(
+        queryset=Prescription.objects.all(),
+        required=False,
+        allow_null=True
+    )
 
-    def get_prescription(self, obj):
-        if obj.prescription:
-            from prescriptions.serializers import PrescriptionSerializer
-            return PrescriptionSerializer(obj.prescription, context=self.context).data
-        return None
-    
+    # Optional: Include full details in response
+    prescription_details = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = OrderItem
         fields = [
@@ -48,11 +48,21 @@ class OrderItemSerializer(serializers.ModelSerializer):
             'price',
             'lens_option',
             'prescription',
+            'prescription_details',
         ]
         extra_kwargs = {
-            'prescription': {'required': False, 'allow_null': True},
             'lens_option': {'required': False, 'allow_null': True}
         }
+
+    def get_product(self, obj):
+        from products.serializers import ProductSerializer
+        return ProductSerializer(obj.product, context=self.context).data
+
+    def get_prescription_details(self, obj):
+        if obj.prescription:
+            from prescriptions.serializers import PrescriptionSerializer
+            return PrescriptionSerializer(obj.prescription, context=self.context).data
+        return None
 
     def validate_quantity(self, value):
         if value < 1:

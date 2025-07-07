@@ -9,8 +9,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
-from .models import Order, OrderItem
-from products.models import Product
+from .models import Order
 from .serializers import OrderSerializer
 from rest_framework.decorators import api_view, permission_classes
 import json
@@ -36,7 +35,8 @@ class OrderCreateView(APIView):
                 except Exception as email_error:
                     print(f"Email failed but order created: {str(email_error)}")
 
-                return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
+                return Response(OrderSerializer(order, context={'request': request}).data, status=status.HTTP_201_CREATED)
+
 
             except ValidationError as ve:
                 print("Validation during save:", ve.detail)
@@ -128,49 +128,6 @@ class OrderStatusUpdateView(APIView):
             message = f"Your order #{order.order_number} status has been updated to {order.get_status_display()}"
             from django.core.mail import send_mail
             send_mail(subject, message, from_email, recipient_list)
-
-
-# from core.permission import IsAdmin
-
-# class AdminOrderListView(APIView):
-#     permission_classes = [IsAuthenticated, IsAdmin]
-
-#     def get(self, request):
-#         orders = Order.objects.all().order_by('-created_at')
-#         serializer = OrderSerializer(orders, many=True)
-#         return Response(serializer.data)
-
-
-# class AdminOrderDetailView(APIView):
-#     permission_classes = [IsAuthenticated, IsAdmin]
-
-#     def get(self, request, order_number):
-#         order = get_object_or_404(Order, order_number=order_number)
-#         serializer = OrderSerializer(order)
-#         return Response(serializer.data)
-
-
-# class AdminOrderStatusUpdateView(APIView):
-#     permission_classes = [IsAuthenticated, IsAdmin]
-
-#     def patch(self, request, order_number):
-#         order = get_object_or_404(Order, order_number=order_number)
-#         new_status = request.data.get("status")
-
-#         valid_statuses = [choice[0] for choice in Order.ORDER_STATUS]
-#         if new_status not in valid_statuses:
-#             return Response(
-#                 {"error": f"Invalid status. Choose from {valid_statuses}"},
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
-
-#         order.status = new_status
-#         order.save()
-#         return Response({
-#             "message": f"Order status updated to {new_status}",
-#             "order_number": order.order_number,
-#             "status": order.status
-#         }, status=status.HTTP_200_OK)
 
 from core.permission import IsAdmin, IsManufacturer, IsDelivery
 
