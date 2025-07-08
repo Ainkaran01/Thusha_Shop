@@ -98,8 +98,16 @@ class OrderSerializer(serializers.ModelSerializer):
         }
     
     def get_assigned_delivery_person(self, obj):
-        if hasattr(obj, "delivery") and obj.delivery and obj.delivery.delivery_person:
-            return obj.delivery.delivery_person.name
+        try:
+            if hasattr(obj, "delivery") and obj.delivery and obj.delivery.delivery_person:
+                person = obj.delivery.delivery_person
+                return {
+                    "id": person.id,
+                    "name": person.name or person.get_full_name() or person.username or "Unnamed",
+                    "email": person.email
+                }
+        except Exception as e:
+            print(f"Delivery person serialization error: {e}")
         return None
 
 

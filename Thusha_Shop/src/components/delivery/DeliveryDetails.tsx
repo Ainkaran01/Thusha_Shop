@@ -18,7 +18,7 @@ import {
   TableRow, 
   TableCell 
 } from "@/components/ui/table";
-import type { Order, OrderStatus } from "@/types";
+import type { Order, OrderStatus } from "@/api/orders";
 
 interface DeliveryDetailsProps {
   delivery: Order;
@@ -80,11 +80,11 @@ const DeliveryDetails: React.FC<DeliveryDetailsProps> = ({
             <div>
               <CardTitle className="text-xl">Order #{delivery.id}</CardTitle>
               <CardDescription>
-                Created: {formatDate(delivery.createdAt)}
+                Created: {formatDate(delivery.created_at)}
               </CardDescription>
             </div>
             <div className="flex space-x-2">
-              {getStatusBadge(delivery.status)}
+              {getStatusBadge(delivery.status as OrderStatus)}
               <Button 
                 variant="outline" 
                 size="icon" 
@@ -104,14 +104,14 @@ const DeliveryDetails: React.FC<DeliveryDetailsProps> = ({
               <TableBody>
                 {delivery.items.map((item, index) => (
                   <TableRow key={index}>
-                    <TableCell>Product #{item.productId}</TableCell>
+                    <TableCell>Product :- {item.product_name}</TableCell>
                     <TableCell>Qty: {item.quantity}</TableCell>
-                    <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">LKR {parseFloat(item.price).toFixed(2)}</TableCell>
                   </TableRow>
                 ))}
                 <TableRow>
                   <TableCell colSpan={2} className="font-medium">Total</TableCell>
-                  <TableCell className="text-right font-medium">${delivery.totalAmount.toFixed(2)}</TableCell>
+                  <TableCell className="text-right font-medium">LKR {parseFloat(delivery.total_price).toFixed(2)}</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -124,14 +124,15 @@ const DeliveryDetails: React.FC<DeliveryDetailsProps> = ({
               <MapPin className="h-4 w-4 mr-2" /> Shipping Address
             </h3>
             <div className="mt-2 space-y-1 text-sm">
-              <p className="font-medium">{delivery.shippingAddress.fullName}</p>
-              <p>{delivery.shippingAddress.street}</p>
+             <p>{delivery.billing.address1}</p>
+              {delivery.billing.address2 && <p>{delivery.billing.address2}</p>}
               <p>
-                {delivery.shippingAddress.city}, {delivery.shippingAddress.state} {delivery.shippingAddress.zipCode}
+                {delivery.billing.city}, {delivery.billing.state}{" "}
+                {delivery.billing.zip_code}
               </p>
-              <p>{delivery.shippingAddress.country}</p>
+              <p>{delivery.billing.country}</p>
               <p className="mt-2">
-                <span className="font-medium">Phone:</span> {delivery.shippingAddress.phone}
+                <strong>Phone:</strong> {delivery.billing.phone}
               </p>
             </div>
           </div>
@@ -144,30 +145,28 @@ const DeliveryDetails: React.FC<DeliveryDetailsProps> = ({
             </h3>
             <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Tracking Number</p>
-                <p className="font-mono">{delivery.trackingNumber}</p>
+                <p className="text-sm text-muted-foreground">Payment Method</p>
+                <p className="font-mono">{delivery.payment_method}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Estimated Delivery</p>
-                <p>{new Date(delivery.estimatedDelivery).toLocaleDateString()}</p>
+                <p>{new Date(delivery.created_at).toLocaleDateString()}</p>
               </div>
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button 
-            variant="outline" 
-            onClick={() => onStatusChange(delivery.id, "delivered")}
-          >
-            <CheckCircle className="h-4 w-4 mr-2" /> Mark as Delivered
-          </Button>
-          <Button 
-            variant="outline" 
-            className="border-red-200 text-red-600 hover:bg-red-50"
-            onClick={() => onStatusChange(delivery.id, "cancelled")}
-          >
-            <XCircle className="h-4 w-4 mr-2" /> Cancel Delivery
-          </Button>
+        <CardFooter className="flex justify-end">
+          {delivery.status === "shipped" && (
+            <Button
+              onClick={() =>
+                onStatusChange(delivery.order_number, "delivered")
+              }
+              className="bg-green-600 text-white hover:bg-green-700"
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Mark as Delivered
+            </Button>
+          )}
         </CardFooter>
       </Card>
     </>

@@ -1,6 +1,5 @@
-
 import React from "react";
-import { Edit, Trash } from "lucide-react";
+import { Edit, Trash, Eye, Truck, CheckCircle } from "lucide-react";
 import { 
   Card, 
   CardHeader, 
@@ -18,7 +17,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { Order, OrderStatus } from "@/types";
+import type { Order, OrderStatus } from "@/api/orders";
 
 interface DeliveryListProps {
   deliveries: Order[];
@@ -26,15 +25,17 @@ interface DeliveryListProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   onViewDetails: (delivery: Order) => void;
-  onDeleteDelivery: (id: string) => void;
+  onStatusUpdate: (orderId: string, status: OrderStatus) => void;
+  updatingStatus: string | null;
 }
 
 const DeliveryList: React.FC<DeliveryListProps> = ({ 
   filteredDeliveries, 
   activeTab, 
   setActiveTab, 
-  onViewDetails, 
-  onDeleteDelivery 
+  onViewDetails,
+  onStatusUpdate,
+  updatingStatus, 
 }) => {
   // Get status badge style
   const getStatusBadge = (status: OrderStatus) => {
@@ -72,7 +73,7 @@ const DeliveryList: React.FC<DeliveryListProps> = ({
               <TableHead>Customer</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Delivery Date</TableHead>
+              <TableHead>Payment Method</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -86,27 +87,38 @@ const DeliveryList: React.FC<DeliveryListProps> = ({
             ) : (
               filteredDeliveries.map((delivery) => (
                 <TableRow key={delivery.id}>
-                  <TableCell className="font-medium">{delivery.id}</TableCell>
-                  <TableCell>{delivery.shippingAddress.fullName}</TableCell>
-                  <TableCell>{new Date(delivery.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell>{getStatusBadge(delivery.status)}</TableCell>
-                  <TableCell>{delivery.estimatedDelivery}</TableCell>
+                  <TableCell className="font-medium">{delivery.order_number}</TableCell>
+                  <TableCell><p>{delivery.billing.name}</p> <p>{delivery.billing.address1}</p></TableCell>
+                  <TableCell>{new Date(delivery.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell>{getStatusBadge(delivery.status as OrderStatus)}</TableCell>
+                  <TableCell>{delivery.payment_method}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      {delivery.status === "shipped" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onStatusUpdate(delivery.order_number, "delivered")}
+                          disabled={updatingStatus === delivery.order_number}
+                        >
+                          {updatingStatus === delivery.order_number ? (
+                            <>
+                              <span className="animate-pulse">Updating...</span>
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Mark Delivered
+                            </>
+                          )}
+                        </Button>
+                      )}
                       <Button 
                         variant="ghost" 
                         size="icon"
                         onClick={() => onViewDetails(delivery)}
                       >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        className="text-destructive hover:bg-destructive/10"
-                        onClick={() => onDeleteDelivery(delivery.id)}
-                      >
-                        <Trash className="h-4 w-4" />
+                        <Eye className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
