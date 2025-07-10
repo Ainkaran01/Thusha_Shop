@@ -88,7 +88,7 @@ const DeliveryList: React.FC<DeliveryListProps> = ({
               filteredDeliveries.map((delivery) => (
                 <TableRow key={delivery.id}>
                   <TableCell className="font-medium">{delivery.order_number}</TableCell>
-                  <TableCell><p>{delivery.billing.name}</p> <p>{delivery.billing.address1}</p></TableCell>
+                  <TableCell><p>{delivery.billing.name}</p> <p>{delivery.billing.address1}</p> <p>{delivery.billing.phone}</p></TableCell>
                   <TableCell>{new Date(delivery.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>{getStatusBadge(delivery.status as OrderStatus)}</TableCell>
                   <TableCell>{delivery.payment_method}</TableCell>
@@ -100,6 +100,7 @@ const DeliveryList: React.FC<DeliveryListProps> = ({
                           size="sm"
                           onClick={() => onStatusUpdate(delivery.order_number, "delivered")}
                           disabled={updatingStatus === delivery.order_number}
+                           className="bg-green-200 text-green-900 hover:bg-green-400 border-green-500"
                         >
                           {updatingStatus === delivery.order_number ? (
                             <>
@@ -113,13 +114,15 @@ const DeliveryList: React.FC<DeliveryListProps> = ({
                           )}
                         </Button>
                       )}
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => onViewDetails(delivery)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                     <Button 
+  variant="outline" 
+  size="sm"
+  onClick={() => onViewDetails(delivery)}
+  className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-green-200"
+>
+  <Eye className="h-4 w-4 mr-2" />
+  View
+</Button>
                     </div>
                   </TableCell>
                 </TableRow>

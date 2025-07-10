@@ -15,11 +15,15 @@ export interface Order {
   created_at: string;
   items: OrderItem[];
   billing: BillingInfo;
+  status_updated_at: string | null;
   assigned_delivery_person:  {
     id: number;
     name: string;
     email: string;
   } | null;
+  delivery?: {
+    assigned_at: string;
+  };
 }
 
 export type OrderStatus =
