@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Package, CheckCircle, Clock, User } from "lucide-react";
+import { Package, CheckCircle, Clock, PackageCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Order } from "@/api/orders";
 
@@ -12,6 +12,34 @@ const DeliveryStats: React.FC<DeliveryStatsProps> = ({ deliveries }) => {
   const pendingDeliveries = deliveries.filter(
     d => d.status === "processing" || d.status === "shipped"
   ).length;
+
+const today = new Date().toISOString().slice(0, 10); // e.g., "2025-07-08"
+const completedToday = deliveries.filter(
+  (d) =>
+    d.status === "delivered" &&
+    d.status_updated_at?.slice(0, 10) === today
+).length;
+
+const deliveredOrders = deliveries.filter(
+  (d) =>
+    d.status === "delivered" &&
+    d.status_updated_at &&
+    d.delivery?.assigned_at
+);
+
+const deliveryTimes = deliveredOrders.map((order) => {
+  const assigned = new Date(order.delivery.assigned_at);
+  const delivered = new Date(order.status_updated_at!);
+  const diffMs = delivered.getTime() - assigned.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  return diffDays;
+});
+
+const averageDeliveryTime =
+  deliveryTimes.length > 0
+    ? (deliveryTimes.reduce((a, b) => a + b, 0) / deliveryTimes.length).toFixed(1)
+    : "N/A";
+
   
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -37,7 +65,7 @@ const DeliveryStats: React.FC<DeliveryStatsProps> = ({ deliveries }) => {
             </div>
             <div>
               <p className="text-muted-foreground text-sm">Completed Today</p>
-              <p className="text-2xl font-bold">2</p>
+              <p className="text-2xl font-bold">{completedToday}</p>
             </div>
           </div>
         </CardContent>
@@ -51,7 +79,7 @@ const DeliveryStats: React.FC<DeliveryStatsProps> = ({ deliveries }) => {
             </div>
             <div>
               <p className="text-muted-foreground text-sm">Average Delivery Time</p>
-              <p className="text-2xl font-bold">1.8 days</p>
+              <p className="text-2xl font-bold"> {averageDeliveryTime !== "N/A" ? `${averageDeliveryTime} days` : "N/A"}</p>
             </div>
           </div>
         </CardContent>
@@ -61,11 +89,11 @@ const DeliveryStats: React.FC<DeliveryStatsProps> = ({ deliveries }) => {
         <CardContent className="pt-6">
           <div className="flex items-center space-x-2">
             <div className="h-10 w-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
-              <User className="h-5 w-5" />
+              <PackageCheck className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-muted-foreground text-sm">Customer Rating</p>
-              <p className="text-2xl font-bold">4.9/5</p>
+              <p className="text-muted-foreground text-sm">Total Completed Orders</p>
+              <p className="text-2xl font-bold">{deliveredOrders.length}</p>
             </div>
           </div>
         </CardContent>
