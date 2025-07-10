@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from prescriptions.models import Prescription
 from products.models import Product
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -21,7 +22,17 @@ class Order(models.Model):
     payment_method = models.CharField(max_length=20, default="card")
     delivery_option = models.CharField(max_length=20, choices=[("home", "Home"), ("pickup", "Pickup")])
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    
+    status_updated_at = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            old_status = Order.objects.get(pk=self.pk).status
+            if old_status != self.status:
+                self.status_updated_at = timezone.now()
+        else:
+            self.status_updated_at = timezone.now()  # for new order
+        super().save(*args, **kwargs)
+
     class Meta:
         unique_together = ('order_number',) 
 
