@@ -14,6 +14,7 @@ import ContactUsTable from "@/components/admin/ContactUsTable";
 import AccountSettings from "@/components/admin/AccountSettings";
 import { useState,useEffect } from "react";
 import { fetchProductCategoryCounts } from "@/api/products";
+import { fetchSalesOverview ,SalesDataPoint } from "@/api/orders";
 
 interface ContactMessage {
   id: number;
@@ -23,11 +24,6 @@ interface ContactMessage {
   subject: string;
   message: string;
 }
-
-// Import mock data
-import {
-  salesData,
-} from "@/components/admin/mockData";
 
 interface AdminTabContentProps extends StaffAccountReceiverProps {
   viewMode: "list" | "grid";
@@ -65,6 +61,7 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
 
   const [contacts, setContacts] = useState<ContactMessage[]>([]);
   const [categoryData, setCategoryData] = useState<{ id: string; value: number }[]>([]);
+  const [salesData, setSalesData] = useState<SalesDataPoint[]>([]);
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -86,7 +83,24 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
   }).catch((err) => {
     console.error("Failed to fetch category chart data:", err);
   });
-}, []);
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [salesOverviewData, categoryData] = await Promise.all([
+          fetchSalesOverview(),
+          fetchProductCategoryCounts(),
+        ]);
+        setSalesData(salesOverviewData);
+        setCategoryData(categoryData);
+      } catch (err) {
+        console.error("Failed to fetch chart data:", err);
+      }
+    };
+
+    fetchData();
+  }, []);
 
 
   const handleAssignDelivery = async (orderId: number, deliveryPersonId: number) => {

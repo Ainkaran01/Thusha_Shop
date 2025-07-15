@@ -16,6 +16,8 @@ interface DashboardStats {
   pendingOrders: number;
   totalOrders: number;
   conversion: number;
+  salesGrowth: number;         
+  revenueGrowth: number; 
 }
 
 interface Appointment {
@@ -63,15 +65,21 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       <div className={`grid ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4" : "grid-cols-1"} gap-6`}>
       <StatCard 
         title="Total Sales" 
-        value={`LKR ${stats.totalSales.toLocaleString()}`} 
-        description="+12% from last month" 
+        value={`LKR ${stats.totalSales.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+        })}`} 
+        description={`${stats.salesGrowth >= 0 ? "+" : ""}${stats.salesGrowth.toFixed(1)}% growth this month `} 
         icon={<DollarSign className="h-4 w-4" />} 
         variant="green"
       />
       <StatCard 
         title="Monthly Revenue" 
-        value={`LKR ${stats.monthlyRevenue.toLocaleString()}`} 
-        description="+5.2% from last month" 
+        value={`LKR ${stats.monthlyRevenue.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+        })}`}
+        description={`${stats.revenueGrowth >= 0 ? "+" : ""}${stats.revenueGrowth.toFixed(1)}% compared to last month`} 
         icon={<BarChart className="h-4 w-4" />} 
         variant="blue"
       />
