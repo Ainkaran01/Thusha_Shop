@@ -94,6 +94,12 @@ export interface BillingInfo {
   country: string;
 }
 
+export interface SalesDataPoint {
+  month: string;
+  revenue: number;
+}
+
+
 const endpoint = "api/orders/role/";
 
 export const fetchOrders = async (): Promise<Order[]> => {
@@ -126,3 +132,19 @@ export const fetchPendingOrderCount = async (): Promise<number> => {
   return res.data.pending_orders;
 };
 
+
+export const fetchTotalSales = async (): Promise<{ total_sales: number; last_month_sales: number }> => {
+  const res = await apiClient.get(`${endpoint}total-sales/`);
+  return res.data;
+};
+
+export const fetchMonthlyRevenue = async (): Promise<{ monthly_revenue: number; last_month_revenue: number }> => {
+  const res = await apiClient.get(`${endpoint}monthly-revenue/`);
+  return res.data;
+};
+
+
+export const fetchSalesOverview = async (): Promise<SalesDataPoint[]> => {
+  const res = await apiClient.get(`${endpoint}sales-overview/`);
+  return res.data;
+};
