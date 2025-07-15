@@ -95,7 +95,7 @@ const MyOrdersList: React.FC<MyOrdersListProps> = ({ onViewOrder }) => {
           <Card key={order.id}>
             <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
               <div>
-                <CardTitle className="text-base">Order #{order.id}</CardTitle>
+                <CardTitle className="text-base">{order.order_number}</CardTitle>
                 <CardDescription>
                   Placed on {new Date(order.created_at).toLocaleDateString()}
                 </CardDescription>

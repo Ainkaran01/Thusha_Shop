@@ -71,11 +71,12 @@ from .models import CustomerProfile
 
 class ProfileSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='user.name', read_only=False)
-
+    created_at=serializers.CharField(source='user.created_at', read_only=True)
     class Meta:
         model = CustomerProfile
         fields = [
-            'name',  # ✅ Now included
+            'name',  
+            'created_at',
             'phone_number',
             'address_line1',
             'address_line2',
