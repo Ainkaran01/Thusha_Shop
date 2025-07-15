@@ -13,7 +13,9 @@ from .models import Order
 from .serializers import OrderSerializer
 from rest_framework.decorators import api_view, permission_classes
 import json
-
+from django.db.models import Sum
+from django.utils import timezone
+from django.db.models.functions import ExtractMonth, ExtractYear
 
 class OrderCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -282,3 +284,81 @@ class ActiveDeliveryPersons(APIView):
         users = User.objects.filter(role='delivery', is_active=True)
         data = [{'id': u.id, 'name': u.name, 'email': u.email} for u in users]
         return Response(data, status=200)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdmin])
+def total_sales(request):
+    now = timezone.now()
+    start_of_current_month = now.replace(day=1)
+    
+    current_total = Order.objects.filter(
+        status='delivered'
+    ).aggregate(total=Sum('total_price'))['total'] or 0
+
+    previous_total = Order.objects.filter(
+        status='delivered',
+        created_at__lt=start_of_current_month
+    ).aggregate(total=Sum('total_price'))['total'] or 0
+
+    return Response({
+        'total_sales': float(current_total),
+        'last_month_sales': float(previous_total)
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdmin])
+def monthly_revenue(request):
+    now = timezone.now()
+    start_of_this_month = now.replace(day=1)
+    start_of_last_month = (start_of_this_month - timezone.timedelta(days=1)).replace(day=1)
+
+    current = Order.objects.filter(
+        status='delivered',
+        created_at__gte=start_of_this_month
+    ).aggregate(total=Sum('total_price'))['total'] or 0
+
+    previous = Order.objects.filter(
+        status='delivered',
+        created_at__gte=start_of_last_month,
+        created_at__lt=start_of_this_month
+    ).aggregate(total=Sum('total_price'))['total'] or 0
+
+    return Response({
+        'monthly_revenue': float(current),
+        'last_month_revenue': float(previous)
+    })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdmin])
+def sales_overview(request):
+    # Get current year
+    now = timezone.now()
+    start_of_year = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    
+    # Query monthly sales data for delivered orders
+    monthly_sales = Order.objects.filter(
+        status='delivered',
+        created_at__gte=start_of_year
+    ).annotate(
+        month=ExtractMonth('created_at'),
+        year=ExtractYear('created_at')
+    ).values('month', 'year').annotate(
+        revenue=Sum('total_price')
+    ).order_by('year', 'month')
+    
+    # Format the data for the chart
+    month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    
+    # Initialize all months with 0 revenue
+    result = [{'month': month, 'revenue': 0.0} for month in month_names]
+    
+    # Update with actual data
+    for sale in monthly_sales:
+        month_index = sale['month'] - 1
+        if month_index < len(result):
+            result[month_index]['revenue'] = float(sale['revenue'] or 0.0)
+    
+    return Response(result)

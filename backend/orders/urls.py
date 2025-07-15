@@ -6,7 +6,8 @@ from .views import (
     OrderDetailView,
     OrderStatusUpdateView,
     RoleBasedOrderListView, RoleBasedOrderStatusUpdateView,
-    AssignDeliveryView, ActiveDeliveryPersons,pending_order_count
+    AssignDeliveryView, ActiveDeliveryPersons,pending_order_count,
+    sales_overview ,total_sales ,monthly_revenue
     )
 
 urlpatterns = [
@@ -21,5 +22,7 @@ urlpatterns = [
     path('role/assign-delivery/', AssignDeliveryView.as_view(), name='assign-delivery'),
     path('role/delivery-persons/', ActiveDeliveryPersons.as_view(), name='delivery-person-list'),
     path('role/pending-order-count/', pending_order_count, name='pending-order-count'),
-
+    path('role/total-sales/', total_sales, name='total-sales'),
+    path('role/monthly-revenue/', monthly_revenue, name='monthly-revenue'),
+    path('role/sales-overview/',sales_overview, name='sales-overview'),
 ]
