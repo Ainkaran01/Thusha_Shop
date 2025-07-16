@@ -283,19 +283,19 @@ const LoginForm = ({ onToggleAuthMode, onForgotPassword }: LoginFormProps) => {
 
       switch (loggedInUser.role) {
         case "admin":
-          navigate("/admin-dashboard");
+          navigate("/admin-dashboard", { replace: true });
           break;
         case "doctor":
-          navigate("/doctor-dashboard");
+          navigate("/doctor-dashboard", { replace: true });
           break;
         case "manufacturer":
-          navigate("/manufacturer-dashboard");
+          navigate("/manufacturer-dashboard", { replace: true });
           break;
         case "delivery":
-          navigate("/delivery-dashboard");
+          navigate("/delivery-dashboard", { replace: true });
           break;
         default:
-          navigate("/account");
+          navigate("/account", { replace: true });
       }
     } catch (error) {
       toast({
@@ -353,8 +353,16 @@ const LoginForm = ({ onToggleAuthMode, onForgotPassword }: LoginFormProps) => {
             <Button 
               type="submit" 
               className="w-full h-12 bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-black font-medium rounded-lg shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
+              disabled={isSubmitting}
             >
-              Send Reset Link
+               {isSubmitting ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black mr-2"></div>
+                  Sending...
+                </div>
+              ) : (
+                "Send Reset Link"
+              )}
             </Button>
             
             <Button 
