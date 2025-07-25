@@ -98,5 +98,8 @@ export interface UserContextType {
   authLoading: boolean;
   initialized: boolean;
   isLoading: boolean
-  isInitialized: boolean
+  isInitialized: boolean;
+  sendPasswordResetOtp: (email: string) => Promise<void>;
+  verifyPasswordResetOtp: (email: string, otp: string) => Promise<boolean>;
+  resetPassword: (email: string, newPassword: string) => Promise<void>;
 }
