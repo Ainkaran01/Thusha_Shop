@@ -52,7 +52,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order }) => {
   return (
     <div className="animate-fade-in">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Order #{order.id}</h2>
+        <h2 className="text-xl font-semibold">{order.order_number}</h2>
         <div className="flex items-center">
           <span className={`${getStatusLabel(order.status).color} font-medium`}>
             {getStatusLabel(order.status).label}
@@ -131,7 +131,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order }) => {
         {order.items.map((item, index) => (
           <div key={index} className="flex justify-between">
             <div>
-              <div className="font-medium">{item.productName}</div>
+              <div className="font-medium">{item.product_name}</div>
               <div className="text-sm text-muted-foreground">Qty: {item.quantity}</div>
             </div>
             <div className="font-medium">LKR {(item.price * item.quantity).toFixed(2)}</div>

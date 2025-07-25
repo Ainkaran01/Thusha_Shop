@@ -75,7 +75,7 @@ class OrderListView(APIView):
 
     def get(self, request):
         orders = Order.objects.filter(user=request.user)
-        serializer = OrderSerializer(orders, many=True)
+        serializer = OrderSerializer(orders, many=True, context={'request': request})
         return Response(serializer.data)
 
 class OrderDetailView(APIView):
