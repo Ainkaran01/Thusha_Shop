@@ -295,7 +295,7 @@ const LoginForm = ({ onToggleAuthMode, onForgotPassword }: LoginFormProps) => {
           navigate("/delivery-dashboard", { replace: true });
           break;
         default:
-          navigate("/account", { replace: true });
+          navigate("/user-dashboard", { replace: true });
       }
     } catch (error) {
       toast({
