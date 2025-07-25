@@ -6,7 +6,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SalesDataPoint {
   month: string;
-  revenue: number;
+  online: number;
+  pos: number;
 }
 
 interface CategoryDataPoint {
@@ -49,11 +50,12 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ salesData, categoryDa
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis 
-                    label={{ value: 'Revenue ($)', angle: -90, position: 'insideLeft' }} 
+                    label={{ value: 'Revenue ($)', angle: -90, position: 'outsideLeft',offset: 10, }} 
                   />
                   <Tooltip formatter={(value) => [`$${value}`, 'Revenue']} />
                   <Legend />
-                  <Line type="monotone" dataKey="revenue" stroke="#8884d8" activeDot={{ r: 8 }} />
+                  <Line type="monotone" dataKey="online" stroke="#4f46e5" name="Online Orders" />
+                  <Line type="monotone" dataKey="pos" stroke="#10b981" name="Point Of Sales" />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
