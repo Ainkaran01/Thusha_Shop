@@ -286,24 +286,29 @@ class ActiveDeliveryPersons(APIView):
         return Response(data, status=200)
 
 
+from pointofsales.models import PointOfSale
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsAdmin])
 def total_sales(request):
     now = timezone.now()
     start_of_current_month = now.replace(day=1)
     
-    current_total = Order.objects.filter(
-        status='delivered'
-    ).aggregate(total=Sum('total_price'))['total'] or 0
+    online_total = Order.objects.filter(status='delivered').aggregate(total=Sum('total_price'))['total'] or 0
+    pos_total = PointOfSale.objects.aggregate(total=Sum('total_amount'))['total'] or 0
 
-    previous_total = Order.objects.filter(
+    online_last_month = Order.objects.filter(
         status='delivered',
         created_at__lt=start_of_current_month
     ).aggregate(total=Sum('total_price'))['total'] or 0
 
+    pos_last_month = PointOfSale.objects.filter(
+        created_at__lt=start_of_current_month
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+    
     return Response({
-        'total_sales': float(current_total),
-        'last_month_sales': float(previous_total)
+        'total_sales': float(online_total + pos_total),
+        'last_month_sales': float(online_last_month + pos_last_month)
     })
 
 
@@ -314,20 +319,29 @@ def monthly_revenue(request):
     start_of_this_month = now.replace(day=1)
     start_of_last_month = (start_of_this_month - timezone.timedelta(days=1)).replace(day=1)
 
-    current = Order.objects.filter(
+    online_current = Order.objects.filter(
         status='delivered',
         created_at__gte=start_of_this_month
     ).aggregate(total=Sum('total_price'))['total'] or 0
 
-    previous = Order.objects.filter(
+    pos_current = PointOfSale.objects.filter(
+        created_at__gte=start_of_this_month
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+
+    online_last = Order.objects.filter(
         status='delivered',
         created_at__gte=start_of_last_month,
         created_at__lt=start_of_this_month
     ).aggregate(total=Sum('total_price'))['total'] or 0
 
+    pos_last = PointOfSale.objects.filter(
+        created_at__gte=start_of_last_month,
+        created_at__lt=start_of_this_month
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+
     return Response({
-        'monthly_revenue': float(current),
-        'last_month_revenue': float(previous)
+        'monthly_revenue': float(online_current + pos_current),
+        'last_month_revenue': float(online_last + pos_last)
     })
 
 @api_view(['GET'])
@@ -338,7 +352,7 @@ def sales_overview(request):
     start_of_year = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
     
     # Query monthly sales data for delivered orders
-    monthly_sales = Order.objects.filter(
+    online_sales = Order.objects.filter(
         status='delivered',
         created_at__gte=start_of_year
     ).annotate(
@@ -346,19 +360,29 @@ def sales_overview(request):
         year=ExtractYear('created_at')
     ).values('month', 'year').annotate(
         revenue=Sum('total_price')
-    ).order_by('year', 'month')
+    )
+
+    # POS sales monthly
+    pos_sales = PointOfSale.objects.filter(
+        created_at__gte=start_of_year
+    ).annotate(
+        month=ExtractMonth('created_at'),
+        year=ExtractYear('created_at')
+    ).values('month', 'year').annotate(
+        revenue=Sum('total_amount')
+    )
     
     # Format the data for the chart
     month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    
-    # Initialize all months with 0 revenue
-    result = [{'month': month, 'revenue': 0.0} for month in month_names]
-    
-    # Update with actual data
-    for sale in monthly_sales:
-        month_index = sale['month'] - 1
-        if month_index < len(result):
-            result[month_index]['revenue'] = float(sale['revenue'] or 0.0)
-    
+    result = []
+    for i in range(1, 13):
+        online = next((o['revenue'] for o in online_sales if o['month'] == i), 0)
+        pos = next((p['revenue'] for p in pos_sales if p['month'] == i), 0)
+        result.append({
+            'month': month_names[i-1],
+            'online': float(online or 0),
+            'pos': float(pos or 0)
+        })
+
     return Response(result)

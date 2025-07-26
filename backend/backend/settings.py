@@ -107,7 +107,7 @@ INSTALLED_APPS = [
    'wishlist',
    'cart',
    'adminprofile',
-   
+   'pointofsales',
 
    
 ]

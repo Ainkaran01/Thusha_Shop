@@ -133,7 +133,7 @@ const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <Calendar className="h-5 w-5 text-blue-600" />
+              <Calendar className="h-5 w-5 text-yellow-600" />
             </div>
             <div>
               <CardTitle className="text-2xl font-bold text-gray-800">
@@ -218,7 +218,7 @@ const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
                       </TableCell>
                       <TableCell className="py-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                          <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
                             {apt.patient_name?.charAt(0)?.toUpperCase() || "P"}
                           </div>
                           <span className="font-medium text-gray-800">

@@ -96,7 +96,8 @@ export interface BillingInfo {
 
 export interface SalesDataPoint {
   month: string;
-  revenue: number;
+  online: number;
+  pos: number;
 }
 
 

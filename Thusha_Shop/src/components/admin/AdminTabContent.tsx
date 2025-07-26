@@ -6,6 +6,7 @@ import { StaffAccountReceiverProps } from "./StaffAccountManager";
 
 // Import dashboard components
 import DashboardOverview from "@/components/admin/DashboardOverview";
+import PointOfSale from "@/components/admin/PointOfSale";
 import OrdersTable from "@/components/admin/OrdersTable";
 import ProductsTable from "@/components/admin/ProductsTable";
 import AppointmentsTable from "@/components/admin/AppointmentsTable";
@@ -124,6 +125,12 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
           salesData={salesData}
           categoryData={categoryData}
           setActiveTab={setActiveTab}
+        />
+      </TabsContent>
+
+      <TabsContent value="sale">
+        <PointOfSale
+        products={products}
         />
       </TabsContent>
 

@@ -31,7 +31,8 @@ interface Appointment {
 
 interface SalesDataPoint {
   month: string;
-  revenue: number;
+  online: number;
+  pos: number;
 }
 
 interface CategoryDataPoint {
@@ -62,7 +63,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 }) => {
   return (
     <div className="space-y-6">
-      <div className={`grid ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4" : "grid-cols-1"} gap-6`}>
+      <div className={`grid ${viewMode === "grid" ? "sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4" : "grid-cols-1"} gap-6`}>
       <StatCard 
         title="Total Sales" 
         value={`LKR ${stats.totalSales.toLocaleString('en-US', {

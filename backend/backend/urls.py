@@ -27,7 +27,7 @@ urlpatterns = [
     path('api/wishlist/', include('wishlist.urls')),
     path('api/cart/', include('cart.urls')),
     path('api/adminprofile/', include('adminprofile.urls')),
-
+    path('api/pointofsales/', include('pointofsales.urls')),
  ]
 
 # For media files (uploaded photos, prescriptions, etc.)
