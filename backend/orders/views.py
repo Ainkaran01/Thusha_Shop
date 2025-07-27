@@ -13,7 +13,9 @@ from .models import Order
 from .serializers import OrderSerializer
 from rest_framework.decorators import api_view, permission_classes
 import json
-
+from django.db.models import Sum
+from django.utils import timezone
+from django.db.models.functions import ExtractMonth, ExtractYear
 
 class OrderCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -73,7 +75,7 @@ class OrderListView(APIView):
 
     def get(self, request):
         orders = Order.objects.filter(user=request.user)
-        serializer = OrderSerializer(orders, many=True)
+        serializer = OrderSerializer(orders, many=True, context={'request': request})
         return Response(serializer.data)
 
 class OrderDetailView(APIView):
@@ -228,12 +230,52 @@ class AssignDeliveryView(APIView):
             order = serializer.validated_data['order']
             if hasattr(order, 'delivery'):
                 return Response({"error": "Delivery already assigned for this order."}, status=400)
+
             delivery = serializer.save()
             order.status = "shipped"
             order.save()
+
+            # ✅ Send emails to both
+            self.send_assignment_emails(order, delivery)
+
             return Response(DeliverySerializer(delivery).data, status=201)
+
         return Response(serializer.errors, status=400)
 
+    def send_assignment_emails(self, order, delivery):
+        from_email = settings.DEFAULT_FROM_EMAIL
+        customer_email = order.billing.email
+        delivery_email = delivery.delivery_person.email
+
+        # 1. Email to customer
+        try:
+            subject = f"Order Status Update - #{order.order_number}"
+            html_customer = render_to_string("emails/status_update.html", {
+                "order": order,
+                "new_status": order.get_status_display(),
+            })
+            text_customer = strip_tags(html_customer)
+
+            email_customer = EmailMultiAlternatives(subject, text_customer, from_email, [customer_email])
+            email_customer.attach_alternative(html_customer, "text/html")
+            email_customer.send()
+        except Exception as e:
+            print("Failed to send customer email:", e)
+
+        # 2. Email to delivery person
+        try:
+            subject = f"New Delivery Assigned - Order #{order.order_number}"
+            html_delivery = render_to_string("emails/delivery_person_assignment.html", {
+                "order": order,
+                "delivery_person": delivery.delivery_person,
+            })
+            text_delivery = strip_tags(html_delivery)
+
+            email_delivery = EmailMultiAlternatives(subject, text_delivery, from_email, [delivery_email])
+            email_delivery.attach_alternative(html_delivery, "text/html")
+            email_delivery.send()
+        except Exception as e:
+            print("Failed to send delivery email:", e)
 
 class ActiveDeliveryPersons(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]
@@ -242,3 +284,105 @@ class ActiveDeliveryPersons(APIView):
         users = User.objects.filter(role='delivery', is_active=True)
         data = [{'id': u.id, 'name': u.name, 'email': u.email} for u in users]
         return Response(data, status=200)
+
+
+from pointofsales.models import PointOfSale
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdmin])
+def total_sales(request):
+    now = timezone.now()
+    start_of_current_month = now.replace(day=1)
+    
+    online_total = Order.objects.filter(status='delivered').aggregate(total=Sum('total_price'))['total'] or 0
+    pos_total = PointOfSale.objects.aggregate(total=Sum('total_amount'))['total'] or 0
+
+    online_last_month = Order.objects.filter(
+        status='delivered',
+        created_at__lt=start_of_current_month
+    ).aggregate(total=Sum('total_price'))['total'] or 0
+
+    pos_last_month = PointOfSale.objects.filter(
+        created_at__lt=start_of_current_month
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+    
+    return Response({
+        'total_sales': float(online_total + pos_total),
+        'last_month_sales': float(online_last_month + pos_last_month)
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdmin])
+def monthly_revenue(request):
+    now = timezone.now()
+    start_of_this_month = now.replace(day=1)
+    start_of_last_month = (start_of_this_month - timezone.timedelta(days=1)).replace(day=1)
+
+    online_current = Order.objects.filter(
+        status='delivered',
+        created_at__gte=start_of_this_month
+    ).aggregate(total=Sum('total_price'))['total'] or 0
+
+    pos_current = PointOfSale.objects.filter(
+        created_at__gte=start_of_this_month
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+
+    online_last = Order.objects.filter(
+        status='delivered',
+        created_at__gte=start_of_last_month,
+        created_at__lt=start_of_this_month
+    ).aggregate(total=Sum('total_price'))['total'] or 0
+
+    pos_last = PointOfSale.objects.filter(
+        created_at__gte=start_of_last_month,
+        created_at__lt=start_of_this_month
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+
+    return Response({
+        'monthly_revenue': float(online_current + pos_current),
+        'last_month_revenue': float(online_last + pos_last)
+    })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdmin])
+def sales_overview(request):
+    # Get current year
+    now = timezone.now()
+    start_of_year = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    
+    # Query monthly sales data for delivered orders
+    online_sales = Order.objects.filter(
+        status='delivered',
+        created_at__gte=start_of_year
+    ).annotate(
+        month=ExtractMonth('created_at'),
+        year=ExtractYear('created_at')
+    ).values('month', 'year').annotate(
+        revenue=Sum('total_price')
+    )
+
+    # POS sales monthly
+    pos_sales = PointOfSale.objects.filter(
+        created_at__gte=start_of_year
+    ).annotate(
+        month=ExtractMonth('created_at'),
+        year=ExtractYear('created_at')
+    ).values('month', 'year').annotate(
+        revenue=Sum('total_amount')
+    )
+    
+    # Format the data for the chart
+    month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    result = []
+    for i in range(1, 13):
+        online = next((o['revenue'] for o in online_sales if o['month'] == i), 0)
+        pos = next((p['revenue'] for p in pos_sales if p['month'] == i), 0)
+        result.append({
+            'month': month_names[i-1],
+            'online': float(online or 0),
+            'pos': float(pos or 0)
+        })
+
+    return Response(result)

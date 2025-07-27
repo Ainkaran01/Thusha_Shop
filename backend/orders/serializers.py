@@ -75,7 +75,15 @@ class OrderSerializer(serializers.ModelSerializer):
     billing = BillingInfoSerializer()
     assigned_delivery_person = serializers.SerializerMethodField()
     order_number = serializers.CharField(required=True)
+    delivery = serializers.SerializerMethodField()
 
+    def get_delivery(self, obj):
+        # ✅ Safely import it here
+        from .serializers import DeliverySerializer
+        if hasattr(obj, "delivery"):
+            return DeliverySerializer(obj.delivery, context=self.context).data
+        return None
+    
     class Meta:
         model = Order
         fields = [
@@ -90,6 +98,8 @@ class OrderSerializer(serializers.ModelSerializer):
             'billing',
             'created_at',
             'assigned_delivery_person',
+            'status_updated_at',
+            'delivery', 
         ]
         read_only_fields = ['created_at', 'status']
         extra_kwargs = {
@@ -98,8 +108,16 @@ class OrderSerializer(serializers.ModelSerializer):
         }
     
     def get_assigned_delivery_person(self, obj):
-        if hasattr(obj, "delivery") and obj.delivery and obj.delivery.delivery_person:
-            return obj.delivery.delivery_person.name
+        try:
+            if hasattr(obj, "delivery") and obj.delivery and obj.delivery.delivery_person:
+                person = obj.delivery.delivery_person
+                return {
+                    "id": person.id,
+                    "name": person.name or person.get_full_name() or person.username or "Unnamed",
+                    "email": person.email
+                }
+        except Exception as e:
+            print(f"Delivery person serialization error: {e}")
         return None
 
 

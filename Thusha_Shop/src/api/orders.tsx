@@ -15,7 +15,15 @@ export interface Order {
   created_at: string;
   items: OrderItem[];
   billing: BillingInfo;
-  assigned_delivery_person?: string;
+  status_updated_at: string | null;
+  assigned_delivery_person:  {
+    id: number;
+    name: string;
+    email: string;
+  } | null;
+  delivery?: {
+    assigned_at: string;
+  };
 }
 
 export type OrderStatus =
@@ -86,6 +94,13 @@ export interface BillingInfo {
   country: string;
 }
 
+export interface SalesDataPoint {
+  month: string;
+  online: number;
+  pos: number;
+}
+
+
 const endpoint = "api/orders/role/";
 
 export const fetchOrders = async (): Promise<Order[]> => {
@@ -118,3 +133,19 @@ export const fetchPendingOrderCount = async (): Promise<number> => {
   return res.data.pending_orders;
 };
 
+
+export const fetchTotalSales = async (): Promise<{ total_sales: number; last_month_sales: number }> => {
+  const res = await apiClient.get(`${endpoint}total-sales/`);
+  return res.data;
+};
+
+export const fetchMonthlyRevenue = async (): Promise<{ monthly_revenue: number; last_month_revenue: number }> => {
+  const res = await apiClient.get(`${endpoint}monthly-revenue/`);
+  return res.data;
+};
+
+
+export const fetchSalesOverview = async (): Promise<SalesDataPoint[]> => {
+  const res = await apiClient.get(`${endpoint}sales-overview/`);
+  return res.data;
+};

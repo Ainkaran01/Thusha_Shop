@@ -85,6 +85,39 @@
             border-radius: 6px;
             color:rgb(19, 44, 113);
         }
+
+        .review-box {
+            background-color: #fff6e5;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 5px solid #ffc107;
+        }
+
+        .review-box h3 {
+            margin-top: 0;
+            font-size: 18px;
+            color: #9c7405;
+        }
+
+        .review-box p {
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+
+        .review-button {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 18px;
+            background-color: #003366;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .review-button:hover {
+            background-color: #001f4d;
+        }
     </style>
 </head>
 <body>
@@ -108,13 +141,20 @@
                 </div>
             </div>
 
-            {% if order.delivery_option == "home" %}
+            {% if order.delivery_option == "home" and new_status != "Delivered" %}
                 <div class="note">
                     🏠 Your order will be delivered to your home. Please expect delivery within a few days.
                 </div>
-            {% elif order.delivery_option == "pickup" %}
+            {% elif order.delivery_option == "pickup" and new_status != "Delivered"  %}
                 <div class="note">
                     🏬 Your order is ready for in-store pickup. You can collect it from our shop during business hours.
+                </div>
+            {% endif %}
+
+            {% if new_status == "Delivered" %}
+                <div class="review-box">
+                    <h3>✅ Delivery Completed</h3>
+                    <p>We hope you had a great delivery experience!</p>
                 </div>
             {% endif %}
 

@@ -53,7 +53,9 @@ import {
   assignDelivery as apiAssignDelivery,
   fetchDeliveryPersons as apiFetchDeliveryPersons,
   Order,
-  fetchPendingOrderCount
+  fetchPendingOrderCount,
+  fetchTotalSales,
+  fetchMonthlyRevenue,
 } from "@/api/orders"
 import { useToast } from "@/hooks/use-toast";
 import { Product } from "@/types/product";
@@ -69,6 +71,8 @@ interface AdminContextType {
     totalOrders: number;
     pendingOrders: number;
     conversion: number;
+    salesGrowth: number;       
+    revenueGrowth: number;
   };
 
   // Frame Types
@@ -144,12 +148,14 @@ export const AdminDashboardProvider: React.FC<AdminDashboardProviderProps> = ({
   const [products, setProducts] = useState<Product[]>([]);
   const { toast } = useToast();
   const [stats, setStats] = useState({
-    totalSales: 25890.75,
-    monthlyRevenue: 4560.25,
+    totalSales: 0,
+    monthlyRevenue: 0,
     totalCustomers: 0,
     totalOrders: 412,
     pendingOrders: 0,
     conversion: 3.2,
+    salesGrowth: 0,      
+    revenueGrowth: 0,
   });
 
   const [frameTypes, setFrameTypes] = useState<FrameType[]>([]);
@@ -171,6 +177,8 @@ export const AdminDashboardProvider: React.FC<AdminDashboardProviderProps> = ({
           customersData,
           customerCount,
           pendingOrderCount,
+          totalSalesData,
+          monthlyRevenueData,
         ] = await Promise.all([
           getFrameTypes(),
           getCategories(),
@@ -179,6 +187,8 @@ export const AdminDashboardProvider: React.FC<AdminDashboardProviderProps> = ({
           fetchActiveCustomers(),
           fetchCustomerCount(),
           fetchPendingOrderCount(),
+          fetchTotalSales(),
+          fetchMonthlyRevenue(),
         ]);
         setFrameTypes(frameTypesData);
         setCategories(categoriesData);
@@ -186,11 +196,23 @@ export const AdminDashboardProvider: React.FC<AdminDashboardProviderProps> = ({
         setAppointments(appointmentData);
         setCustomers(customersData);
         setStats((prev) => ({
-        ...prev,
+        ...prev,  
+        totalSales: totalSalesData.total_sales,
+        monthlyRevenue: monthlyRevenueData.monthly_revenue,
         totalCustomers: customerCount,
         pendingOrders: pendingOrderCount,
+        salesGrowth:
+          totalSalesData.last_month_sales === 0
+            ? 100
+            : ((totalSalesData.total_sales - totalSalesData.last_month_sales) /
+                totalSalesData.last_month_sales) * 100,
+        revenueGrowth:
+          monthlyRevenueData.last_month_revenue === 0
+            ? 100
+            : ((monthlyRevenueData.monthly_revenue - monthlyRevenueData.last_month_revenue) /
+                monthlyRevenueData.last_month_revenue) * 100,
         }));
-        console.log("✅ Customers fetch response va:", customersData); // ✅ step 2
+    
       } catch (error) {
         console.error("Failed to load initial data:", error);
         toast({

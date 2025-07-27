@@ -66,7 +66,7 @@ const OrderHistory = () => {
               <CardHeader>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <CardTitle className="text-lg">Order #{order.id}</CardTitle>
+                    <CardTitle className="text-lg">{order.order_number}</CardTitle>
                     <p className="text-sm text-muted-foreground">
                       Placed on {new Date(order.created_at).toLocaleDateString()}
                     </p>

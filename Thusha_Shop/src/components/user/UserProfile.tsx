@@ -1,4 +1,4 @@
-import React from "react";
+import React ,{ useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -9,8 +9,14 @@ import { Card } from "@/components/ui/card";
 import ProfileInformation from "@/components/user/ProfileInformation";
 
 const UserProfile = () => {
-  const { user } = useUser();
+  const { user,fetchProfile} = useUser();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user && user.role === "customer") {
+      fetchProfile();
+    }
+  }, [user]);
 
   if (!user) {
     return (
