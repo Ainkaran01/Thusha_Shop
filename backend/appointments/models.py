@@ -81,8 +81,16 @@ class Appointment(models.Model):
         return dict(self.TIME_SLOT_CHOICES).get(self.time, self.time)
     
 # Signal registration
-@receiver(pre_save, sender=Appointment)
-def update_appointment_status(sender, instance, **kwargs):
-    """Automatically update status for past appointments"""
-    if instance.date < timezone.now().date():
-        instance.status = 'completed'
+# @receiver(pre_save, sender=Appointment)
+# def update_appointment_status(sender, instance, **kwargs):
+#     """Automatically update status for past appointments"""
+#     if instance.date < timezone.now().date():
+#         instance.status = 'completed'
+
+ 
+
+    def save(self, *args, **kwargs):
+        # Auto-complete only if not manually set to 'cancelled'
+        if self.date < timezone.now().date() and self.status != 'cancelled':
+            self.status = 'completed'
+        super().save(*args, **kwargs)  # Proceed with normal save
