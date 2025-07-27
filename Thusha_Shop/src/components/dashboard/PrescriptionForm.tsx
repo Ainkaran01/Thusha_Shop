@@ -1,27 +1,21 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-} from '@/components/ui/select';
+import React from "react"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { Eye, User, Mail, Plus, X, Save } from "lucide-react"
 
 interface PrescriptionFormProps {
-  newPrescription: any;
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  onEyeValueChange: (eye: 'rightEye' | 'leftEye', field: string, value: number) => void;
-  onSave: () => void;
-  onCancel: () => void;
-  onPupillaryDistanceChange: (value: number) => void;
-  onSelectPatientEmail: (value: string) => void;
-  confirmedPatients: string[];
+  newPrescription: any
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
+  onEyeValueChange: (eye: "rightEye" | "leftEye", field: string, value: number) => void
+  onSave: () => void
+  onCancel: () => void
+  onPupillaryDistanceChange: (value: number) => void
+  onSelectPatientEmail: (value: string) => void
+  confirmedPatients: string[]
 }
 
 const PrescriptionForm = ({
@@ -32,157 +26,141 @@ const PrescriptionForm = ({
   onCancel,
   onPupillaryDistanceChange,
   confirmedPatients,
-  onSelectPatientEmail
+  onSelectPatientEmail,
 }: PrescriptionFormProps) => {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="max-w-2xl w-full mx-4">
-        <CardHeader>
-          <CardTitle>Create New Prescription</CardTitle>
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex justify-center items-center p-4">
+      <div className="bg-white max-w-4xl w-full max-h-[95vh] rounded-xl shadow-xl flex flex-col overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 text-white p-4">
+          <CardTitle className="text-lg font-bold flex items-center gap-2">
+            <Plus className="h-5 w-5" /> New Prescription
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4">
-            {/* Patient Email Dropdown */}
-            <div className="grid gap-2">
-              <Label htmlFor="patientEmail">Patient Email</Label>
-               <Select onValueChange={(value) => onSelectPatientEmail(value)}>
-  <SelectTrigger>
-    <SelectValue placeholder="Select a patient email" />
-  </SelectTrigger>
-  <SelectContent>
-    {confirmedPatients && confirmedPatients.length > 0 ? (
-      [...new Set(confirmedPatients)].map((email) => (
-        <SelectItem key={email} value={email}>
-          {email}
-        </SelectItem>
-      ))
-    ) : (
-      <div className="px-4 py-2 text-sm text-gray-500">No confirmed appointments</div>
-    )}
-  </SelectContent>
-</Select>
 
+        <CardContent className="overflow-y-auto p-6 space-y-6 bg-gradient-to-br from-yellow-50/30 via-white to-amber-50/30 flex-1">
+          {/* Patient Selection */}
+          <div className="bg-yellow-50 p-4 rounded-md border border-yellow-200 shadow-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <Mail className="h-4 w-4 text-yellow-600" />
+              <Label className="font-medium">Patient Email</Label>
+            </div>
+            <Select onValueChange={onSelectPatientEmail}>
+              <SelectTrigger className="h-10 text-sm bg-white border-yellow-300 focus:ring-yellow-400">
+                <SelectValue placeholder="Select a patient" />
+              </SelectTrigger>
+              <SelectContent>
+                {confirmedPatients.length > 0 ? (
+                  [...new Set(confirmedPatients)].map((email) => (
+                    <SelectItem key={email} value={email} className="text-sm">
+                      <User className="h-3 w-3 text-yellow-600 mr-1" />
+                      {email}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="text-gray-500 text-xs px-2 py-1">No confirmed patients</div>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Eye Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Right Eye */}
+            <div className="bg-amber-50 p-4 rounded-md border border-amber-200 shadow-sm space-y-2">
+              <div className="flex items-center gap-2 font-semibold text-gray-700 mb-2">
+                <Eye className="h-4 w-4 text-amber-600" />
+                Right Eye (OD)
+              </div>
+              {["sphere", "cylinder", "axis"].map((field) => (
+                <div key={field}>
+                  <Label className="text-xs capitalize">{field}</Label>
+                  <Input
+                    type="number"
+                    step={field === "axis" ? "1" : "0.25"}
+                    min={field === "axis" ? 1 : undefined}
+                    max={field === "axis" ? 180 : undefined}
+                    value={newPrescription.rightEye[field]}
+                    onChange={(e) =>
+                      onEyeValueChange("rightEye", field, parseFloat(e.target.value))
+                    }
+                    className="h-9 text-sm"
+                  />
+                </div>
+              ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <h3 className="font-medium">Right Eye (OD)</h3>
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <Label htmlFor="rightSphere">Sphere</Label>
-                    <Input
-                      id="rightSphere"
-                      type="number"
-                      step="0.25"
-                      value={newPrescription.rightEye.sphere}
-                      onChange={(e) =>
-                        onEyeValueChange('rightEye', 'sphere', parseFloat(e.target.value))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="rightCylinder">Cylinder</Label>
-                    <Input
-                      id="rightCylinder"
-                      type="number"
-                      step="0.25"
-                      value={newPrescription.rightEye.cylinder}
-                      onChange={(e) =>
-                        onEyeValueChange('rightEye', 'cylinder', parseFloat(e.target.value))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="rightAxis">Axis</Label>
-                    <Input
-                      id="rightAxis"
-                      type="number"
-                      min="0"
-                      max="180"
-                      value={newPrescription.rightEye.axis}
-                      onChange={(e) =>
-                        onEyeValueChange('rightEye', 'axis', parseInt(e.target.value))
-                      }
-                    />
-                  </div>
-                </div>
+            {/* Left Eye */}
+            <div className="bg-orange-50 p-4 rounded-md border border-orange-200 shadow-sm space-y-2">
+              <div className="flex items-center gap-2 font-semibold text-gray-700 mb-2">
+                <Eye className="h-4 w-4 text-orange-600" />
+                Left Eye (OS)
               </div>
-
-              <div className="space-y-3">
-                <h3 className="font-medium">Left Eye (OS)</h3>
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <Label htmlFor="leftSphere">Sphere</Label>
-                    <Input
-                      id="leftSphere"
-                      type="number"
-                      step="0.25"
-                      value={newPrescription.leftEye.sphere}
-                      onChange={(e) =>
-                        onEyeValueChange('leftEye', 'sphere', parseFloat(e.target.value))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="leftCylinder">Cylinder</Label>
-                    <Input
-                      id="leftCylinder"
-                      type="number"
-                      step="0.25"
-                      value={newPrescription.leftEye.cylinder}
-                      onChange={(e) =>
-                        onEyeValueChange('leftEye', 'cylinder', parseFloat(e.target.value))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="leftAxis">Axis</Label>
-                    <Input
-                      id="leftAxis"
-                      type="number"
-                      min="0"
-                      max="180"
-                      value={newPrescription.leftEye.axis}
-                      onChange={(e) =>
-                        onEyeValueChange('leftEye', 'axis', parseInt(e.target.value))
-                      }
-                    />
-                  </div>
+              {["sphere", "cylinder", "axis"].map((field) => (
+                <div key={field}>
+                  <Label className="text-xs capitalize">{field}</Label>
+                  <Input
+                    type="number"
+                    step={field === "axis" ? "1" : "0.25"}
+                    min={field === "axis" ? 1 : undefined}
+                    max={field === "axis" ? 180 : undefined}
+                    value={newPrescription.leftEye[field]}
+                    onChange={(e) =>
+                      onEyeValueChange("leftEye", field, parseFloat(e.target.value))
+                    }
+                    className="h-9 text-sm"
+                  />
                 </div>
-              </div>
+              ))}
             </div>
+          </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="pupillaryDistance">Pupillary Distance (PD)</Label>
+          {/* PD and Notes */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-yellow-50 p-4 rounded-md border border-yellow-200 shadow-sm">
+              <Label className="text-sm font-medium">Pupillary Distance (PD)</Label>
               <Input
-                id="pupillaryDistance"
                 type="number"
                 value={newPrescription.pupillaryDistance}
-                onChange={(e) => onPupillaryDistanceChange(parseInt(e.target.value))}
+                onChange={(e) => onPupillaryDistanceChange(parseFloat(e.target.value))}
+                className="h-9 text-sm"
+                placeholder="PD"
               />
             </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="details">Additional Notes</Label>
+            <div className="bg-amber-50 p-4 rounded-md border border-amber-200 shadow-sm">
+              <Label className="text-sm font-medium">Additional Notes</Label>
               <Textarea
-                id="details"
                 name="details"
+                rows={3}
                 value={newPrescription.details}
                 onChange={onInputChange}
-                rows={4}
+                className="text-sm resize-none h-[70px]"
+                placeholder="Notes..."
               />
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={onCancel}>
+
+        {/* Footer Buttons */}
+        <CardFooter className="bg-white border-t border-yellow-100 p-4 flex justify-end gap-3">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            className="rounded-full px-6 py-2 text-sm font-semibold"
+          >
+            <X className="h-4 w-4 mr-1" />
             Cancel
           </Button>
-          <Button onClick={onSave}>Create Prescription</Button>
+          <Button
+            onClick={onSave}
+            className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-white rounded-full px-6 py-2 text-sm font-semibold"
+          >
+            <Save className="h-4 w-4 mr-1" />
+            Save
+          </Button>
         </CardFooter>
-      </Card>
+      </div>
     </div>
-  );
-};
+  )
+}
 
-export default PrescriptionForm;
+export default PrescriptionForm

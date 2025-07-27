@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { CreditCard, CheckCircle, AlertCircle } from "lucide-react";
 
-
+// Detect card type
 const detectCardType = (cardNumber: string): string | null => {
   const number = cardNumber.replace(/\s/g, "");
   if (/^4/.test(number)) return "Visa";
@@ -17,7 +18,7 @@ const detectCardType = (cardNumber: string): string | null => {
   return null;
 };
 
-
+// Get card logo
 const getCardIcon = (type: string) => {
   const size = "h-6 w-auto";
   switch (type) {
@@ -36,6 +37,7 @@ const getCardIcon = (type: string) => {
   }
 };
 
+// Blocked number patterns
 const isBlockedCardNumber = (number: string): boolean => {
   const clean = number.replace(/\s/g, "");
   if (clean.length !== 16) return false;
@@ -55,6 +57,7 @@ const isBlockedCardNumber = (number: string): boolean => {
   return false;
 };
 
+// Validate expiry
 const isValidExpiry = (date: string): boolean => {
   if (!/^\d{2}\/\d{2}$/.test(date)) return false;
   const [month, year] = date.split("/").map(Number);

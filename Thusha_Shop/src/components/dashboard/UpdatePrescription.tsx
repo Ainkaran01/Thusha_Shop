@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Prescription } from '@/types/user';
 import { useToast } from '@/hooks/use-toast';
+import { FileText } from 'lucide-react';
 
 interface UpdatePrescriptionProps {
   prescription: Prescription;
@@ -13,7 +14,7 @@ interface UpdatePrescriptionProps {
 }
 
 const getAuthHeaders = () => {
-  const token = sessionStorage.getItem('access_token');
+  const token = localStorage.getItem('access_token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -76,84 +77,127 @@ const UpdatePrescription: React.FC<UpdatePrescriptionProps> = ({ prescription, o
     }
   };
 
+
   return (
-    <Card className="max-w-5xl mx-auto mt-4">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xl font-bold text-center">Update Prescription</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="space-y-3 p-1">
+      {/* Patient Info */}
+      <div className="bg-white/80 p-3 rounded-lg border border-yellow-200">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="bg-yellow-100 p-2 rounded-full">
+            <FileText className="h-5 w-5 text-yellow-600" />
+          </div>
+          <div>
+            <h3 className="font-medium">{prescription.patient_name}</h3>
+            <p className="text-sm text-gray-600">{prescription.patient_email_display}</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <div>
+            <Label className="text-xs text-gray-500">Prescription ID</Label>
+            <p className="font-medium">{prescription.prescription_id}</p>
+          </div>
+          <div>
+            <Label className="text-xs text-gray-500">Date Issued</Label>
+            <p className="font-medium">{formatDate(prescription.date_issued)}</p>
+          </div>
+        </div>
+      </div>
 
-        {/* Static Info */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+      {/* Prescription Values */}
+      <div className="bg-gradient-to-br from-yellow-50 to-amber-50 p-3 rounded-lg border border-yellow-200">
+        <h3 className="text-sm font-semibold mb-2 text-yellow-700">Prescription Values</h3>
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label className="text-muted-foreground">Prescription ID</Label>
-            <p className="bg-gray-100 rounded px-3 py-1">{prescription.prescription_id}</p>
-          </div>
-          <div>
-            <Label className="text-muted-foreground">Date Issued</Label>
-            <p className="bg-gray-100 rounded px-3 py-1">{formatDate(prescription.date_issued)}</p>
-          </div>
-          <div>
-            <Label className="text-muted-foreground">Patient Name</Label>
-            <p className="bg-gray-100 rounded px-3 py-1">{prescription.patient_name}</p>
-          </div>
-           {/* <div>
-            <Label className="text-muted-foreground">Doctor Name</Label>
-            <p className="bg-gray-100 rounded px-3 py-1">{prescription.doctor_name}</p>
-          </div> */}
-          </div>
-          <div>
-            <Label className="text-muted-foreground">Patient Email</Label>
-            <p className="bg-gray-100 rounded px-1 py-1">{prescription.patient_email_display}</p>
-          </div>
-
-        {/* Prescription Values */}
-        <div className="border rounded-md p-4">
-          <h2 className="text-md font-semibold text-yellow-600 mb-3">Prescription Values</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="font-semibold">Right Eye (OD)</Label>
-              <Input name="right_sphere" placeholder="Sphere" value={formData.right_sphere} onChange={handleChange} />
-              <Input name="right_cylinder" placeholder="Cylinder" value={formData.right_cylinder} onChange={handleChange} />
-              <Input name="right_axis" placeholder="Axis" value={formData.right_axis} onChange={handleChange} />
+            <Label className="text-xs font-medium">Right Eye (OD)</Label>
+            <div className="space-y-1 mt-1">
+              <Input 
+                name="right_sphere" 
+                placeholder="SPH" 
+                 type="number"
+                value={formData.right_sphere} 
+                onChange={handleChange}
+                className="h-8 text-sm"
+              />
+              <Input 
+                name="right_cylinder" 
+                placeholder="CYL" 
+                 type="number"
+                value={formData.right_cylinder} 
+                onChange={handleChange}
+                className="h-8 text-sm"
+              />
+              <Input 
+                name="right_axis" 
+                placeholder="Axis" 
+                 type="number"
+                value={formData.right_axis} 
+                onChange={handleChange}
+                className="h-8 text-sm"
+              />
             </div>
-            <div className="space-y-2">
-              <Label className="font-semibold">Left Eye (OS)</Label>
-              <Input name="left_sphere" placeholder="Sphere" value={formData.left_sphere} onChange={handleChange} />
-              <Input name="left_cylinder" placeholder="Cylinder" value={formData.left_cylinder} onChange={handleChange} />
-              <Input name="left_axis" placeholder="Axis" value={formData.left_axis} onChange={handleChange} />
+          </div>
+          <div>
+            <Label className="text-xs font-medium">Left Eye (OS)</Label>
+            <div className="space-y-1 mt-1">
+              <Input 
+                name="left_sphere" 
+                placeholder="SPH" 
+                 type="number"
+                value={formData.left_sphere} 
+                onChange={handleChange}
+                className="h-8 text-sm"
+              />
+              <Input 
+                name="left_cylinder" 
+                placeholder="CYL" 
+                 type="number"
+                value={formData.left_cylinder} 
+                onChange={handleChange}
+                className="h-8 text-sm"
+              />
+              <Input 
+                name="left_axis" 
+                placeholder="Axis"
+                type="number"
+                value={formData.left_axis} 
+                onChange={handleChange}
+                className="h-8 text-sm"
+              />
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Other Fields */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label className="font-semibold">Pupillary Distance</Label>
-            <Input
-              type="number"
-              name="pupillary_distance"
-              value={formData.pupillary_distance}
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <Label className="font-semibold">Additional Notes</Label>
-            <Textarea
-              name="additional_notes"
-              value={formData.additional_notes}
-              onChange={handleChange}
-              className="h-[70px]"
-            />
-          </div>
+      {/* Measurements */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-3 rounded-lg border border-amber-200">
+          <Label className="text-xs font-medium">Pupillary Distance (mm)</Label>
+          <Input
+            type="number"
+            name="pupillary_distance"
+            value={formData.pupillary_distance}
+            onChange={handleChange}
+            className="h-8 text-sm mt-1"
+          />
         </div>
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-3 rounded-lg border border-amber-200">
+          <Label className="text-xs font-medium">Additional Notes</Label>
+          <Textarea
+            name="additional_notes"
+            value={formData.additional_notes}
+            onChange={handleChange}
+            className="h-16 text-sm mt-1"
+          />
+        </div>
+      </div>
 
-        {/* Submit Button */}
-        <div className="pt-2 text-right">
-          <Button onClick={handleSubmit} className="px-6">Update Prescription</Button>
-        </div>
-      </CardContent>
-    </Card>
+      <Button 
+        onClick={handleSubmit} 
+        className="w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white text-sm py-2 shadow-sm"
+      >
+        Update Prescription
+      </Button>
+    </div>
   );
 };
 
