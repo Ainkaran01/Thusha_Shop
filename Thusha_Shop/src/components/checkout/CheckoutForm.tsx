@@ -79,8 +79,8 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
       case 1: return "Enter your billing information";
       case 2: return "Choose delivery and payment options";
       case 3: return hasEyeglasses ? "Select lens options" : "Complete your payment";
-      case 4: return "Verify your prescription";
-      case 5: return "Complete your payment";
+      // case 4: return "Verify your prescription";
+      case 4: return "Complete your payment";
       default: return "";
     }
   };
@@ -121,14 +121,14 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
         );
       }
 
-      if (currentStep === 4) {
-        return (
-          <PrescriptionChecker
-             onPrescriptionVerified={(prescription) => onPrescriptionVerified(prescription.id.toString())}
-            onCancel={onSkipPrescription}
-          />
-        );
-      }
+      // if (currentStep === 4) {
+      //   return (
+      //     <PrescriptionChecker
+      //        onPrescriptionVerified={(prescription) => onPrescriptionVerified(prescription.id.toString())}
+      //       onCancel={onSkipPrescription}
+      //     />
+      //   );
+      // }
     }
 
     // Final payment step (either step 3 for non-eyeglasses or step 5 for eyeglasses)

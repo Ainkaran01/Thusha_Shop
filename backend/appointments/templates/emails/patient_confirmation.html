@@ -1,26 +1,63 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Appointment Confirmation</title>
+    <meta charset="UTF-8">
+    <title>Appointment {{ status|title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f6f6f6;
+            padding: 20px;
+            color: #333;
+        }
+        .email-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            margin: auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        h2 {
+            color: #007BFF;
+        }
+        .clinic-info {
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
 </head>
 <body>
-    <h2>Your Appointment is Confirmed!</h2>
-    <p>Dear {{ patient_name }},</p>
-    
-    <p>Your appointment with {{ doctor_name }} ({{ specialty }}) has been scheduled for:</p>
-    
-    <p><strong>{{ date }} at {{ time }}</strong></p>
-    
-    <p>Reason for visit: {{ reason }}</p>
-    
-    <h3>Clinic Information</h3>
-    <p>{{ clinic_name }}<br>
-    {{ clinic_address }}<br>
-    Phone: {{ clinic_phone }}</p>
-    
-    <p>Please arrive 10 minutes before your scheduled time.</p>
-    
-    <p>Best regards,<br>
-    The {{ clinic_name }} Team</p>
+    <div class="email-container">
+        <h2>Your Appointment is {{ status|title }}!</h2>
+        
+        <p>Dear {{ patient_name }},</p>
+
+        {% if status == 'confirmed' %}
+            <p>Your appointment with <strong>{{ doctor_name }}</strong> (<em>{{ specialty }}</em>) has been scheduled for:</p>
+            <p><strong>{{ date }} at {{ time }}</strong></p>
+            <p>Reason for visit: {{ reason }}</p>
+            <p>Please arrive 10 minutes before your scheduled time.</p>
+        
+        {% elif status == 'cancelled' %}
+            <p>We regret to inform you that your appointment with <strong>{{ doctor_name }}</strong> has been <strong>cancelled</strong>.</p>
+            <p>If you wish to reschedule, please contact us or use our online booking system.</p>
+
+        {% elif status == 'completed' %}
+            <p>Your appointment with <strong>{{ doctor_name }}</strong> has been marked as <strong>completed</strong>.</p>
+            <p>Thank you for visiting us. We hope you had a good experience.</p>
+            <p>If you have any feedback or need further assistance, feel free to contact us.</p>
+        {% endif %}
+
+        <h3>Clinic Information</h3>
+        <div class="clinic-info">
+            <p>{{ clinic_name }}<br>
+            {{ clinic_address }}<br>
+            Phone: {{ clinic_phone }}</p>
+        </div>
+
+        <p>Best regards,<br>
+        The {{ clinic_name }} Team</p>
+    </div>
 </body>
 </html>
