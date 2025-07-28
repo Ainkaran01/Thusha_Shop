@@ -86,3 +86,6 @@ def update_appointment_status(sender, instance, **kwargs):
     """Automatically update status for past appointments"""
     if instance.date < timezone.now().date():
         instance.status = 'completed'
+
+ 
+
