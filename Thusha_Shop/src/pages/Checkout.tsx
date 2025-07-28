@@ -144,7 +144,7 @@ const Checkout = () => {
     (item) => item.product.category.name === "Eyeglasses"
   );
   const hasEyeglasses = eyeglassesItems.length > 0;
-  const totalSteps = hasEyeglasses ? 5 : 3;
+  const totalSteps = hasEyeglasses ? 4 : 3;
 
   if (orderComplete) {
     return (

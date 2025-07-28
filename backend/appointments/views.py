@@ -15,28 +15,51 @@ from doctors.models import DoctorProfile
 from doctors.serializers import DoctorProfileSerializer
 
 
-def send_appointment_emails(appointment, doctor_profile):
-    """Send confirmation emails to patient and doctor"""
+
+def send_appointment_emails(appointment, doctor_profile, status='confirmed'):
     doctor = doctor_profile
     patient = appointment.patient
-    
+
     patient_name = patient.name
     doctor_name = doctor.user.name
-    
-    # Patient email content
-    patient_subject = f"Your appointment confirmation with Dr. {doctor_name}"
+
+    # Email subject based on status
+    if status == 'confirmed':
+        subject = f"Your appointment is Confirmed with Dr. {doctor_name}"
+    elif status == 'cancelled':
+        subject = f"Your appointment has been Cancelled with Dr. {doctor_name}"
+    elif status == 'completed':
+        subject = f"Your appointment with Dr. {doctor_name} is Completed"
+    else:
+        subject = f"Appointment Update with Dr. {doctor_name}"
+
+    # Email context
     patient_context = {
         'patient_name': patient_name,
         'doctor_name': doctor_name,
         'date': appointment.date.strftime('%A, %B %d, %Y'),
-        'time': dict(Appointment.TIME_SLOT_CHOICES).get(appointment.time),
+        'time': dict(appointment.TIME_SLOT_CHOICES).get(appointment.time),
         'specialty': doctor.specialization,
         'reason': appointment.reason,
         'clinic_name': "Thusha Optical",
         'clinic_phone': "(123) 456-7890",
-        'clinic_address': "Hospital road , Jaffna"
+        'clinic_address': "Hospital Road, Jaffna",
+        'status': status
     }
-    patient_html_message = render_to_string('emails/patient_confirmation.html', patient_context)
+
+    # Render email template
+    html_message = render_to_string('emails/patient_confirmation.html', patient_context)
+
+    # Send email
+    if patient.email:
+        send_mail(
+            subject=subject,
+            message=strip_tags(html_message),
+            html_message=html_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[patient.email],
+            fail_silently=False
+        )
 
     # Doctor email content
     doctor_subject = f"New appointment: {patient_name}"
@@ -50,16 +73,6 @@ def send_appointment_emails(appointment, doctor_profile):
         'reason': appointment.reason
     }
     doctor_html_message = render_to_string('emails/doctor_notification.html', doctor_context)
-
-    # Send email to patient
-    send_mail(
-        subject=patient_subject,
-        message=strip_tags(patient_html_message),
-        html_message=patient_html_message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[patient.email],
-        fail_silently=False
-    )
 
     # Send email to doctor (if email exists)
     if doctor.user.email:
@@ -209,21 +222,16 @@ class AppointmentListView(generics.ListCreateAPIView):
         appointment = serializer.save(patient=self.request.user)
         send_appointment_emails(appointment, appointment.doctor)
 
-
 class AppointmentDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Appointment.objects.all()
     serializer_class = AppointmentSerializer
     permission_classes = [IsAuthenticated]
-
+    filter_backends = [DjangoFilterBackend]
     def perform_update(self, serializer):
-        # Just save the data - let the serializer handle status changes
         appointment = serializer.save()
-        
-        # Optionally send emails based on status
+
+        # Check status change and send respective email
         if 'status' in serializer.validated_data:
             new_status = serializer.validated_data['status']
-            if new_status == 'confirmed':
-                send_appointment_emails(appointment, appointment.doctor)
-            elif new_status == 'cancelled':
-                # Add cancellation email logic if needed
-                pass
+            if new_status in ['confirmed', 'cancelled', 'completed']:
+                send_appointment_emails(appointment, appointment.doctor, status=new_status)
