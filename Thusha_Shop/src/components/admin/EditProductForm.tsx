@@ -135,6 +135,15 @@ const EditProductForm: React.FC<EditProductFormProps> = ({
     vision_problems: safeParseArray(product.vision_problems),
   });
 
+  const selectedCategoryName = categories.find(
+  (cat) => cat.id.toString() === formData.category
+  )?.name || "";
+
+  const isAccessoryCategory = () => {
+  const normalized = selectedCategoryName.trim().toLowerCase();
+  return ["accessory", "accessories"].includes(normalized);
+  };
+
   const [images, setImages] = useState<File[]>([]);
   const [currentImages, setCurrentImages] = useState<string[]>(
     product.images || []
@@ -413,6 +422,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({
 
           {/* Physical Properties */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {!isAccessoryCategory() && (
             <div className="space-y-2">
               <Label htmlFor="frameType">Frame Type</Label>
               <Select
@@ -436,7 +446,9 @@ const EditProductForm: React.FC<EditProductFormProps> = ({
                 </SelectContent>
               </Select>
             </div>
-
+            )}
+            
+            {!isAccessoryCategory() && (
             <div className="space-y-2">
               <Label htmlFor="frameMaterial">Material</Label>
               <Select
@@ -457,6 +469,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({
                 </SelectContent>
               </Select>
             </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="color">Color</Label>
@@ -490,6 +503,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({
           </div>
 
           {/* Features */}
+          {!isAccessoryCategory() && (
           <div className="space-y-2">
             <Label>Features</Label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -509,8 +523,10 @@ const EditProductForm: React.FC<EditProductFormProps> = ({
               ))}
             </div>
           </div>
+          )}
 
           {/* Recommendations */}
+          {!isAccessoryCategory() && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label>Recommended Face Shapes</Label>
@@ -558,6 +574,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({
               </div>
             </div>
           </div>
+          )}
 
           {/* Image Upload - Updated for multiple images */}
           <div className="space-y-2">

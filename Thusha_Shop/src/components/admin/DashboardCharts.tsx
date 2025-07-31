@@ -49,8 +49,8 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({ salesData, categoryDa
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
-                  <YAxis 
-                    label={{ value: 'Revenue ($)', angle: -90, position: 'outsideLeft',offset: 10, }} 
+                 <YAxis 
+                    label={{ value: 'Revenue ($)', angle: -90, position: 'outsideLeft',offset: 10, dx: -40 }} 
                   />
                   <Tooltip formatter={(value) => [`$${value}`, 'Revenue']} />
                   <Legend />
