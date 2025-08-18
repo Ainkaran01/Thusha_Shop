@@ -3,7 +3,7 @@ import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
 import { authClient, apiClient } from "@/lib/api-clients";
 import { User, UserContextType, UserRole, FaceShape, VisionProblem, UserPreferences } from "@/types/user";
-import { validateForm, loginSchema, registerSchema } from "@/utils/validation";
+import { validateForm, registerSchema } from "@/utils/validation";
 
 interface AuthState {
   user: User | null;
@@ -177,7 +177,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (!validation.success) {
-      const errorMessage = validation.errors?.errors[0]?.message || "Invalid registration data";
+      const errorMessage =
+        Array.isArray(validation.errors) && validation.errors.length > 0
+          ? validation.errors[0].message
+          : "Invalid registration data";
       toast({
         title: "Registration Error",
         description: errorMessage,
@@ -268,7 +271,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfile = async () => {
     try {
-      if (authState.user?.role !== "customer") return; // ✅ only for customers
+      if (authState.user?.role !== "customer") return; 
 
       const response = await apiClient.get("/api/core/profile/");
       const profileData = response.data;

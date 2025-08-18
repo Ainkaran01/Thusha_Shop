@@ -117,7 +117,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ isAdminPath }) => {
             </DropdownMenuItem>)
 }
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout} className="cursor-pointer text-destructive focus:text-destructive">
+            <DropdownMenuItem onClick={() => logout()} className="cursor-pointer text-destructive focus:text-destructive">
               Logout
             </DropdownMenuItem> 
           </>
