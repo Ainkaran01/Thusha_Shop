@@ -46,6 +46,7 @@ interface ProductFormData {
 }
 
 const frameMaterials = [
+  "Stainless Steel",
   "metal",
   "acetate",
   "titanium",
