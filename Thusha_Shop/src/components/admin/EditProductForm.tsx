@@ -46,6 +46,7 @@ interface EditProductFormProps {
 }
 
 const frameMaterials = [
+  "Steeless steel",
   "metal",
   "acetate",
   "titanium",

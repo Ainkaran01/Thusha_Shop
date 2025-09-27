@@ -28,6 +28,8 @@ import {
   OrderStatus,
   fetchOrders,
   updateOrderStatus,
+  fetchPrescriptionDetails,
+  Prescription,
 } from "@/api/orders";
 import { Input } from "@/components/ui/input";
 import {
@@ -60,6 +62,12 @@ const ManufacturerDashboard = () => {
   const [dateFilter, setDateFilter] = useState<string>("all");
   const [orderToMarkReady, setOrderToMarkReady] = useState<Order | null>(null);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+  const [prescriptionDetails, setPrescriptionDetails] = useState<
+    Record<number, Prescription>
+  >({});
+  const [loadingPrescriptions, setLoadingPrescriptions] = useState<
+    Record<number, boolean>
+  >({});
 
   useEffect(() => {
     const loadOrders = async () => {
@@ -78,6 +86,45 @@ const ManufacturerDashboard = () => {
     };
     loadOrders();
   }, []);
+
+  // Function to load prescription details
+  const loadPrescriptionDetails = async (prescriptionId: number) => {
+    if (
+      prescriptionDetails[prescriptionId] ||
+      loadingPrescriptions[prescriptionId]
+    ) {
+      return; // Already loaded or loading
+    }
+
+    setLoadingPrescriptions((prev) => ({ ...prev, [prescriptionId]: true }));
+
+    try {
+      const prescription = await fetchPrescriptionDetails(prescriptionId);
+      setPrescriptionDetails((prev) => ({
+        ...prev,
+        [prescriptionId]: prescription,
+      }));
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch prescription details",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingPrescriptions((prev) => ({ ...prev, [prescriptionId]: false }));
+    }
+  };
+
+  // Load prescription details when an order is selected
+  useEffect(() => {
+    if (selectedOrder) {
+      selectedOrder.items.forEach((item) => {
+        if (item.prescription && !prescriptionDetails[item.prescription]) {
+          loadPrescriptionDetails(item.prescription);
+        }
+      });
+    }
+  }, [selectedOrder, prescriptionDetails]);
 
   const handleUpdateOrderStatus = async (
     orderNumber: string,
@@ -657,88 +704,88 @@ const ManufacturerDashboard = () => {
         {selectedOrder && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-5 p-4">
             <Card className="w-full max-w-4xl bg-white max-h-[85vh] overflow-hidden shadow-2xl">
-              <CardHeader className="bg-gray-50/50 border-b px-8 py-6">
+              <CardHeader className="bg-gray-50/50 border-b px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-xl font-semibold text-gray-900">
+                    <CardTitle className="text-lg font-semibold text-gray-900">
                       Manufacturing Details
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1 font-mono">
+                    <p className="text-xs text-muted-foreground mt-1 font-mono">
                       {selectedOrder.order_number}
                     </p>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0"
+                    className="h-7 w-7 p-0"
                     onClick={() => setSelectedOrder(null)}
                   >
-                    <X className="h-5 w-5" />
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="p-8 overflow-y-auto max-h-[calc(90vh-120px)]">
-                <div className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">
+              <CardContent className="p-6 overflow-y-auto max-h-[calc(90vh-100px)]">
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <h4 className="text-base font-semibold text-gray-900 border-b pb-1">
                         Customer Information
                       </h4>
-                      <div className="space-y-3">
-                        <div>
-                          <span className="text-sm font-medium text-gray-500">
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-xs font-medium text-gray-500">
                             Name
                           </span>
-                          <p className="text-base font-medium text-gray-900">
+                          <p className="text-sm font-medium text-gray-900">
                             {selectedOrder.billing?.name || "N/A"}
                           </p>
                         </div>
-                        <div>
-                          <span className="text-sm font-medium text-gray-500">
+                        <div className="flex justify-between">
+                          <span className="text-xs font-medium text-gray-500">
                             Email
                           </span>
-                          <p className="text-base text-gray-900">
+                          <p className="text-sm text-gray-900">
                             {selectedOrder.billing?.email || "N/A"}
                           </p>
                         </div>
-                        <div>
-                          <span className="text-sm font-medium text-gray-500">
+                        <div className="flex justify-between">
+                          <span className="text-xs font-medium text-gray-500">
                             Order Date
                           </span>
-                          <p className="text-base text-gray-900">
+                          <p className="text-sm text-gray-900">
                             {selectedOrder.created_at
                               ? new Date(
                                   selectedOrder.created_at
                                 ).toLocaleDateString("en-US", {
                                   year: "numeric",
-                                  month: "long",
+                                  month: "short",
                                   day: "numeric",
                                 })
                               : "N/A"}
                           </p>
                         </div>
-                        <div>
-                          <span className="text-sm font-medium text-gray-500">
+                        <div className="flex justify-between">
+                          <span className="text-xs font-medium text-gray-500">
                             Total Amount
                           </span>
-                          <p className="text-lg font-semibold text-gray-900">
+                          <p className="text-base font-semibold text-gray-900">
                             ${selectedOrder.total_price || "N/A"}
                           </p>
                         </div>
                       </div>
                     </div>
-                    <div className="space-y-4">
-                      <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                    <div className="space-y-3">
+                      <h4 className="text-base font-semibold text-gray-900 border-b pb-1">
                         Production Status
                       </h4>
-                      <div className="space-y-3">
+                      <div>
                         <Badge
                           className={`${getStatusColor(
                             selectedOrder.status as OrderStatus
-                          )} text-base px-4 py-2`}
+                          )} text-sm px-3 py-1`}
                         >
                           {getStatusIcon(selectedOrder.status as OrderStatus)}
-                          <span className="ml-2 capitalize font-medium">
+                          <span className="ml-1 capitalize font-medium">
                             {selectedOrder.status.replace("_", " ")}
                           </span>
                         </Badge>
@@ -746,11 +793,11 @@ const ManufacturerDashboard = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-6">
-                    <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                  <div className="space-y-4">
+                    <h4 className="text-base font-semibold text-gray-900 border-b pb-1">
                       Product Specifications
                     </h4>
-                    <div className="grid gap-6">
+                    <div className="grid gap-4">
                       {selectedOrder.items?.map((item, index) => {
                         const isAccessory = item.product?.category?.name
                           ?.toLowerCase()
@@ -759,69 +806,66 @@ const ManufacturerDashboard = () => {
                         return (
                           <div
                             key={`${selectedOrder.id}-frame-${index}`}
-                            className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-4"
+                            className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3"
                           >
                             <div className="flex items-start justify-between">
-                              <h5 className="font-semibold text-gray-900 text-lg">
+                              <h5 className="font-medium text-gray-900 text-sm">
                                 {item.product_name || "N/A"}
                               </h5>
-                              <Badge variant="outline" className="font-medium">
+                              <Badge
+                                variant="outline"
+                                className="text-xs font-medium"
+                              >
                                 Qty: {item.quantity || "N/A"}
                               </Badge>
                             </div>
 
                             {item.product ? (
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                                 <div>
-                                  <span className="text-sm font-medium text-gray-500">
-                                    Color
-                                  </span>
-                                  <p className="text-base text-gray-900">
+                                  <span className="text-gray-500">Color</span>
+                                  <p className="font-medium text-gray-900">
                                     {item.product.colors?.[0] || "N/A"}
                                   </p>
                                 </div>
 
                                 <div>
-                                  <span className="text-sm font-medium text-gray-500">
-                                    Size
-                                  </span>
-                                  <p className="text-base text-gray-900">
+                                  <span className="text-gray-500">Size</span>
+                                  <p className="font-medium text-gray-900">
                                     {item.product.size || "N/A"}
                                   </p>
                                 </div>
 
                                 {!isAccessory && (
                                   <div>
-                                    <span className="text-sm font-medium text-gray-500">
+                                    <span className="text-gray-500">
                                       Material
                                     </span>
-                                    <p className="text-base text-gray-900">
+                                    <p className="font-medium text-gray-900">
                                       {item.product.frame_material || "N/A"}
                                     </p>
                                   </div>
                                 )}
                                 {!isAccessory && (
                                   <div>
-                                    <span className="text-sm font-medium text-gray-500">
+                                    <span className="text-gray-500">
                                       Frame Type
                                     </span>
-                                    <p className="text-base text-gray-900">
-                                      {item.product.frame_type.name || "N/A"}
+                                    <p className="font-medium text-gray-900">
+                                      {item.product.frame_type?.name || "N/A"}
                                     </p>
                                   </div>
                                 )}
                                 <div>
-                                  <span className="text-sm font-medium text-gray-500">
-                                    Weight
-                                  </span>
-                                  <p className="text-base text-gray-900">
+                                  <span className="text-gray-500">Weight</span>
+                                  <p className="font-medium text-gray-900">
                                     {item.product.weight || "N/A"}g
                                   </p>
                                 </div>
                               </div>
                             ) : (
-                              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                                <p className="text-red-700 font-medium">
+                              <div className="bg-red-50 border border-red-200 rounded p-2">
+                                <p className="text-red-700 text-xs font-medium">
                                   ⚠ Product data unavailable
                                 </p>
                               </div>
@@ -833,11 +877,11 @@ const ManufacturerDashboard = () => {
                   </div>
 
                   {/* Lens Section */}
-                  <div className="space-y-6">
-                    <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                  <div className="space-y-4">
+                    <h4 className="text-base font-semibold text-gray-900 border-b pb-1">
                       Lens Specifications
                     </h4>
-                    <div className="grid gap-6">
+                    <div className="grid gap-4">
                       {selectedOrder.items?.map((item, index) => {
                         const isAccessory = item.product?.category?.name
                           ?.toLowerCase()
@@ -846,20 +890,20 @@ const ManufacturerDashboard = () => {
                         return (
                           <div
                             key={`${selectedOrder.id}-lens-${index}`}
-                            className="bg-blue-50 border border-blue-200 rounded-xl p-6 space-y-4"
+                            className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3"
                           >
                             {isAccessory ? (
-                              <p className="italic text-muted-foreground">
+                              <p className="italic text-muted-foreground text-xs">
                                 Not applicable for accessories
                               </p>
                             ) : (
                               <>
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2">
                                   <Badge
                                     className={
                                       item.prescription
-                                        ? "bg-blue-100 text-blue-800"
-                                        : "bg-gray-100 text-gray-800"
+                                        ? "bg-blue-100 text-blue-800 text-xs"
+                                        : "bg-gray-100 text-gray-800 text-xs"
                                     }
                                   >
                                     {item.prescription
@@ -868,7 +912,7 @@ const ManufacturerDashboard = () => {
                                   </Badge>
 
                                   {item.lens_option?.length > 0 && (
-                                    <div className="flex flex-wrap gap-2">
+                                    <div className="flex flex-wrap gap-1">
                                       {item.lens_option.map(
                                         (option, optIndex) => (
                                           <Badge
@@ -885,98 +929,142 @@ const ManufacturerDashboard = () => {
                                 </div>
 
                                 {item.prescription && (
-                                  <div className="space-y-4">
-                                    <h6 className="font-medium text-gray-900">
-                                      Prescription Details
-                                    </h6>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                      <div className="space-y-3">
-                                        <h6 className="text-sm font-medium text-gray-700">
-                                          Right Eye
-                                        </h6>
-                                        <div className="grid grid-cols-3 gap-3 text-sm">
-                                          <div>
-                                            <span className="text-gray-500">
-                                              SPH
-                                            </span>
-                                            <p className="font-medium">
-                                              {item.prescription.right_sphere ||
-                                                "N/A"}
-                                            </p>
-                                          </div>
-                                          <div>
-                                            <span className="text-gray-500">
-                                              CYL
-                                            </span>
-                                            <p className="font-medium">
-                                              {item.prescription
-                                                .right_cylinder || "N/A"}
-                                            </p>
-                                          </div>
-                                          <div>
-                                            <span className="text-gray-500">
-                                              AXIS
-                                            </span>
-                                            <p className="font-medium">
-                                              {item.prescription.right_axis ||
-                                                "N/A"}
-                                            </p>
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <div className="space-y-3">
-                                        <h6 className="text-sm font-medium text-gray-700">
-                                          Left Eye
-                                        </h6>
-                                        <div className="grid grid-cols-3 gap-3 text-sm">
-                                          <div>
-                                            <span className="text-gray-500">
-                                              SPH
-                                            </span>
-                                            <p className="font-medium">
-                                              {item.prescription.left_sphere ||
-                                                "N/A"}
-                                            </p>
-                                          </div>
-                                          <div>
-                                            <span className="text-gray-500">
-                                              CYL
-                                            </span>
-                                            <p className="font-medium">
-                                              {item.prescription
-                                                .left_cylinder || "N/A"}
-                                            </p>
-                                          </div>
-                                          <div>
-                                            <span className="text-gray-500">
-                                              AXIS
-                                            </span>
-                                            <p className="font-medium">
-                                              {item.prescription.left_axis ||
-                                                "N/A"}
-                                            </p>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="pt-2">
-                                      <span className="text-sm font-medium text-gray-500">
-                                        Pupillary Distance
-                                      </span>
-                                      <p className="text-base font-medium text-gray-900">
-                                        {item.prescription.pupillary_distance ||
-                                          "N/A"}{" "}
-                                        mm
-                                      </p>
-                                    </div>
-                                    {item.prescription.additional_notes && (
-                                      <div className="pt-2">
-                                        <span className="text-sm font-medium text-gray-500">
-                                          Additional Notes
+                                  <div className="space-y-3">
+                                    {loadingPrescriptions[item.prescription] ? (
+                                      <div className="flex items-center justify-center py-2">
+                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                                        <span className="ml-2 text-gray-600 text-xs">
+                                          Loading prescription details...
                                         </span>
-                                        <p className="text-base text-gray-900 bg-white p-3 rounded-lg border mt-1">
-                                          {item.prescription.additional_notes}
+                                      </div>
+                                    ) : prescriptionDetails[
+                                        item.prescription
+                                      ] ? (
+                                      <>
+                                        <h6 className="font-medium text-gray-900 text-sm">
+                                          Prescription Details
+                                        </h6>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                          <div className="space-y-2">
+                                            <h6 className="text-xs font-medium text-gray-700">
+                                              Right Eye
+                                            </h6>
+                                            <div className="grid grid-cols-3 gap-2 text-xs">
+                                              <div>
+                                                <span className="text-gray-500">
+                                                  SPH
+                                                </span>
+                                                <p className="font-medium">
+                                                  {prescriptionDetails[
+                                                    item.prescription
+                                                  ].right_sphere || "N/A"}
+                                                </p>
+                                              </div>
+                                              <div>
+                                                <span className="text-gray-500">
+                                                  CYL
+                                                </span>
+                                                <p className="font-medium">
+                                                  {prescriptionDetails[
+                                                    item.prescription
+                                                  ].right_cylinder || "N/A"}
+                                                </p>
+                                              </div>
+                                              <div>
+                                                <span className="text-gray-500">
+                                                  AXIS
+                                                </span>
+                                                <p className="font-medium">
+                                                  {prescriptionDetails[
+                                                    item.prescription
+                                                  ].right_axis || "N/A"}
+                                                </p>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div className="space-y-2">
+                                            <h6 className="text-xs font-medium text-gray-700">
+                                              Left Eye
+                                            </h6>
+                                            <div className="grid grid-cols-3 gap-2 text-xs">
+                                              <div>
+                                                <span className="text-gray-500">
+                                                  SPH
+                                                </span>
+                                                <p className="font-medium">
+                                                  {prescriptionDetails[
+                                                    item.prescription
+                                                  ].left_sphere || "N/A"}
+                                                </p>
+                                              </div>
+                                              <div>
+                                                <span className="text-gray-500">
+                                                  CYL
+                                                </span>
+                                                <p className="font-medium">
+                                                  {prescriptionDetails[
+                                                    item.prescription
+                                                  ].left_cylinder || "N/A"}
+                                                </p>
+                                              </div>
+                                              <div>
+                                                <span className="text-gray-500">
+                                                  AXIS
+                                                </span>
+                                                <p className="font-medium">
+                                                  {prescriptionDetails[
+                                                    item.prescription
+                                                  ].left_axis || "N/A"}
+                                                </p>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div className="pt-1">
+                                          <span className="text-xs font-medium text-gray-500">
+                                            Pupillary Distance
+                                          </span>
+                                          <p className="text-sm font-medium text-gray-900">
+                                            {prescriptionDetails[
+                                              item.prescription
+                                            ].pupillary_distance || "N/A"}{" "}
+                                            mm
+                                          </p>
+                                        </div>
+                                        {prescriptionDetails[item.prescription]
+                                          .additional_notes && (
+                                          <div className="pt-1">
+                                            <span className="text-xs font-medium text-gray-500">
+                                              Additional Notes
+                                            </span>
+                                            <p className="text-sm text-gray-900 bg-white p-2 rounded border mt-1">
+                                              {
+                                                prescriptionDetails[
+                                                  item.prescription
+                                                ].additional_notes
+                                              }
+                                            </p>
+                                          </div>
+                                        )}
+                                      </>
+                                    ) : (
+                                      <div className="bg-yellow-50 border border-yellow-200 rounded p-2">
+                                        <p className="text-yellow-700 text-xs font-medium">
+                                          ⚠ Prescription details not available
+                                          (ID: {item.prescription})
                                         </p>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="mt-1 h-7 text-xs"
+                                          onClick={() =>
+                                            loadPrescriptionDetails(
+                                              item.prescription
+                                            )
+                                          }
+                                        >
+                                          Retry Loading
+                                        </Button>
                                       </div>
                                     )}
                                   </div>
@@ -990,10 +1078,10 @@ const ManufacturerDashboard = () => {
                   </div>
 
                   {selectedOrder.status === "pending" && (
-                    <div className="flex justify-end pt-6 border-t">
+                    <div className="flex justify-end pt-4 border-t">
                       <Button
                         onClick={() => handleMarkReadyClick(selectedOrder)}
-                        className="h-11 px-8"
+                        className="h-9 px-6 text-sm"
                       >
                         Mark as Ready to Deliver
                       </Button>
