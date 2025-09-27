@@ -136,7 +136,7 @@ const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
               <Calendar className="h-5 w-5 text-yellow-600" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold text-gray-800">
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-yellow-500 to-amber-600 bg-clip-text text-transparent flex items-center gap-2">
                 Appointment Management
               </CardTitle>
               <CardDescription className="text-gray-600 mt-1">
@@ -180,45 +180,45 @@ const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50/80 hover:bg-gray-50">
-                  <TableHead className="font-semibold text-gray-700 py-4">
-                    ID
+                <TableRow className="bg-gradient-to-r from-yellow-500 to-amber-600 text-white">
+                  <TableHead className="font-semibold text-gray-200 py-4">
+                    No
                   </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4">
+                  <TableHead className="font-semibold text-gray-200 py-4">
                     Customer
                   </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4">
+                  <TableHead className="font-semibold text-gray-200 py-4">
                     Date
                   </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4">
+                  <TableHead className="font-semibold text-gray-200 py-4">
                     Time
                   </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4">
+                  <TableHead className="font-semibold text-gray-200 py-4">
                     Doctor
                   </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4">
+                  <TableHead className="font-semibold text-gray-200 py-4">
                     Status
                   </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 text-center">
+                  <TableHead className="font-semibold text-gray-200 py-4 text-center">
                     Actions
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredAppointments.length > 0 ? (
-                  filteredAppointments.map((apt) => (
+                  filteredAppointments.map((apt, index) => (
                     <TableRow
                       key={apt.id}
-                      className="hover:bg-blue-50/30 transition-colors duration-200 border-b border-gray-100"
+                      className="hover:bg-gray-100/90 transition-colors duration-200 border-b border-gray-100"
                     >
                       <TableCell className="py-4">
                         <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-                          #{apt.id}
+                           {index + 1}
                         </span>
                       </TableCell>
                       <TableCell className="py-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                          <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
                             {apt.patient_name?.charAt(0)?.toUpperCase() || "P"}
                           </div>
                           <span className="font-medium text-gray-800">

@@ -1,28 +1,46 @@
-import { apiClient } from "@/lib/api-clients"
-import { useState, useEffect, useRef, forwardRef } from "react"
-import { Search, ShoppingCart, User, CreditCard, Banknote } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import type { Product } from "@/types/product"
-import { fetchProducts } from "@/api/products"
-import { useToast } from "@/hooks/use-toast"
+import { apiClient } from "@/lib/api-clients";
+import { useState, useEffect, useRef, forwardRef } from "react";
+import { Search, ShoppingCart, User, CreditCard, Banknote } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import type { Product } from "@/types/product";
+import { fetchProducts } from "@/api/products";
+import { useToast } from "@/hooks/use-toast";
 
 interface CartItem extends Product {
-  quantity: number
+  quantity: number;
 }
 
 interface PointOfSaleProps {
-  products: Product[]
+  products: Product[];
 }
 
 const BillToPrint = forwardRef<any, any>(
-  ({ cart, customerName, phoneNumber, email, paymentMethod, subtotal, tax, total }, ref) => {
-    const currentDate = new Date().toLocaleDateString()
-    const currentTime = new Date().toLocaleTimeString()
-    const billNumber = `BILL-${Date.now()}`
+  (
+    {
+      cart,
+      customerName,
+      phoneNumber,
+      email,
+      paymentMethod,
+      subtotal,
+      tax,
+      total,
+    },
+    ref
+  ) => {
+    const currentDate = new Date().toLocaleDateString();
+    const currentTime = new Date().toLocaleTimeString();
+    const billNumber = `BILL-${Date.now()}`;
 
     const styles = {
       container: {
@@ -158,7 +176,7 @@ const BillToPrint = forwardRef<any, any>(
         fontSize: "10px",
         marginTop: "4px",
       },
-    }
+    };
 
     return (
       <div ref={ref} style={styles.container}>
@@ -210,11 +228,15 @@ const BillToPrint = forwardRef<any, any>(
           {cart.map((item: CartItem) => (
             <div key={item.id} style={styles.itemRow}>
               <span style={styles.itemName}>
-                {item.name.length > 15 ? `${item.name.substring(0, 15)}...` : item.name}
+                {item.name.length > 15
+                  ? `${item.name.substring(0, 15)}...`
+                  : item.name}
               </span>
               <span style={styles.itemQty}>{item.quantity}</span>
               <span style={styles.itemRate}>{item.price}</span>
-              <span style={styles.itemAmount}>{(item.price * item.quantity).toFixed(2)}</span>
+              <span style={styles.itemAmount}>
+                {(item.price * item.quantity).toFixed(2)}
+              </span>
             </div>
           ))}
         </div>
@@ -223,7 +245,9 @@ const BillToPrint = forwardRef<any, any>(
         <div style={styles.totalsSection}>
           <div style={styles.totalRow}>
             <span>Sub Total:</span>
-            <span style={{ fontWeight: "bold" }}>Rs. {subtotal.toFixed(2)}</span>
+            <span style={{ fontWeight: "bold" }}>
+              Rs. {subtotal.toFixed(2)}
+            </span>
           </div>
           <div style={styles.totalRow}>
             <span>Tax (5%):</span>
@@ -260,73 +284,83 @@ const BillToPrint = forwardRef<any, any>(
           <p style={styles.barcodeText}>{billNumber}</p>
         </div>
       </div>
-    )
-  },
-)
+    );
+  }
+);
 
-BillToPrint.displayName = "BillToPrint"
+BillToPrint.displayName = "BillToPrint";
 
-export default function PointOfSale({ products: initialProducts }: PointOfSaleProps) {
-  const [cart, setCart] = useState<CartItem[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [customerName, setCustomerName] = useState("")
-  const [phoneNumber, setPhoneNumber] = useState("")
-  const [email, setEmail] = useState("")
-  const [paymentMethod, setPaymentMethod] = useState("cash")
-  const [products, setProducts] = useState<Product[]>(initialProducts)
-  const printRef = useRef<HTMLDivElement>(null)
+export default function PointOfSale({
+  products: initialProducts,
+}: PointOfSaleProps) {
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [customerName, setCustomerName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const printRef = useRef<HTMLDivElement>(null);
   const [billData, setBillData] = useState<{
-    cart: CartItem[]
-    customerName: string
-    phoneNumber: string
-    email: string
-    paymentMethod: string
-    subtotal: number
-    tax: number
-    total: number
-  } | null>(null)
+    cart: CartItem[];
+    customerName: string;
+    phoneNumber: string;
+    email: string;
+    paymentMethod: string;
+    subtotal: number;
+    tax: number;
+    total: number;
+  } | null>(null);
 
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   const refreshProducts = async () => {
     try {
-      const data = await fetchProducts()
-      setProducts(data)
+      const data = await fetchProducts();
+      setProducts(data);
     } catch (err) {
       // Optionally handle error
     }
-  }
+  };
 
   const addToCart = (product: Product) => {
-    if (product.stock === 0) return
+    if (product.stock === 0) return;
     setCart((prevCart) => {
-      const existingItem = prevCart.find((item) => item.id === product.id)
+      const existingItem = prevCart.find((item) => item.id === product.id);
       if (existingItem) {
-        return prevCart.map((item) => (item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item))
+        return prevCart.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
       }
-      return [...prevCart, { ...product, quantity: 1 }]
-    })
-  }
+      return [...prevCart, { ...product, quantity: 1 }];
+    });
+  };
 
   const removeFromCart = (productId: number) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== productId))
-  }
+    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
+  };
 
   const updateQuantity = (productId: number, quantity: number) => {
     if (quantity === 0) {
-      removeFromCart(productId)
-      return
+      removeFromCart(productId);
+      return;
     }
-    setCart((prevCart) => prevCart.map((item) => (item.id === productId ? { ...item, quantity } : item)))
-  }
+    setCart((prevCart) =>
+      prevCart.map((item) =>
+        item.id === productId ? { ...item, quantity } : item
+      )
+    );
+  };
 
   const clearCart = () => {
-    setCart([])
-    setCustomerName("")
-    setPhoneNumber("")
-    setEmail("")
-  }
+    setCart([]);
+    setCustomerName("");
+    setPhoneNumber("");
+    setEmail("");
+  };
 
   const handleCompleteBilling = async () => {
     if (!customerName || !phoneNumber) {
@@ -334,22 +368,22 @@ export default function PointOfSale({ products: initialProducts }: PointOfSalePr
         title: "Missing Customer Info",
         description: "Please enter customer name and phone number.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
     const hasInvalidQuantity = cart.some((item) => {
-      const original = products.find((p) => p.id === item.id)
-      return !original || item.quantity > original.stock
-    })
+      const original = products.find((p) => p.id === item.id);
+      return !original || item.quantity > original.stock;
+    });
 
     if (hasInvalidQuantity) {
       toast({
         title: "Invalid Quantity",
         description: "One or more items in the cart exceed available stock.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
     const payload = {
@@ -363,28 +397,28 @@ export default function PointOfSale({ products: initialProducts }: PointOfSalePr
         quantity: item.quantity,
         price: Number(item.price).toFixed(2),
       })),
-    }
+    };
 
     try {
       const res = await apiClient.post("/api/pointofsales/create/", payload, {
         headers: {
           "Content-Type": "application/json",
         },
-      })
+      });
 
       // Update local products state to reflect stock changes
       setProducts((prevProducts) =>
         prevProducts.map((product) => {
-          const cartItem = cart.find((item) => item.id === product.id)
+          const cartItem = cart.find((item) => item.id === product.id);
           if (cartItem) {
             return {
               ...product,
               stock: product.stock - cartItem.quantity,
-            }
+            };
           }
-          return product
-        }),
-      )
+          return product;
+        })
+      );
 
       setBillData({
         cart,
@@ -395,18 +429,20 @@ export default function PointOfSale({ products: initialProducts }: PointOfSalePr
         subtotal,
         tax,
         total,
-      })
+      });
 
       setTimeout(() => {
         if (printRef.current) {
-          const printContent = printRef.current
-          const printWindow = window.open("", "_blank")
+          const printContent = printRef.current;
+          const printWindow = window.open("", "_blank");
           if (printWindow) {
             printWindow.document.write(`
               <!DOCTYPE html>
               <html>
                 <head>
-                  <title>Print Bill - ${billData?.customerName || customerName}</title>
+                  <title>Print Bill - ${
+                    billData?.customerName || customerName
+                  }</title>
                   <meta charset="UTF-8">
                   <style>
                     * {
@@ -443,41 +479,47 @@ export default function PointOfSale({ products: initialProducts }: PointOfSalePr
                   ${printContent.innerHTML}
                 </body>
               </html>
-            `)
-            printWindow.document.close()
-            printWindow.focus()
+            `);
+            printWindow.document.close();
+            printWindow.focus();
 
             // Add a small delay before printing to ensure content is loaded
             setTimeout(() => {
-              printWindow.print()
+              printWindow.print();
               printWindow.onafterprint = () => {
-                printWindow.close()
-              }
-            }, 250)
+                printWindow.close();
+              };
+            }, 250);
           }
         }
-      }, 500)
+      }, 500);
 
       toast({
         title: "Success!",
-        description: "Billing completed successfully and bill is being printed.",
-      })
-      clearCart()
+        description:
+          "Billing completed successfully and bill is being printed.",
+      });
+      clearCart();
     } catch (err: any) {
-      const message = err.response?.data?.detail || err.response?.data?.message || err.message
+      const message =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        err.message;
       toast({
         title: "Billing Failed",
         description: message,
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch =
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const normalizedCategory = product.category?.name.toLowerCase().replace(/\s+/g, "")
+      product.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const normalizedCategory = product.category?.name
+      .toLowerCase()
+      .replace(/\s+/g, "");
     const isEyeGlassCategory = [
       "eyeglass",
       "eyeglasses",
@@ -487,17 +529,21 @@ export default function PointOfSale({ products: initialProducts }: PointOfSalePr
       "eyeglassess",
       "eyeglass ",
       "eyeglass.",
-    ].includes(normalizedCategory || "")
-    const isNotEyeGlass = !isEyeGlassCategory
+    ].includes(normalizedCategory || "");
+    const isNotEyeGlass = !isEyeGlassCategory;
     const matchesCategory =
-      selectedCategory === "all" || product.category?.name.toLowerCase() === selectedCategory.toLowerCase()
+      selectedCategory === "all" ||
+      product.category?.name.toLowerCase() === selectedCategory.toLowerCase();
 
-    return matchesSearch && matchesCategory && isNotEyeGlass
-  })
+    return matchesSearch && matchesCategory && isNotEyeGlass;
+  });
 
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const tax = subtotal * 0.05
-  const total = subtotal + tax
+  const subtotal = cart.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const tax = subtotal * 0.05;
+  const total = subtotal + tax;
 
   // Extract unique categories for filter dropdown
   const categories = Array.from(
@@ -505,26 +551,28 @@ export default function PointOfSale({ products: initialProducts }: PointOfSalePr
       products
         .map((p) => p.category?.name)
         .filter((name): name is string => {
-          if (!name) return false
-          const normalized = name.toLowerCase().replace(/\s+/g, "")
-          return !["eyeglass", "eyeglasses"].includes(normalized)
-        }),
-    ),
-  )
+          if (!name) return false;
+          const normalized = name.toLowerCase().replace(/\s+/g, "");
+          return !["eyeglass", "eyeglasses"].includes(normalized);
+        })
+    )
+  );
 
   useEffect(() => {
-    refreshProducts()
-  }, [])
+    refreshProducts();
+  }, []);
 
   return (
     <>
       <div className="min-h-screen bg-gray-50 flex flex-col">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
-          <h1 className="text-2xl font-bold text-gray-900">Point of Sale</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-500 to-amber-600 bg-clip-text text-transparent flex items-center gap-2">
+            <ShoppingCart className="h-7 w-7 text-yellow-600" />
+            Point of Sale
+          </h1>
           <p className="text-gray-600">Process sales and manage transactions</p>
         </div>
-
         <div className="flex flex-1 overflow-hidden">
           {/* Left Side - Products */}
           <div className="flex-1 p-6 overflow-hidden">
@@ -539,7 +587,10 @@ export default function PointOfSale({ products: initialProducts }: PointOfSalePr
                   className="pl-10"
                 />
               </div>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
@@ -573,7 +624,10 @@ export default function PointOfSale({ products: initialProducts }: PointOfSalePr
                       {product.images && product.images.length > 0 && (
                         <div className="w-full h-32 overflow-hidden rounded-lg bg-gray-100">
                           <img
-                            src={product.images[0] || "/placeholder.svg?height=128&width=200"}
+                            src={
+                              product.images[0] ||
+                              "/placeholder.svg?height=128&width=200"
+                            }
                             alt={product.name}
                             className="w-full h-full object-cover"
                           />
@@ -581,37 +635,51 @@ export default function PointOfSale({ products: initialProducts }: PointOfSalePr
                       )}
                       {/* Product Info */}
                       <div className="space-y-1">
-                        <h3 className="font-medium text-sm text-gray-900 line-clamp-2 leading-tight">{product.name}</h3>
+                        <h3 className="font-medium text-sm text-gray-900 line-clamp-2 leading-tight">
+                          {product.name}
+                        </h3>
                         <p className="text-xs text-gray-500 leading-tight">
-                          {product.description.split(" ").slice(0, 3).join(" ")}...
+                          {product.description.split(" ").slice(0, 3).join(" ")}
+                          ...
                         </p>
                       </div>
                       <div className="flex items-start justify-between pt-1 gap-2">
-                      {/* Price */}
-                      <div className="text-left leading-tight">
-                        <div className="text-xs text-blue-600 font-semibold">Rs.</div>
-                        <div className="text-sm text-blue-700 font-bold break-words max-w-[100px]">
-                          {product.price}
+                        {/* Price */}
+                        <div className="text-left leading-tight">
+                          <div className="text-xs text-blue-600 font-semibold">
+                            Rs.
+                          </div>
+                          <div className="text-sm text-blue-700 font-bold break-words max-w-[100px]">
+                            {product.price}
+                          </div>
+                        </div>
+
+                        {/* Stock Badge */}
+                        <div className="text-right mt-1 flex-shrink-0">
+                          {product.stock === 0 ? (
+                            <Badge
+                              variant="destructive"
+                              className="text-xs px-2 py-1 whitespace-nowrap"
+                            >
+                              OUT OF STOCK
+                            </Badge>
+                          ) : product.stock <= 5 ? (
+                            <Badge
+                              variant="secondary"
+                              className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 whitespace-nowrap"
+                            >
+                              {product.stock} left
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="secondary"
+                              className="text-xs px-2 py-1 whitespace-nowrap"
+                            >
+                              {product.stock} in stock
+                            </Badge>
+                          )}
                         </div>
                       </div>
-
-                      {/* Stock Badge */}
-                      <div className="text-right mt-1 flex-shrink-0">
-                        {product.stock === 0 ? (
-                          <Badge variant="destructive" className="text-xs px-2 py-1 whitespace-nowrap">
-                            OUT OF STOCK
-                          </Badge>
-                        ) : product.stock <= 5 ? (
-                          <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 whitespace-nowrap">
-                            {product.stock} left
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="text-xs px-2 py-1 whitespace-nowrap">
-                            {product.stock} in stock
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -629,7 +697,9 @@ export default function PointOfSale({ products: initialProducts }: PointOfSalePr
                   <span className="font-medium">Billing Cart</span>
                 </div>
                 <div className="text-right">
-                  <div className="text-xl font-bold">Rs. {total.toFixed(2)}</div>
+                  <div className="text-xl font-bold">
+                    Rs. {total.toFixed(2)}
+                  </div>
                   <div className="text-sm opacity-90">Total Amount</div>
                 </div>
               </div>
@@ -642,44 +712,64 @@ export default function PointOfSale({ products: initialProducts }: PointOfSalePr
                 <div className="text-center py-12">
                   <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-500 font-medium">Cart is empty</p>
-                  <p className="text-gray-400 text-sm">Add products to start billing</p>
+                  <p className="text-gray-400 text-sm">
+                    Add products to start billing
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {cart.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                    >
                       {item.images && item.images.length > 0 && (
                         <img
-                          src={item.images[0] || "/placeholder.svg?height=48&width=48"}
+                          src={
+                            item.images[0] ||
+                            "/placeholder.svg?height=48&width=48"
+                          }
                           alt={item.name}
                           className="w-12 h-12 object-cover rounded"
                         />
                       )}
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm truncate">{item.name}</h4>
-                        <p className="text-xs text-gray-500">Rs. {item.price}</p>
+                        <h4 className="font-medium text-sm truncate">
+                          {item.name}
+                        </h4>
+                        <p className="text-xs text-gray-500">
+                          Rs. {item.price}
+                        </p>
                         <div className="flex items-center gap-2 mt-1">
                           <Button
                             size="sm"
                             variant="outline"
                             className="w-6 h-6 p-0 bg-transparent"
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity - 1)
+                            }
                           >
                             -
                           </Button>
-                          <span className="text-sm font-medium w-8 text-center">{item.quantity}</span>
+                          <span className="text-sm font-medium w-8 text-center">
+                            {item.quantity}
+                          </span>
                           <Button
                             size="sm"
                             variant="outline"
                             className="w-6 h-6 p-0 bg-transparent"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity + 1)
+                            }
                           >
                             +
                           </Button>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium text-sm">Rs. {(item.price * item.quantity).toFixed(2)}</p>
+                        <p className="font-medium text-sm">
+                          Rs. {(item.price * item.quantity).toFixed(2)}
+                        </p>
                         <Button
                           size="sm"
                           variant="ghost"
@@ -712,7 +802,11 @@ export default function PointOfSale({ products: initialProducts }: PointOfSalePr
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                 />
-                <Input placeholder="Email (Optional)" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Input
+                  placeholder="Email (Optional)"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
             </div>
 
@@ -776,7 +870,11 @@ export default function PointOfSale({ products: initialProducts }: PointOfSalePr
                 <CreditCard className="w-4 h-4 mr-2" />
                 Complete Billing - Rs. {total.toFixed(2)}
               </Button>
-              <Button variant="outline" className="w-full bg-transparent" onClick={clearCart}>
+              <Button
+                variant="outline"
+                className="w-full bg-transparent"
+                onClick={clearCart}
+              >
                 Clear Cart & Start New
               </Button>
             </div>
@@ -800,5 +898,5 @@ export default function PointOfSale({ products: initialProducts }: PointOfSalePr
         </div>
       )}
     </>
-  )
+  );
 }
