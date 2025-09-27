@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
 import { Product } from '@/types/product'
-import { JEELIZVTOWIDGET } from '@/dist/jeelizVTOWidget.module.js' // adjust path
+import { JEELIZVTOWIDGET } from '@/dista/jeelizVTOWidget.module.js' // adjust path
 
 interface VirtualTryOnProps {
   product: Product
