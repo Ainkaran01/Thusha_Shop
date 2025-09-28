@@ -1,4 +1,4 @@
-from django.conf import settings
+ from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
@@ -226,14 +226,6 @@ class AppointmentDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Appointment.objects.all()
     serializer_class = AppointmentSerializer
     permission_classes = [IsAuthenticated]
-<<<<<<< HEAD
-    filter_backends = []
-
-    def perform_update(self, serializer):
-        appointment = serializer.save()
-        if 'status' in serializer.validated_data:
-            send_appointment_emails(appointment, appointment.doctor)
-=======
     filter_backends = [DjangoFilterBackend]
     def perform_update(self, serializer):
         appointment = serializer.save()
@@ -243,4 +235,3 @@ class AppointmentDetailView(generics.RetrieveUpdateDestroyAPIView):
             new_status = serializer.validated_data['status']
             if new_status in ['confirmed', 'cancelled', 'completed']:
                 send_appointment_emails(appointment, appointment.doctor, status=new_status)
->>>>>>> 61ecbfed301653241cfe305a6e851ae74ded3caa
