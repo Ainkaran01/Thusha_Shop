@@ -10,14 +10,14 @@ export interface ApiProduct {
   stock: number;
   manufacturer: number;
   created_at: string;
-  colors:string;
+  colors: string;
   features: string[];
   face_shapes: string[];
   vision_problems: string[];
-  sold:number;
+  sold: number;
   images: string[];
   frame_material?: string;
-
+  sku?: string;
 }
 
 export interface Category {
@@ -38,7 +38,7 @@ export interface Product {
   stock: number;
   size: string;
   weight: number;
-  sold:number;
+  sold: number;
 
   category: Category;
   frame_type: FrameType;
@@ -49,9 +49,10 @@ export interface Product {
   features?: string[];
   face_shapes?: string[];
   vision_problems?: string[];
-  
+
   created_at?: string;
   manufacturer_id?: number;
+  sku?: string;
 }
 
 export interface ProductFormData {
@@ -69,9 +70,6 @@ export interface ProductFormData {
   face_shapes: string[];
   vision_problems: string[];
 }
-
-
-
 
 export function normalizeProduct(apiProduct: ApiProduct): Product {
   return {
@@ -103,5 +101,6 @@ export function normalizeProduct(apiProduct: ApiProduct): Product {
     vision_problems: apiProduct.vision_problems || [],
     created_at: apiProduct.created_at,
     manufacturer_id: apiProduct.manufacturer,
+    sku: apiProduct.sku || "",
   };
 }

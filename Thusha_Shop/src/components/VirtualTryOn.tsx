@@ -20,9 +20,9 @@ const VirtualTryOn: React.FC<VirtualTryOnProps> = ({ product, isOpen, onClose })
 
   // Load predefined Jeeliz glasses based on product.frame_type.name
   const loadProductModel = () => {
-    if (!product || !product.frame_type?.name) return
+    if (!product || !product.sku) return
 
-    const sku = product.frame_type.name
+    const sku = product.sku
     JEELIZVTOWIDGET.load(sku, {
       pivotOffset: [0.0, 0.05, 0.0],
       scale: 1.2,
