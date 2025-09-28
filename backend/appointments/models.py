@@ -1,4 +1,4 @@
- from django.db import models
+from django.db import models
 from django.contrib.auth import get_user_model
 from django.dispatch import receiver
 from doctors.models import DoctorProfile
