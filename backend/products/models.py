@@ -35,10 +35,10 @@ class Product(models.Model):
     stock = models.IntegerField()
     frame_material = models.CharField(max_length=100, blank=True)
 
-    manufacturer = models.ForeignKey(
-        User, on_delete=models.CASCADE, limit_choices_to={'role': 'manufacturer'}, null=True, blank=True
-    )
-
+    # manufacturer = models.ForeignKey(
+    #     User, on_delete=models.CASCADE, limit_choices_to={'role': 'manufacturer'}, null=True, blank=True
+    # )
+    sku = models.CharField(max_length=100, unique=True)  # Stock Keeping Unit
     images = models.JSONField(default=list)
     face_shapes = models.JSONField(default=list, blank=True)
     vision_problems = models.JSONField(default=list, blank=True)
