@@ -1,4 +1,4 @@
-from django.db import models
+ from django.db import models
 from django.contrib.auth import get_user_model
 from django.dispatch import receiver
 from doctors.models import DoctorProfile
@@ -85,11 +85,6 @@ class Appointment(models.Model):
 # def update_appointment_status(sender, instance, **kwargs):
 #     """Automatically update status for past appointments"""
 #     if instance.date < timezone.now().date():
-<<<<<<< HEAD
-#         instance.status = 'completed'
-=======
 #         instance.status = 'completed'
 
  
-
->>>>>>> 61ecbfed301653241cfe305a6e851ae74ded3caa
