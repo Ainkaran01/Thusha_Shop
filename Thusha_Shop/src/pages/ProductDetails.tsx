@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   Check,
   Camera,
+  Box,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -24,9 +25,12 @@ import { motion } from "framer-motion";
 import ProductReviews from "@/components/ProductReviews";
 import RelatedProducts from "@/components/RelatedProducts";
 import VirtualTryOn from "@/components/VirtualTryOn";
+import ProductViewer360Modal from "@/components/ProductViewer360Modal";
 import { useMemo } from "react";
 import { Review } from "@/types/review";
 import { useUser } from "@/context/UserContext";
+import { get360ImagesForProduct, has360View } from "@/types/product360";
+import { getOptimal360Frames } from "@/utils/360EffectUtils";
 // Extend Product type for cart items
 interface CartProduct extends Product {
   quantity: number;
@@ -45,6 +49,7 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showVirtualTryOn, setShowVirtualTryOn] = useState(false);
+  const [show360Modal, setShow360Modal] = useState(false);
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist, removeFromWishlist } = useWishlist();
   useEffect(() => {
@@ -200,6 +205,15 @@ const ProductDetails = () => {
               }}
             >
               <ChevronRight className="h-5 w-5" />
+            </Button>
+             {/* 360° Icon - Top Right Corner */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShow360Modal(true)}
+              className="absolute top-2 right-2 bg-white/90 hover:bg-white text-yellow-600 hover:text-yellow-700 rounded-full shadow-lg border border-yellow-200 h-10 w-10"
+            >
+              <span className="text-lg font-bold">360°</span>
             </Button>
           </div>
 
@@ -518,77 +532,140 @@ const ProductDetails = () => {
         </div>
       </div>
 
-      {/* Product Tabs */}
+      {/* Product Tabs - Enhanced Design */}
       <div className="mb-16">
-        <Tabs defaultValue="details">
-          <TabsList className="w-full justify-start mb-6 border-b">
-            <TabsTrigger value="details" className="text-lg">
-              Details
-            </TabsTrigger>
-            <TabsTrigger value="reviews" className="text-lg">
-              Reviews
-            </TabsTrigger>
-            <TabsTrigger value="shipping" className="text-lg">
-              Shipping & Returns
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="details" className="p-4">
-            <div>
-              <h3 className="text-xl font-semibold mb-4">Product Details</h3>
+        <Tabs defaultValue="details" className="w-full">
+          <div className="relative">
+            <TabsList className="w-full justify-start mb-6 bg-gradient-to-r from-gray-50 to-gray-100 p-1 rounded-lg border border-gray-200 shadow-sm">
+              <TabsTrigger 
+                value="details" 
+                className="text-sm font-medium px-4 py-2 rounded-md transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-600 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/50"
+              >
+                <Box className="h-3 w-3 mr-1" />
+                Details
+              </TabsTrigger>
+              <TabsTrigger 
+                value="reviews" 
+                className="text-sm font-medium px-4 py-2 rounded-md transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-600 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/50"
+              >
+                <Star className="h-3 w-3 mr-1" />
+                Reviews
+              </TabsTrigger>
+              <TabsTrigger 
+                value="shipping" 
+                className="text-sm font-medium px-4 py-2 rounded-md transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-600 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/50"
+              >
+                <Truck className="h-3 w-3 mr-1" />
+                Shipping & Returns
+              </TabsTrigger>
+            </TabsList>
+          </div>
+          <TabsContent value="details" className="mt-0">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-xl border border-gray-200 shadow-sm p-6"
+            >
+              <div className="flex items-center mb-4">
+                <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                  <Box className="h-5 w-5 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Product Details</h3>
+              </div>
 
-              {/* Always show product description */}
-              <p className="mb-4">{product.description}</p>
+              {/* Product Description */}
+              <div className="mb-6">
+                <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
+                  <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                    Description
+                  </h4>
+                  <p className="text-gray-700 leading-relaxed text-sm">{product.description}</p>
+                </div>
+              </div>
 
               {/* Only show this part for Eyeglasses */}
               {product.category.name === "Eyeglasses" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div>
-                    <h4 className="font-medium mb-2">Specifications</h4>
-                    <ul className="space-y-2">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Specifications Card */}
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+                    <div className="flex items-center mb-3">
+                      <div className="p-2 bg-blue-100 rounded-lg mr-2">
+                        <Check className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900">Specifications</h4>
+                    </div>
+                    <div className="space-y-3">
                       {product.frame_type && (
-                        <li>
-                          <strong>Frame Type:</strong> {product.frame_type.name}
-                        </li>
+                        <div className="flex justify-between items-center py-1 border-b border-blue-200">
+                          <span className="font-medium text-gray-700 text-sm">Frame Type:</span>
+                          <span className="text-gray-900 font-semibold text-sm">{product.frame_type.name}</span>
+                        </div>
                       )}
                       {product.frame_material && (
-                        <li>
-                          <strong>Frame Material:</strong>{" "}
-                          {product.frame_material}
-                        </li>
+                        <div className="flex justify-between items-center py-1 border-b border-blue-200">
+                          <span className="font-medium text-gray-700 text-sm">Frame Material:</span>
+                          <span className="text-gray-900 font-semibold text-sm">{product.frame_material}</span>
+                        </div>
                       )}
                       {product.colors && (
-                        <li>
-                          <strong>Color:</strong> {product.colors}
-                        </li>
+                        <div className="flex justify-between items-center py-1 border-b border-blue-200">
+                          <span className="font-medium text-gray-700 text-sm">Color:</span>
+                          <span className="text-gray-900 font-semibold text-sm">{product.colors}</span>
+                        </div>
                       )}
-                      <li>
-                        <strong>UV Protection:</strong> Yes
-                      </li>
-                      <li>
-                        <strong>Prescription Compatible:</strong> Yes
-                      </li>
-                    </ul>
+                      <div className="flex justify-between items-center py-1 border-b border-blue-200">
+                        <span className="font-medium text-gray-700 text-sm">UV Protection:</span>
+                        <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
+                          <Check className="h-3 w-3 mr-1" />
+                          Yes
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center py-1">
+                        <span className="font-medium text-gray-700 text-sm">Prescription Compatible:</span>
+                        <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
+                          <Check className="h-3 w-3 mr-1" />
+                          Yes
+                        </Badge>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-medium mb-2">Recommended For</h4>
+
+                  {/* Recommended For Card */}
+                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
+                    <div className="flex items-center mb-3">
+                      <div className="p-2 bg-purple-100 rounded-lg mr-2">
+                        <Star className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900">Recommended For</h4>
+                    </div>
+                    
                     {product.face_shapes?.length > 0 && (
                       <div className="mb-4">
-                        <p className="font-medium">Face Shapes:</p>
-                        <div className="flex flex-wrap gap-2 mt-1">
+                        <h5 className="font-semibold text-gray-800 mb-2 flex items-center text-sm">
+                          <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                          Face Shapes
+                        </h5>
+                        <div className="flex flex-wrap gap-1">
                           {product.face_shapes.map((shape) => (
-                            <Badge key={shape} className="capitalize">
+                            <Badge key={shape} className="bg-purple-100 text-purple-800 border-purple-200 capitalize px-2 py-1 text-xs">
                               {shape}
                             </Badge>
                           ))}
                         </div>
                       </div>
                     )}
+                    
                     {product.vision_problems?.length > 0 && (
                       <div>
-                        <p className="font-medium">Vision Problems:</p>
-                        <div className="flex flex-wrap gap-2 mt-1">
+                        <h5 className="font-semibold text-gray-800 mb-2 flex items-center text-sm">
+                          <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                          Vision Problems
+                        </h5>
+                        <div className="flex flex-wrap gap-1">
                           {product.vision_problems.map((problem) => (
-                            <Badge key={problem} className="capitalize">
+                            <Badge key={problem} className="bg-pink-100 text-pink-800 border-pink-200 capitalize px-2 py-1 text-xs">
                               {problem}
                             </Badge>
                           ))}
@@ -598,68 +675,152 @@ const ProductDetails = () => {
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
           </TabsContent>
-          <TabsContent value="reviews" className="p-4">
-            <ProductReviews
-              productId={product.id}
-              reviews={productReviews}
-              setReviews={setProductReviews}
-            />
-          </TabsContent>
-          <TabsContent value="shipping" className="p-4">
-            <div>
-              <h3 className="text-xl font-semibold mb-4">
-                Shipping Information
-              </h3>
-              <p className="mb-4">
-                We offer free standard shipping on all orders within the United
-                States. International shipping rates vary by destination.
-              </p>
-
-              <h4 className="font-medium mb-2">Shipping Options</h4>
-              <ul className="space-y-2 mb-6">
-                <li>
-                  <strong>Standard Shipping:</strong> 5-7 business days (Free)
-                </li>
-                <li>
-                  <strong>Express Shipping:</strong> 2-3 business days (LKR 400)
-                </li>
-                <li>
-                  <strong>Next Day Shipping:</strong> Next business day if
-                  ordered before 2pm EST (LKR 500)
-                </li>
-              </ul>
-
-              <h3 className="text-xl font-semibold mb-4">Return Policy</h3>
-              <p className="mb-4">
-                We offer a 30-day return policy for all our frames. If you're
-                not completely satisfied with your purchase, you can return it
-                within 30 days for a full refund or exchange.
-              </p>
-
-              <h4 className="font-medium mb-2">Return Process</h4>
-              <ol className="list-decimal list-inside space-y-2">
-                <li>Contact our customer service to initiate a return</li>
-                <li>Pack your glasses in their original packaging</li>
-                <li>Print the prepaid return label that we'll send to you</li>
-                <li>Drop off the package at any postal service location</li>
-                <li>
-                  Once we receive and inspect the return, we'll process your
-                  refund
-                </li>
-              </ol>
-
-              <div className="bg-secondary p-4 rounded-lg mt-6">
-                <p className="font-medium">Note</p>
-                <p className="text-sm">
-                  Prescription lenses are custom-made for your specific vision
-                  needs and cannot be returned unless there's a manufacturing
-                  defect. Please contact our customer service if you have any
-                  issues with your prescription lenses.
-                </p>
+          <TabsContent value="reviews" className="mt-0">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-xl border border-gray-200 shadow-sm p-6"
+            >
+              <div className="flex items-center mb-4">
+                <div className="p-2 bg-yellow-100 rounded-lg mr-3">
+                  <Star className="h-5 w-5 text-yellow-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Customer Reviews</h3>
               </div>
-            </div>
+              <ProductReviews
+                productId={product.id}
+                reviews={productReviews}
+                setReviews={setProductReviews}
+              />
+            </motion.div>
+          </TabsContent>
+          <TabsContent value="shipping" className="mt-0">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-xl border border-gray-200 shadow-sm p-6"
+            >
+              <div className="flex items-center mb-6">
+                <div className="p-2 bg-green-100 rounded-lg mr-3">
+                  <Truck className="h-5 w-5 text-green-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Shipping & Returns</h3>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Shipping Information Card */}
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
+                  <div className="flex items-center mb-4">
+                    <div className="p-2 bg-green-100 rounded-lg mr-3">
+                      <Truck className="h-5 w-5 text-green-600" />
+                    </div>
+                    <h4 className="text-xl font-semibold text-gray-900">Shipping Information</h4>
+                  </div>
+                  
+                  <p className="text-gray-700 mb-6 leading-relaxed">
+                    We offer free standard shipping on all orders within Sri Lanka. 
+                    International shipping rates vary by destination.
+                  </p>
+
+                  <h5 className="font-semibold text-gray-800 mb-4 flex items-center">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                    Shipping Options
+                  </h5>
+                  
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center py-3 px-4 bg-white rounded-lg border border-green-200">
+                      <div>
+                        <span className="font-semibold text-gray-900">Standard Shipping</span>
+                        <p className="text-sm text-gray-600">5-7 business days</p>
+                      </div>
+                      <Badge className="bg-green-100 text-green-800 border-green-200">
+                        Free
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex justify-between items-center py-3 px-4 bg-white rounded-lg border border-green-200">
+                      <div>
+                        <span className="font-semibold text-gray-900">Express Shipping</span>
+                        <p className="text-sm text-gray-600">2-3 business days</p>
+                      </div>
+                      <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                        LKR 400
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex justify-between items-center py-3 px-4 bg-white rounded-lg border border-green-200">
+                      <div>
+                        <span className="font-semibold text-gray-900">Next Day Shipping</span>
+                        <p className="text-sm text-gray-600">Next business day (before 2pm)</p>
+                      </div>
+                      <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+                        LKR 500
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Return Policy Card */}
+                <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-6 border border-orange-200">
+                  <div className="flex items-center mb-4">
+                    <div className="p-2 bg-orange-100 rounded-lg mr-3">
+                      <Repeat className="h-5 w-5 text-orange-600" />
+                    </div>
+                    <h4 className="text-xl font-semibold text-gray-900">Return Policy</h4>
+                  </div>
+                  
+                  <p className="text-gray-700 mb-6 leading-relaxed">
+                    We offer a 30-day return policy for all our frames. If you're
+                    not completely satisfied with your purchase, you can return it
+                    within 30 days for a full refund or exchange.
+                  </p>
+
+                  <h5 className="font-semibold text-gray-800 mb-4 flex items-center">
+                    <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
+                    Return Process
+                  </h5>
+                  
+                  <div className="space-y-3">
+                    {[
+                      "Contact our customer service to initiate a return",
+                      "Pack your glasses in their original packaging",
+                      "Print the prepaid return label that we'll send to you",
+                      "Drop off the package at any postal service location",
+                      "Once we receive and inspect the return, we'll process your refund"
+                    ].map((step, index) => (
+                      <div key={index} className="flex items-start">
+                        <div className="flex-shrink-0 w-6 h-6 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-sm font-semibold mr-3 mt-0.5">
+                          {index + 1}
+                        </div>
+                        <p className="text-gray-700 text-sm leading-relaxed">{step}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Important Note */}
+              <div className="mt-8 bg-amber-50 border border-amber-200 rounded-xl p-6">
+                <div className="flex items-start">
+                  <div className="p-2 bg-amber-100 rounded-lg mr-4 flex-shrink-0">
+                    <ShieldCheck className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-amber-800 mb-2">Important Note</h5>
+                    <p className="text-amber-700 text-sm leading-relaxed">
+                      Prescription lenses are custom-made for your specific vision
+                      needs and cannot be returned unless there's a manufacturing
+                      defect. Please contact our customer service if you have any
+                      issues with your prescription lenses.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </TabsContent>
         </Tabs>
       </div>
@@ -704,6 +865,14 @@ const ProductDetails = () => {
           </>
         )}
       </div>
+       {/* 360° Modal */}
+      <ProductViewer360Modal
+        isOpen={show360Modal}
+        onClose={() => setShow360Modal(false)}
+        images={getOptimal360Frames(product.images || ["/images/f1.jpg"], 32)}
+        productName={product.name}
+        fallbackImage={product.images?.[0] || "/images/f1.jpg"}
+      />
     </div>
   );
 };

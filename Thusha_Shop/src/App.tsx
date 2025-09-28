@@ -28,6 +28,7 @@ import DoctorAppointment from "./pages/DoctorAppointment";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import Product360Demo from "./pages/Product360Demo";
 import Layout from "./components/Layout";
 import ManufacturerDashboard from "./pages/ManufacturerDashboard";
 
@@ -74,7 +75,7 @@ const AppContent = () => {
                 <Route path="account" element={<Account />} />
                 <Route path="about" element={<About />} />
                 <Route path="contact" element={<Contact />} />
-
+ <Route path="product-360-demo" element={<Product360Demo />} />
                 {/* Protected routes */}
                 <Route element={<RouteGuard allowedRoles={["customer"]} />}>
                   <Route path="checkout" element={<Checkout />} />
