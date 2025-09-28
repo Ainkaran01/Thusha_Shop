@@ -86,11 +86,3 @@ class Appointment(models.Model):
 #     """Automatically update status for past appointments"""
 #     if instance.date < timezone.now().date():
 #         instance.status = 'completed'
-
- 
-
-    def save(self, *args, **kwargs):
-        # Auto-complete only if not manually set to 'cancelled'
-        if self.date < timezone.now().date() and self.status != 'cancelled':
-            self.status = 'completed'
-        super().save(*args, **kwargs)  # Proceed with normal save

@@ -214,16 +214,9 @@ class AppointmentDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Appointment.objects.all()
     serializer_class = AppointmentSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = []
 
     def perform_update(self, serializer):
-        # Just save the data - let the serializer handle status changes
         appointment = serializer.save()
-        
-        # Optionally send emails based on status
         if 'status' in serializer.validated_data:
-            new_status = serializer.validated_data['status']
-            if new_status == 'confirmed':
-                send_appointment_emails(appointment, appointment.doctor)
-            elif new_status == 'cancelled':
-                # Add cancellation email logic if needed
-                pass
+            send_appointment_emails(appointment, appointment.doctor)
