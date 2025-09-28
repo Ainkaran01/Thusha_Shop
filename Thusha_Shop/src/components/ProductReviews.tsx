@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Star, ThumbsUp, ChevronDown, ChevronUp } from "lucide-react";
+import { Star, ThumbsUp, ChevronDown, ChevronUp, MessageSquare, User, Calendar, Award, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useUser } from "@/context/UserContext";
 import { Review } from "@/types/review";
+import { motion, AnimatePresence } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
 
 interface ProductReviewsProps {
   productId: number;
@@ -140,202 +142,367 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({
   });
 
   if (loading) {
-    return <div className="text-center py-8">Loading reviews...</div>;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="flex items-center space-x-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="text-gray-600">Loading reviews...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <div className="flex flex-col md:flex-row gap-8 mb-8">
-        {/* Rating Summary */}
-        <div className="md:w-1/3 bg-secondary p-6 rounded-lg">
-          <div className="text-center mb-4">
-            <div className="text-4xl font-bold mb-2">
-              {averageRating.toFixed(1)}
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Rating Summary - Enhanced */}
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="lg:col-span-1 min-h-[400px]"
+        >
+          <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg p-4 border border-yellow-200 shadow-sm h-full flex flex-col justify-center">
+            <div className="text-center mb-4">
+              <div className="flex items-center justify-center mb-3">
+                <div className="p-2 bg-yellow-100 rounded-lg shadow-sm">
+                  <Award className="h-5 w-5 text-yellow-600" />
+                </div>
+              </div>
+              <div className="text-4xl font-bold text-gray-900 mb-2 tracking-tight">
+                {averageRating.toFixed(1)}
+              </div>
+              <div className="flex justify-center mb-2 gap-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.1, duration: 0.3 }}
+                  >
+                    <Star
+                      className={`h-5 w-5 ${
+                        i < Math.floor(averageRating)
+                          ? "fill-yellow-500 text-yellow-500"
+                          : "fill-gray-200 text-gray-200"
+                      }`}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+              <div className="text-sm text-gray-600 font-medium">
+                Based on {reviews?.length || 0}{" "}
+                {reviews?.length === 1 ? "review" : "reviews"}
+              </div>
             </div>
-            <div className="flex justify-center mb-2">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`h-5 w-5 ${
-                    i < Math.floor(averageRating)
-                      ? "fill-yellow-500 text-yellow-500"
-                      : "fill-gray-200 text-gray-200"
-                  }`}
-                />
+
+            <div className="space-y-2 mt-4">
+              {ratingDistribution.map(({ rating, count, percentage }) => (
+                <motion.div 
+                  key={rating} 
+                  className="flex items-center"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: rating * 0.1, duration: 0.3 }}
+                >
+                  <div className="w-12 text-sm font-medium text-gray-700 flex items-center">
+                    <Star className="h-3 w-3 mr-1.5 fill-yellow-400 text-yellow-400" />
+                    {rating}
+                  </div>
+                  <div className="flex-1 mx-2 h-2 rounded-full bg-gray-200 overflow-hidden shadow-inner">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full shadow-sm"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${percentage}%` }}
+                      transition={{ delay: rating * 0.1 + 0.5, duration: 0.8, ease: "easeOut" }}
+                    />
+                  </div>
+                  <div className="w-6 text-right text-sm font-semibold text-gray-700">{count}</div>
+                </motion.div>
               ))}
             </div>
-            <div className="text-sm text-muted-foreground">
-              Based on {reviews?.length || 0}{" "}
-              {reviews?.length === 1 ? "review" : "reviews"}
-            </div>
           </div>
+        </motion.div>
 
-          <div className="space-y-2">
-            {ratingDistribution.map(({ rating, count, percentage }) => (
-              <div key={rating} className="flex items-center">
-                <div className="w-12 text-sm">{rating} stars</div>
-                <div className="flex-1 mx-2 h-2 rounded-full bg-gray-200 overflow-hidden">
-                  <div
-                    className="h-full bg-yellow-500"
-                    style={{ width: `${percentage}%` }}
-                  ></div>
-                </div>
-                <div className="w-8 text-right text-sm">{count}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Review Form */}
-        <div className="md:w-2/3">
-          <Button
-            onClick={() => setShowReviewForm(!showReviewForm)}
-            className="w-full mb-6"
+        {/* Review Form - Enhanced */}
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="lg:col-span-2 min-h-[400px]"
+        >
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
-            {showReviewForm ? "Cancel Review" : "Write a Review"}
-          </Button>
-
-          {showReviewForm && (
-            <form
-              onSubmit={handleReviewSubmit}
-              className="bg-accent p-6 rounded-lg mb-6"
+            <Button
+              onClick={() => setShowReviewForm(!showReviewForm)}
+              className="w-full mb-3 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white font-semibold py-1.5 rounded-md shadow-lg transition-all duration-300 text-sm"
             >
-              <h3 className="text-lg font-semibold mb-4">
-                Share Your Experience
-              </h3>
+              <MessageSquare className="h-3 w-3 mr-1" />
+              {showReviewForm ? "Cancel Review" : "Write a Review"}
+            </Button>
+          </motion.div>
 
-              <div className="mb-4">
-                <Label>Rating</Label>
-                <div className="flex">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() =>
-                        setReviewFormData((prev) => ({ ...prev, rating: star }))
-                      }
-                      className="p-1"
-                    >
-                      <Star
-                        className={`h-6 w-6 ${
-                          star <= reviewFormData.rating
-                            ? "fill-yellow-500 text-yellow-500"
-                            : "fill-gray-200 text-gray-200"
-                        }`}
-                      />
-                    </button>
-                  ))}
+          <AnimatePresence>
+            {showReviewForm && (
+              <motion.form
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                onSubmit={handleReviewSubmit}
+                className="bg-gradient-to-br from-yellow-50 to-amber-50 p-4 rounded-lg border border-yellow-200 shadow-lg mb-3"
+              >
+                <div className="flex items-center mb-3">
+                  <div className="p-1 bg-yellow-100 rounded-md mr-2">
+                    <Heart className="h-4 w-4 text-yellow-600" />
+                  </div>
+                  <h3 className="text-base font-bold text-gray-900">
+                    Share Your Experience
+                  </h3>
                 </div>
-              </div>
 
-              <div className="mb-4">
-                <Label htmlFor="title">Review Title</Label>
-                <Input
-                  id="title"
-                  value={reviewFormData.title}
-                  onChange={(e) =>
-                    setReviewFormData((prev) => ({
-                      ...prev,
-                      title: e.target.value,
-                    }))
-                  }
-                  placeholder="Summarize your experience"
-                  required
-                />
-              </div>
+                <div className="mb-3">
+                  <Label className="text-sm font-semibold text-gray-800 mb-1 block">Rating</Label>
+                  <div className="flex space-x-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <motion.button
+                        key={star}
+                        type="button"
+                        onClick={() =>
+                          setReviewFormData((prev) => ({ ...prev, rating: star }))
+                        }
+                        className="p-0.5 rounded-md hover:bg-yellow-100 transition-colors duration-200"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <Star
+                          className={`h-5 w-5 transition-colors duration-200 ${
+                            star <= reviewFormData.rating
+                              ? "fill-yellow-500 text-yellow-500"
+                              : "fill-gray-200 text-gray-200 hover:fill-yellow-300 hover:text-yellow-300"
+                          }`}
+                        />
+                      </motion.button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">
+                    {reviewFormData.rating === 5 && "Excellent!"}
+                    {reviewFormData.rating === 4 && "Very Good!"}
+                    {reviewFormData.rating === 3 && "Good!"}
+                    {reviewFormData.rating === 2 && "Fair"}
+                    {reviewFormData.rating === 1 && "Poor"}
+                  </p>
+                </div>
 
-              <div className="mb-4">
-                <Label htmlFor="comment">Your Review</Label>
-                <Textarea
-                  id="comment"
-                  value={reviewFormData.comment}
-                  onChange={(e) =>
-                    setReviewFormData((prev) => ({
-                      ...prev,
-                      comment: e.target.value,
-                    }))
-                  }
-                  rows={4}
-                  placeholder="Share your thoughts"
-                  required
-                />
-              </div>
+                <div className="mb-3">
+                  <Label htmlFor="title" className="text-sm font-semibold text-gray-800 mb-1 block">
+                    Review Title
+                  </Label>
+                  <Input
+                    id="title"
+                    value={reviewFormData.title}
+                    onChange={(e) =>
+                      setReviewFormData((prev) => ({
+                        ...prev,
+                        title: e.target.value,
+                      }))
+                    }
+                    placeholder="Summarize your experience"
+                    className="h-8 text-sm border-2 border-gray-200 focus:border-yellow-500 rounded-md transition-colors duration-200"
+                    required
+                  />
+                </div>
 
-              <Button type="submit">Submit Review</Button>
-            </form>
-          )}
-        </div>
+                <div className="mb-3">
+                  <Label htmlFor="comment" className="text-sm font-semibold text-gray-800 mb-1 block">
+                    Your Review
+                  </Label>
+                  <Textarea
+                    id="comment"
+                    value={reviewFormData.comment}
+                    onChange={(e) =>
+                      setReviewFormData((prev) => ({
+                        ...prev,
+                        comment: e.target.value,
+                      }))
+                    }
+                    rows={2}
+                    placeholder="Share your thoughts about this product..."
+                    className="text-sm border-2 border-gray-200 focus:border-yellow-500 rounded-md transition-colors duration-200 resize-none"
+                    required
+                  />
+                </div>
+
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white font-semibold py-1.5 rounded-md shadow-lg transition-all duration-300 text-sm"
+                  >
+                    <MessageSquare className="h-3 w-3 mr-1" />
+                    Submit Review
+                  </Button>
+                </motion.div>
+              </motion.form>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
 
-      {/* Reviews List */}
-      <div>
-        <h3 className="text-xl font-semibold mb-4">
-          {reviews?.length ? `${reviews.length} Reviews` : "No Reviews Yet"}
-        </h3>
+      {/* Reviews List - Enhanced */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+        className="min-h-[400px]"
+      >
+        <div className="flex items-center mb-3">
+          <div className="p-1 bg-purple-100 rounded-md mr-2">
+            <MessageSquare className="h-4 w-4 text-purple-600" />
+          </div>
+          <h3 className="text-base font-bold text-gray-900">
+            {reviews?.length ? `${reviews.length} Customer Reviews` : "No Reviews Yet"}
+          </h3>
+        </div>
 
         {!reviews?.length ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground mb-4">
-              Be the first to review this product
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="text-center py-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200 flex flex-col justify-center min-h-[350px]"
+          >
+            <div className="p-2 bg-gray-200 rounded-full w-12 h-12 mx-auto mb-2 flex items-center justify-center">
+              <MessageSquare className="h-6 w-6 text-gray-500" />
+            </div>
+            <h4 className="text-base font-semibold text-gray-800 mb-1">No Reviews Yet</h4>
+            <p className="text-gray-600 mb-3 max-w-md mx-auto text-xs">
+              Be the first to share your experience with this product and help other customers make informed decisions.
             </p>
-            <Button onClick={() => setShowReviewForm(true)}>
-              Write a Review
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {reviews.map((review) => (
-              <div
-                key={review.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300 p-6"
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button 
+                onClick={() => setShowReviewForm(true)}
+                className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white font-semibold px-4 py-1.5 rounded-md shadow-lg transition-all duration-300 text-sm"
               >
-                <div className="flex items-start justify-between mb-4">
-                  {/* User Info */}
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full font-semibold text-sm">
-                      {review.user?.[0]?.toUpperCase() || "U"}
+                <MessageSquare className="h-3 w-3 mr-1" />
+                Write the First Review
+              </Button>
+            </motion.div>
+          </motion.div>
+        ) : (
+          <div className="grid gap-3 min-h-[350px]">
+            {reviews.map((review, index) => (
+              <motion.div
+                key={review.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.3 }}
+                className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 p-3 group"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  {/* User Info - Enhanced */}
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <div className="h-8 w-8 flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100 text-gray-700 rounded-full font-bold text-sm shadow-sm">
+                        {review.user?.[0]?.toUpperCase() || "U"}
+                      </div>
+                      <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></div>
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-800">
+                      <div className="font-semibold text-gray-900 text-sm">
                         {review.user || "Anonymous"}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="flex items-center text-xs text-gray-500">
+                        <Calendar className="h-2.5 w-2.5 mr-1" />
                         {review.created_at
-                          ? new Date(review.created_at).toLocaleDateString()
+                          ? new Date(review.created_at).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })
                           : ""}
                       </div>
                     </div>
                   </div>
 
-                  {/* Star Rating */}
-                  <div className="flex gap-0.5">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < (review.rating || 0)
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "fill-gray-200 text-gray-200"
-                        }`}
-                      />
-                    ))}
+                  {/* Star Rating - Enhanced */}
+                  <div className="flex items-center gap-1">
+                    <div className="flex gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-3 w-3 transition-colors duration-200 ${
+                            i < (review.rating || 0)
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "fill-gray-200 text-gray-200"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <Badge 
+                      className={`ml-1 text-xs ${
+                        (review.rating || 0) >= 4 
+                          ? "bg-green-100 text-green-800 border-green-200" 
+                          : (review.rating || 0) >= 3 
+                          ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                          : "bg-red-100 text-red-800 border-red-200"
+                      }`}
+                    >
+                      {review.rating === 5 && "Excellent"}
+                      {review.rating === 4 && "Very Good"}
+                      {review.rating === 3 && "Good"}
+                      {review.rating === 2 && "Fair"}
+                      {review.rating === 1 && "Poor"}
+                    </Badge>
                   </div>
                 </div>
 
-                {/* Review Text */}
+                {/* Review Text - Enhanced */}
                 <div className="pl-1">
-                  <h4 className="text-base font-semibold text-gray-900 mb-1">
+                  <h4 className="text-base font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors duration-200">
                     {review.title}
                   </h4>
-                  <p className="text-sm text-gray-700 leading-relaxed">
+                  <p className="text-gray-700 leading-relaxed text-xs">
                     {review.comment}
                   </p>
                 </div>
-              </div>
+
+                {/* Review Actions */}
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex items-center gap-1 text-gray-500 hover:text-blue-600 transition-colors duration-200"
+                    >
+                      <ThumbsUp className="h-2.5 w-2.5" />
+                      <span className="text-xs font-medium">Helpful</span>
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex items-center gap-1 text-gray-500 hover:text-red-600 transition-colors duration-200"
+                    >
+                      <Heart className="h-2.5 w-2.5" />
+                      <span className="text-xs font-medium">Like</span>
+                    </motion.button>
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    Verified Purchase
+                  </div>
+                </div>
+              </motion.div>
             ))}
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };
