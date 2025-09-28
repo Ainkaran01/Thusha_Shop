@@ -1,22 +1,28 @@
-import type React from "react"
-import { useState, useMemo } from "react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { useToast } from "@/hooks/use-toast"
-import AddProductForm from "./AddProductForm"
-import ProductTableHeader from "./ProductTableHeader"
-import ProductTableRow from "./ProductTableRow"
-import CategoryTable from "./CategoryTable"
-import FrameTypesTable from "./FrameTypeTable"
-import type { Product } from "@/types/product"
-
+import type React from "react";
+import { useState, useMemo } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import AddProductForm from "./AddProductForm";
+import ProductTableHeader from "./ProductTableHeader";
+import ProductTableRow from "./ProductTableRow";
+import CategoryTable from "./CategoryTable";
+import FrameTypesTable from "./FrameTypeTable";
+import type { Product } from "@/types/product";
+import { Package } from "lucide-react";
 interface ProductsTableProps {
-  products: Product[]
-  onUpdateStock: (productId: number, newStock: number) => void
-  onDeleteProduct: (productId: number) => void
-  onAddProduct: (productData: FormData) => Promise<Product>
-  onUpdateProduct: (id: number, productData: FormData) => Promise<Product>
+  products: Product[];
+  onUpdateStock: (productId: number, newStock: number) => void;
+  onDeleteProduct: (productId: number) => void;
+  onAddProduct: (productData: FormData) => Promise<Product>;
+  onUpdateProduct: (id: number, productData: FormData) => Promise<Product>;
 }
 
 const ProductsTable: React.FC<ProductsTableProps> = ({
@@ -26,37 +32,44 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
   onAddProduct,
   onUpdateProduct,
 }) => {
-  const { toast } = useToast()
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [searchTerm, setSearchTerm] = useState("")
+  const { toast } = useToast();
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Filter products based on search term
   const filteredProducts = useMemo(() => {
     if (!searchTerm.trim()) {
-      return products
+      return products;
     }
 
-    const searchLower = searchTerm.toLowerCase().trim()
+    const searchLower = searchTerm.toLowerCase().trim();
     return products.filter((product) => {
-      const nameMatch = product.name.toLowerCase().includes(searchLower)
-      const categoryMatch = product.category?.name?.toLowerCase().includes(searchLower)
-      const idMatch = product.id.toString().includes(searchLower)
+      const nameMatch = product.name.toLowerCase().includes(searchLower);
+      const categoryMatch = product.category?.name
+        ?.toLowerCase()
+        .includes(searchLower);
+      const idMatch = product.id.toString().includes(searchLower);
 
-      return nameMatch || categoryMatch || idMatch
-    })
-  }, [products, searchTerm])
+      return nameMatch || categoryMatch || idMatch;
+    });
+  }, [products, searchTerm]);
 
   const handleSearchChange = (value: string) => {
-    setSearchTerm(value)
-  }
+    setSearchTerm(value);
+  };
 
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
-        <CardTitle className="text-2xl font-bold">Product Management</CardTitle>
-        <CardDescription className="text-base">Manage your product inventory, categories, and pricing</CardDescription>
-      </CardHeader>
+        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-yellow-500 to-amber-600 bg-clip-text text-transparent flex items-center gap-2">
+          <Package className="h-7 w-7 text-yellow-600" />
+          Product Management
+        </CardTitle>
 
+        <CardDescription className="text-gray-600 mt-1">
+          Manage your product inventory, categories, and pricing
+        </CardDescription>
+      </CardHeader>
       <Tabs defaultValue="products" className="w-full">
         <TabsList className="mx-4 mt-2 grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="products" className="text-sm font-medium">
@@ -100,19 +113,32 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                 <div className="rounded-lg border border-border overflow-hidden bg-card">
                   <div className="overflow-x-auto">
                     <table className="w-full">
-                      <thead className="bg-muted/50">
+                      <thead className="bg-gradient-to-r from-yellow-500 to-amber-600 text-white">
                         <tr className="border-b border-border">
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">ID</th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Product</th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Image</th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Category</th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Price</th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Stock</th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Sold</th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground text-white">
+                            ID
+                          </th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground text-white">
+                            Product
+                          </th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground text-white">
+                            Image
+                          </th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground text-white">
+                            Category
+                          </th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground text-white">
+                            Price
+                          </th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground text-white">
+                            Stock
+                          </th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground text-white">
                             Stock Actions
                           </th>
-                          <th className="px-4 py-3 text-center text-sm font-semibold text-muted-foreground">Actions</th>
+                          <th className="px-4 py-3 text-center text-sm font-semibold text-muted-foreground text-white">
+                            Actions
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
@@ -169,7 +195,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
         </TabsContent>
       </Tabs>
     </Card>
-  )
-}
+  );
+};
 
-export default ProductsTable
+export default ProductsTable;

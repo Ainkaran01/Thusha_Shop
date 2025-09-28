@@ -33,7 +33,7 @@ const DeliveryOptions: React.FC<DeliveryOptionsProps> = ({
                   Delivered to your address in 3-5 business days
                 </div>
                 <div className="text-sm font-medium">
-                  {shippingCost === 0 ? "Free" : `$${shippingCost.toFixed(2)}`}
+                  {shippingCost === 0 ? "Free" : `LKR ${shippingCost.toFixed(2)}`}
                 </div>
               </div>
             </Label>

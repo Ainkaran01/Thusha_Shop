@@ -56,6 +56,11 @@ import {
   CheckCircle,
   Filter,
   Clock,
+  ShoppingCart,
+  CheckSquare,
+  Package2,
+  Home,
+  Store,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useAdminDashboard } from "@/context/AdminDashboardContext";
@@ -100,6 +105,18 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
     loadDeliveryPersonnel();
   }, [fetchDeliveryPersons]);
 
+  // Calculate order counts by status
+  const orderCounts = useMemo(() => {
+    return orders.reduce(
+      (acc, order) => {
+        acc[order.status] = (acc[order.status] || 0) + 1;
+        acc.total++;
+        return acc;
+      },
+      { total: 0 } as Record<string, number>
+    );
+  }, [orders]);
+
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
       const matchesSearch =
@@ -127,6 +144,10 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
         return <Clock className="h-4 w-4" />;
       case "processing":
         return <Package className="h-4 w-4" />;
+      case "shipped":
+        return <Truck className="h-4 w-4" />;
+      case "delivered":
+        return <CheckCircle className="h-4 w-4" />;
       default:
         return <Clock className="h-4 w-4" />;
     }
@@ -141,7 +162,9 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
       case "shipped":
         return "bg-green-100 text-green-800";
       case "delivered":
-        return "bg-green-100 text-green-800";
+        return "bg-purple-100 text-purple-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -203,7 +226,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
 
   const handleAssignDelivery = async () => {
     if (selectedOrder && deliveryPerson) {
-      setIsAssigningDelivery(true); // Start loading
+      setIsAssigningDelivery(true);
       try {
         await onAssignDelivery(selectedOrder, parseInt(deliveryPerson));
         setSelectedOrder(null);
@@ -219,653 +242,793 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
           variant: "destructive",
         });
       } finally {
-        setIsAssigningDelivery(false); // Stop loading
+        setIsAssigningDelivery(false);
       }
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <CardTitle>Order Management</CardTitle>
-            <CardDescription>
-              View and manage all customer orders
-            </CardDescription>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search orders..."
-                className="pl-9 w-full"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+    <div className="space-y-6">
+      {/* Status Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card
+          className={`cursor-pointer transition-all hover:shadow-lg duration-300 border-l-4 border-l-yellow-400 bg-gradient-to-br from-yellow-50 to-amber-50 ${
+            statusFilter === "pending" ? "ring-2 ring-yellow-500" : ""
+          }`}
+          onClick={() => setStatusFilter("pending")}
+        >
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pending</p>
+                <h3 className="text-2xl font-bold">
+                  {orderCounts.pending || 0}
+                </h3>
+              </div>
+              <div className="bg-yellow-100 p-3 rounded-full">
+                <Clock className="h-6 w-6 text-yellow-600" />
+              </div>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
+          </CardContent>
+        </Card>
 
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="processing">Processing</SelectItem>
-                <SelectItem value="shipped">Shipped</SelectItem>
-                <SelectItem value="delivered">Delivered</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
+        <Card
+          className={`cursor-pointer hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-400 bg-gradient-to-br from-blue-50 to-indigo-50 ${
+            statusFilter === "processing" ? "ring-2 ring-yellow-500" : ""
+          }`}
+          onClick={() => setStatusFilter("processing")}
+        >
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Processing</p>
+                <h3 className="text-2xl font-bold">
+                  {orderCounts.processing || 0}
+                </h3>
+              </div>
+              <div className="bg-blue-100 p-3 rounded-full">
+                <Package className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card
+          className={`cursor-pointer transition-all hover:shadow-lg duration-300 border-l-4 border-l-green-400 bg-gradient-to-br from-green-50 to-emerald-50 ${
+            statusFilter === "shipped" ? "ring-2 ring-yellow-500" : ""
+          }`}
+          onClick={() => setStatusFilter("shipped")}
+        >
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Shipped</p>
+                <h3 className="text-2xl font-bold">
+                  {orderCounts.shipped || 0}
+                </h3>
+              </div>
+              <div className="bg-green-100 p-3 rounded-full">
+                <Truck className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card
+          className={`cursor-pointer transition-all hover:shadow-lg duration-300 border-l-4 border-l-purple-400 bg-gradient-to-br from-purple-50 to-violet-50 ${
+            statusFilter === "delivered" ? "ring-2 ring-yellow-500" : ""
+          }`}
+          onClick={() => setStatusFilter("delivered")}
+        >
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Delivered</p>
+                <h3 className="text-2xl font-bold">
+                  {orderCounts.delivered || 0}
+                </h3>
+              </div>
+              <div className="bg-purple-100 p-3 rounded-full">
+                <CheckSquare className="h-6 w-6 text-purple-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Orders Table */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-yellow-500 to-amber-600 bg-clip-text text-transparent flex items-center gap-2">
+                <Truck className="h-7 w-7 text-yellow-600" />
+                Order Management
+              </CardTitle>
+
+              <CardDescription className="text-gray-600 mt-1">
+                View and manage all customer orders
+              </CardDescription>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search orders..."
+                  className="pl-9 w-full"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="processing">Processing</SelectItem>
+                  <SelectItem value="shipped">Shipped</SelectItem>
+                  <SelectItem value="delivered">Delivered</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </div>
-      </CardHeader>
+        </CardHeader>
 
-      <CardContent>
-        <div className="rounded-md border overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order #</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Items</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Assigned Delivery</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
+        <CardContent>
+          <div className="rounded-md border overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gradient-to-r from-yellow-500 to-amber-600 text-white">
+                    <TableHead className="text-white font-semibold">
+                      Order No
+                    </TableHead>
+                    <TableHead className="text-white font-semibold">
+                      Customer
+                    </TableHead>
+                    <TableHead className="text-white font-semibold">
+                      Amount
+                    </TableHead>
+                    <TableHead className="text-white font-semibold">
+                      Items
+                    </TableHead>
+                    <TableHead className="text-white font-semibold">
+                      Status
+                    </TableHead>
+                    <TableHead className="text-white font-semibold">
+                      Assigned Delivery
+                    </TableHead>
+                    <TableHead className="text-white font-semibold">
+                      Date
+                    </TableHead>
+                    <TableHead className="text-white font-semibold text-right">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
 
-              <TableBody>
-                {filteredOrders.length > 0 ? (
-                  filteredOrders.map((order) => (
-                    <TableRow key={order.order_number}>
-                      <TableCell>{order.order_number}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="truncate max-w-[150px]">
-                            {order.billing?.name || "No name"}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className="rounded-full bg-purple-100/80 dark:bg-purple-800 px-3 py-1">
-                          LKR{order.total_price}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{countItems(order)}</TableCell>
-                      <TableCell>
-                        <Badge
-                          className={`${getStatusColor(
-                            order.status as OrderStatus
-                          )} font-medium`}
-                        >
-                          {getStatusIcon(order.status as OrderStatus)}
-                          <span className="ml-2 capitalize">
-                            {order.status.replace("_", " ")}
-                          </span>
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {order.assigned_delivery_person ? (
-                          <div className="flex items-center">
-                            <User className="h-4 w-4 mr-1" />
-                            <span className="text-sm truncate max-w-[120px]">
-                              {order.assigned_delivery_person.name}
+                <TableBody>
+                  {filteredOrders.length > 0 ? (
+                    filteredOrders.map((order) => (
+                      <TableRow key={order.order_number} className="hover:bg-gray-100 transition-colors duration-200">
+                        <TableCell>{order.order_number}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="truncate max-w-[150px]">
+                              {order.billing?.name || "No name"}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {order.billing?.email || "No email"}
                             </span>
                           </div>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">
-                            Not assigned
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>{formatDate(order.created_at)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex gap-2 justify-end">
-                          {order.status === "processing" &&
-                            order.delivery_option === "home" && (
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button
-                                    size="sm"
-                                    onClick={() => setSelectedOrder(order.id)}
-                                  >
-                                    <Truck className="h-4 w-4 mr-1" />
-                                    Assign
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-md">
-                                  <DialogHeader>
-                                    <DialogTitle>
-                                      Assign Delivery Person
-                                    </DialogTitle>
-                                  </DialogHeader>
-                                  <div className="space-y-4">
-                                    <div>
-                                      <Label>
-                                        Order : {order.order_number}
-                                      </Label>
-                                      <p className="text-sm text-muted-foreground truncate">
-                                        Customer:{" "}
-                                        {order.billing?.name || "Unknown"}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <Label htmlFor="delivery-person">
-                                        Select Delivery Person
-                                      </Label>
-                                      <Select
-                                        value={deliveryPerson}
-                                        onValueChange={setDeliveryPerson}
-                                      >
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="Choose delivery person" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          {deliveryPersonnel.map((person) => (
-                                            <SelectItem
-                                              key={person.id}
-                                              value={person.id.toString()}
-                                            >
-                                              {person.name} ({person.email})
-                                            </SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                    <Button
-                                      onClick={handleAssignDelivery}
-                                      disabled={
-                                        !deliveryPerson || isAssigningDelivery
-                                      }
-                                      className="w-full"
-                                    >
-                                      {isAssigningDelivery
-                                        ? "Assigning..."
-                                        : "Assign and Mark as Shipped"}
-                                    </Button>
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
-                            )}
-
-                          {order.status === "processing" &&
-                            order.delivery_option === "pickup" && (
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button
-                                    size="sm"
-                                    className="bg-blue-600 text-white hover:bg-blue-700"
-                                    disabled={isUpdatingStatus}
-                                  >
-                                    <Package className="h-4 w-4 mr-1" />
-                                    {isUpdatingStatus ? "Updating..." : "Ready"}
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                      Confirm Ready for Pickup
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to mark this order
-                                      as ready for pickup? The customer will be
-                                      notified.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>
-                                      Cancel
-                                    </AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() =>
-                                        handleStatusUpdate(
-                                          order.order_number,
-                                          "shipped"
-                                        )
-                                      }
-                                    >
-                                      Confirm
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            )}
-
-                          {order.status === "shipped" &&
-                            order.delivery_option === "pickup" && (
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button
-                                    size="sm"
-                                    className="bg-green-600 text-white hover:bg-green-700"
-                                    disabled={isUpdatingStatus}
-                                  >
-                                    <CheckCircle className="h-4 w-4 mr-1" />
-                                    {isUpdatingStatus
-                                      ? "Updating..."
-                                      : "Pick Up"}
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                      Confirm Pickup
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure the customer picked up the
-                                      order? This will mark the order as
-                                      delivered.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>
-                                      Cancel
-                                    </AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() =>
-                                        handleStatusUpdate(
-                                          order.order_number,
-                                          "delivered"
-                                        )
-                                      }
-                                    >
-                                      Confirm
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            )}
-
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setViewOrder(order)}
-                            className="p-0"
+                        </TableCell>
+                        <TableCell>
+                          <Badge className="rounded-full bg-purple-100/80 dark:bg-purple-800 px-3 py-1">
+                            LKR{order.total_price}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{countItems(order)}</TableCell>
+                        <TableCell>
+                          <Badge
+                            className={`${getStatusColor(
+                              order.status as OrderStatus
+                            )} font-medium flex items-center gap-1`}
                           >
-                            <Badge className="flex items-center gap-1 bg-green-100 text-green-800 hover:bg-green-200 active:bg-green-300 px-2 py-1 rounded-md text-sm font-medium transition-colors">
-                              <Eye className="h-4 w-4" />
-                              View
-                            </Badge>
+                            {getStatusIcon(order.status as OrderStatus)}
+                            <span className="ml-1 capitalize">
+                              {order.status.replace("_", " ")}
+                            </span>
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            {order.delivery_option === "home" ? (
+                              order.assigned_delivery_person ? (
+                                <div className="flex items-center">
+                                  <User className="h-4 w-4 mr-1" />
+                                  <span className="text-sm truncate max-w-[120px]">
+                                    {order.assigned_delivery_person.name}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">
+                                  Not assigned
+                                </span>
+                              )
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="flex items-center gap-1 w-fit"
+                              >
+                                <Store className="h-3 w-3" />
+                                Pickup
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{format(new Date(order.created_at), "MMM dd")}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex gap-2 justify-end">
+                            {order.status === "processing" &&
+                              order.delivery_option === "home" && (
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => setSelectedOrder(order.id)}
+                                    >
+                                      <Truck className="h-4 w-4 mr-1" />
+                                      Assign
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-md">
+                                    <DialogHeader>
+                                      <DialogTitle>
+                                        Assign Delivery Person
+                                      </DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4">
+                                      <div>
+                                        <Label>
+                                          Order : {order.order_number}
+                                        </Label>
+                                        <p className="text-sm text-muted-foreground truncate">
+                                          Customer:{" "}
+                                          {order.billing?.name || "Unknown"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <Label htmlFor="delivery-person">
+                                          Select Delivery Person
+                                        </Label>
+                                        <Select
+                                          value={deliveryPerson}
+                                          onValueChange={setDeliveryPerson}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Choose delivery person" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {deliveryPersonnel.map((person) => (
+                                              <SelectItem
+                                                key={person.id}
+                                                value={person.id.toString()}
+                                              >
+                                                {person.name} ({person.email})
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <Button
+                                        onClick={handleAssignDelivery}
+                                        disabled={
+                                          !deliveryPerson || isAssigningDelivery
+                                        }
+                                        className="w-full"
+                                      >
+                                        {isAssigningDelivery
+                                          ? "Assigning..."
+                                          : "Assign and Mark as Shipped"}
+                                      </Button>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                              )}
+
+                            {order.status === "processing" &&
+                              order.delivery_option === "pickup" && (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      className="bg-blue-600 text-white hover:bg-blue-700"
+                                      disabled={isUpdatingStatus}
+                                    >
+                                      <Package2 className="h-4 w-4 mr-1" />
+                                      {isUpdatingStatus
+                                        ? "Updating..."
+                                        : "Ready"}
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        Confirm Ready for Pickup
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to mark this order
+                                        as ready for pickup? The customer will
+                                        be notified.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() =>
+                                          handleStatusUpdate(
+                                            order.order_number,
+                                            "shipped"
+                                          )
+                                        }
+                                      >
+                                        Confirm
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
+
+                            {order.status === "shipped" &&
+                              order.delivery_option === "pickup" && (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      className="bg-green-600 text-white hover:bg-green-700"
+                                      disabled={isUpdatingStatus}
+                                    >
+                                      <CheckCircle className="h-4 w-4 mr-1" />
+                                      {isUpdatingStatus
+                                        ? "Updating..."
+                                        : "Pick Up"}
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        Confirm Pickup
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure the customer picked up the
+                                        order? This will mark the order as
+                                        delivered.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() =>
+                                          handleStatusUpdate(
+                                            order.order_number,
+                                            "delivered"
+                                          )
+                                        }
+                                      >
+                                        Confirm
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
+
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setViewOrder(order)}
+                              className="p-0"
+                            >
+                              <Badge className="flex items-center gap-1 bg-green-100 text-green-800 hover:bg-green-200 active:bg-green-300 px-2 py-1 rounded-md text-sm font-medium transition-colors">
+                                <Eye className="h-4 w-4" />
+                                View
+                              </Badge>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center py-8">
+                        <div className="flex flex-col items-center gap-2">
+                          <Search className="h-8 w-8 text-muted-foreground" />
+                          <p className="text-muted-foreground">
+                            No orders found matching your criteria
+                          </p>
+                          <Button
+                            variant="ghost"
+                            onClick={() => {
+                              setSearchTerm("");
+                              setStatusFilter("all");
+                            }}
+                          >
+                            Clear filters
                           </Button>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
-                      <div className="flex flex-col items-center gap-2">
-                        <Search className="h-8 w-8 text-muted-foreground" />
-                        <p className="text-muted-foreground">
-                          No orders found matching your criteria
-                        </p>
-                        <Button
-                          variant="ghost"
-                          onClick={() => {
-                            setSearchTerm("");
-                            setStatusFilter("all");
-                          }}
-                        >
-                          Clear filters
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
-        </div>
-      </CardContent>
+        </CardContent>
 
-      {/* Order Details Dialog */}
-      <Dialog
-        open={!!viewOrder}
-        onOpenChange={(open) => !open && setViewOrder(null)}
-      >
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="pb-4">
-            <DialogTitle className="flex justify-between items-center text-xl font-semibold">
-              Order Details - {viewOrder?.order_number}
-            </DialogTitle>
-          </DialogHeader>
+        {/* Order Details Dialog */}
+        <Dialog
+          open={!!viewOrder}
+          onOpenChange={(open) => !open && setViewOrder(null)}
+        >
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="pb-4">
+              <DialogTitle className="flex justify-between items-center text-xl font-semibold">
+                Order Details - {viewOrder?.order_number}
+              </DialogTitle>
+            </DialogHeader>
 
-          {viewOrder && (
-            <div className="space-y-4">
-              {/* Order Status Banner */}
-              <div className="bg-muted/30 rounded-lg p-3 border">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Badge
-                      variant={getOrderBadgeVariant(
-                        viewOrder.status as OrderStatus
-                      )}
-                      className="text-sm px-3 py-1"
-                    >
-                      {viewOrder.status.replace("_", " ").toUpperCase()}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      Order placed on {formatDate(viewOrder.created_at)}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <Badge className="text-lg font-bold px-3 py-1 rounded-full bg-purple-100/80 dark:bg-purple-800">
-                      LKR {viewOrder.total_price}
-                    </Badge>
-                    <p className="text-sm text-muted-foreground">
-                      {countItems(viewOrder)} items
-                    </p>
+            {viewOrder && (
+              <div className="space-y-4">
+                {/* Order Status Banner */}
+                <div className="bg-muted/30 rounded-lg p-3 border">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Badge
+                        variant={getOrderBadgeVariant(
+                          viewOrder.status as OrderStatus
+                        )}
+                        className="text-sm px-3 py-1"
+                      >
+                        {viewOrder.status.replace("_", " ").toUpperCase()}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        Order placed on {formatDate(viewOrder.created_at)}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <Badge className="text-lg font-bold px-3 py-1 rounded-full bg-purple-100/80 dark:bg-purple-800">
+                        LKR {viewOrder.total_price}
+                      </Badge>
+                      <p className="text-sm text-muted-foreground">
+                        {countItems(viewOrder)} items
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Customer & Shipping Information */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Customer & Shipping Information */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <Card className="shadow-sm">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base">
+                        Customer Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">
+                          Name
+                        </Label>
+                        <p className="text-sm font-medium truncate">
+                          {viewOrder.billing?.name || "No name provided"}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">
+                          Email
+                        </Label>
+                        <p className="text-sm truncate">
+                          {viewOrder.billing?.email || "No email provided"}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">
+                          Phone
+                        </Label>
+                        <p className="text-sm">
+                          {viewOrder.billing?.phone || "No phone provided"}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="shadow-sm">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base">
+                        {viewOrder.delivery_option === "home"
+                          ? "Shipping"
+                          : "Pickup"}{" "}
+                        Address
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm leading-relaxed">
+                        {formatAddress(viewOrder.billing)}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Order Information */}
                 <Card className="shadow-sm">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base">
-                      Customer Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">
-                        Name
-                      </Label>
-                      <p className="text-sm font-medium truncate">
-                        {viewOrder.billing?.name || "No name provided"}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">
-                        Email
-                      </Label>
-                      <p className="text-sm truncate">
-                        {viewOrder.billing?.email || "No email provided"}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">
-                        Phone
-                      </Label>
-                      <p className="text-sm">
-                        {viewOrder.billing?.phone || "No phone provided"}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="shadow-sm">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">
-                      {viewOrder.delivery_option === "home"
-                        ? "Shipping"
-                        : "Pickup"}{" "}
-                      Address
+                      Order Information
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm leading-relaxed">
-                      {formatAddress(viewOrder.billing)}
-                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">
+                          Payment Method
+                        </Label>
+                        <p className="text-sm font-medium capitalize">
+                          {viewOrder.payment_method}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">
+                          Delivery Option
+                        </Label>
+                        <p className="text-sm font-medium capitalize">
+                          {viewOrder.delivery_option}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">
+                          Order Date
+                        </Label>
+                        <p className="text-sm">
+                          {formatDate(viewOrder.created_at)}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">
+                          Assigned Delivery
+                        </Label>
+                        <p className="text-sm">
+                          {viewOrder.assigned_delivery_person?.name ??
+                            "Not assigned"}
+                        </p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
-              </div>
 
-              {/* Order Information */}
-              <Card className="shadow-sm">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Order Information</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">
-                        Payment Method
-                      </Label>
-                      <p className="text-sm font-medium capitalize">
-                        {viewOrder.payment_method}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">
-                        Delivery Option
-                      </Label>
-                      <p className="text-sm font-medium capitalize">
-                        {viewOrder.delivery_option}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">
-                        Order Date
-                      </Label>
-                      <p className="text-sm">
-                        {formatDate(viewOrder.created_at)}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">
-                        Assigned Delivery
-                      </Label>
-                      <p className="text-sm">
-                       {viewOrder.assigned_delivery_person?.name ?? "Not assigned"}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Order Items */}
-              <Card className="shadow-sm">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Order Items</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="font-semibold">
-                            Product
-                          </TableHead>
-                          <TableHead className="font-semibold text-center">
-                            Quantity
-                          </TableHead>
-                          <TableHead className="font-semibold text-right">
-                            Unit Price
-                          </TableHead>
-                          <TableHead className="font-semibold text-right">
-                            Total
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {viewOrder.items?.map((item) => (
-                          <TableRow key={item.id}>
-                            <TableCell className="font-medium">
-                              {item.product_name}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {item.quantity}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Badge className="rounded-full bg-purple-100/80 dark:bg-purple-800 px-3 py-1">
-                                LKR{item.price}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Badge className="rounded-full bg-purple-100/80 dark:bg-purple-800 px-3 py-1">
-                                LKR{" "}
-                                {(
-                                  Number.parseFloat(item.price) * item.quantity
-                                ).toFixed(2)}
-                              </Badge>
-                            </TableCell>
+                {/* Order Items */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Order Items</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="font-semibold">
+                              Product
+                            </TableHead>
+                            <TableHead className="font-semibold text-center">
+                              Quantity
+                            </TableHead>
+                            <TableHead className="font-semibold text-right">
+                              Unit Price
+                            </TableHead>
+                            <TableHead className="font-semibold text-right">
+                              Total
+                            </TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
+                        </TableHeader>
+                        <TableBody>
+                          {viewOrder.items?.map((item) => (
+                            <TableRow key={item.id}>
+                              <TableCell className="font-medium">
+                                {item.product_name}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {item.quantity}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Badge className="rounded-full bg-purple-100/80 dark:bg-purple-800 px-3 py-1">
+                                  LKR{item.price}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Badge className="rounded-full bg-purple-100/80 dark:bg-purple-800 px-3 py-1">
+                                  LKR{" "}
+                                  {(
+                                    Number.parseFloat(item.price) *
+                                    item.quantity
+                                  ).toFixed(2)}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
 
-              {/* Order Summary */}
-              <Card className="shadow-sm">
-                <CardContent className="pt-4">
-                  <div className="flex justify-end">
-                    <div className="w-full max-w-sm space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Subtotal:</span>
-                        <Badge className="rounded-full bg-purple-100/80 dark:bg-purple-800 px-3 py-1">
-                          LKR {viewOrder.total_price}
-                        </Badge>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Shipping:</span>
-                        <Badge className="rounded-full bg-purple-100/80 dark:bg-purple-800 px-3 py-1">
-                          $0.00
-                        </Badge>
-                      </div>
-                      <Separator />
-                      <div className="flex justify-between text-lg font-bold">
-                        <span>Total:</span>
-                        <Badge className="rounded-full bg-purple-100/80 dark:bg-purple-800 px-3 py-1">
-                          LKR {viewOrder.total_price}
-                        </Badge>
+                {/* Order Summary */}
+                <Card className="shadow-sm">
+                  <CardContent className="pt-4">
+                    <div className="flex justify-end">
+                      <div className="w-full max-w-sm space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            Subtotal:
+                          </span>
+                          <Badge className="rounded-full bg-purple-100/80 dark:bg-purple-800 px-3 py-1">
+                            LKR {viewOrder.total_price}
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            Shipping:
+                          </span>
+                          <Badge className="rounded-full bg-purple-100/80 dark:bg-purple-800 px-3 py-1">
+                            $0.00
+                          </Badge>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between text-lg font-bold">
+                          <span>Total:</span>
+                          <Badge className="rounded-full bg-purple-100/80 dark:bg-purple-800 px-3 py-1">
+                            LKR {viewOrder.total_price}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              {/* Status Update Actions */}
-              {viewOrder.status === "processing" &&
-                viewOrder.delivery_option === "pickup" && (
-                  <Card className="shadow-sm border-blue-200 bg-blue-50/50">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base text-blue-800">
-                        Order Ready for Pickup
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Button
-                        onClick={() =>
-                          handleStatusUpdate(viewOrder.order_number, "shipped")
-                        }
-                        disabled={isUpdatingStatus}
-                        className="w-full"
-                      >
-                        <Package className="h-4 w-4 mr-2" />
-                        {isUpdatingStatus
-                          ? "Updating..."
-                          : "Mark as Ready for Pickup"}
-                      </Button>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        This will notify the customer that their order is ready
-                        for pickup.
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-
-              {viewOrder.status === "shipped" &&
-                viewOrder.delivery_option === "pickup" && (
-                  <Card className="shadow-sm border-green-200 bg-green-50/50">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base text-green-800">
-                        Order Picked Up
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Button
-                        onClick={() =>
-                          handleStatusUpdate(
-                            viewOrder.order_number,
-                            "delivered"
-                          )
-                        }
-                        disabled={isUpdatingStatus}
-                        className="w-full"
-                      >
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        {isUpdatingStatus ? "Updating..." : "Mark as Picked Up"}
-                      </Button>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Confirm that the customer has picked up their order.
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-
-              {/* Delivery Assignment (only for home delivery) */}
-              {viewOrder.status === "processing" &&
-                viewOrder.delivery_option === "home" && (
-                  <Card className="shadow-sm border-orange-200 bg-orange-50/50">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base text-orange-800">
-                        Delivery Assignment
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
-                        <div className="flex-1 space-y-2">
-                          <Label htmlFor="delivery-assignment">
-                            Select Delivery Person
-                          </Label>
-                          <Select
-                            value={deliveryPerson}
-                            onValueChange={setDeliveryPerson}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Choose delivery person" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {deliveryPersonnel.map((person) => (
-                                <SelectItem
-                                  key={person.id}
-                                  value={person.id.toString()}
-                                >
-                                  {person.name} ({person.email})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                {/* Status Update Actions */}
+                {viewOrder.status === "processing" &&
+                  viewOrder.delivery_option === "pickup" && (
+                    <Card className="shadow-sm border-blue-200 bg-blue-50/50">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base text-blue-800">
+                          Order Ready for Pickup
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
                         <Button
-                          onClick={async () => {
-                            if (deliveryPerson) {
-                              setIsAssigningDelivery(true);
-                              await handleAssignDelivery();
-                              setViewOrder(null);
-                              setIsAssigningDelivery(false);
-                            }
-                          }}
-                          disabled={!deliveryPerson || isAssigningDelivery}
-                          className="w-full sm:w-auto"
+                          onClick={() =>
+                            handleStatusUpdate(
+                              viewOrder.order_number,
+                              "shipped"
+                            )
+                          }
+                          disabled={isUpdatingStatus}
+                          className="w-full"
                         >
-                          {isAssigningDelivery ? (
-                            "Assigning..."
-                          ) : (
-                            <>
-                              <Truck className="h-4 w-4 mr-2" />
-                              Assign Delivery
-                            </>
-                          )}
+                          <Package className="h-4 w-4 mr-2" />
+                          {isUpdatingStatus
+                            ? "Updating..."
+                            : "Mark as Ready for Pickup"}
                         </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-    </Card>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          This will notify the customer that their order is
+                          ready for pickup.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                {viewOrder.status === "shipped" &&
+                  viewOrder.delivery_option === "pickup" && (
+                    <Card className="shadow-sm border-green-200 bg-green-50/50">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base text-green-800">
+                          Order Picked Up
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <Button
+                          onClick={() =>
+                            handleStatusUpdate(
+                              viewOrder.order_number,
+                              "delivered"
+                            )
+                          }
+                          disabled={isUpdatingStatus}
+                          className="w-full"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          {isUpdatingStatus
+                            ? "Updating..."
+                            : "Mark as Picked Up"}
+                        </Button>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Confirm that the customer has picked up their order.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                {/* Delivery Assignment (only for home delivery) */}
+                {viewOrder.status === "processing" &&
+                  viewOrder.delivery_option === "home" && (
+                    <Card className="shadow-sm border-orange-200 bg-orange-50/50">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base text-orange-800">
+                          Delivery Assignment
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
+                          <div className="flex-1 space-y-2">
+                            <Label htmlFor="delivery-assignment">
+                              Select Delivery Person
+                            </Label>
+                            <Select
+                              value={deliveryPerson}
+                              onValueChange={setDeliveryPerson}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Choose delivery person" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {deliveryPersonnel.map((person) => (
+                                  <SelectItem
+                                    key={person.id}
+                                    value={person.id.toString()}
+                                  >
+                                    {person.name} ({person.email})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Button
+                            onClick={async () => {
+                              if (deliveryPerson) {
+                                setIsAssigningDelivery(true);
+                                await handleAssignDelivery();
+                                setViewOrder(null);
+                                setIsAssigningDelivery(false);
+                              }
+                            }}
+                            disabled={!deliveryPerson || isAssigningDelivery}
+                            className="w-full sm:w-auto"
+                          >
+                            {isAssigningDelivery ? (
+                              "Assigning..."
+                            ) : (
+                              <>
+                                <Truck className="h-4 w-4 mr-2" />
+                                Assign Delivery
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </Card>
+    </div>
   );
 };
 

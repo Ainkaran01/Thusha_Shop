@@ -12,7 +12,9 @@ import { AdminDashboardProvider } from "@/context/AdminDashboardContext";
 
 const AdminDashboard = () => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
-  const [activeTab, setActiveTab] = useState("overview");
+ const [activeTab, setActiveTab] = useState(() => {
+    return sessionStorage.getItem("adminActiveTab") || "overview";
+  });
   const { isAuthenticated, user } = useUser();
   const navigate = useNavigate();
 
@@ -22,6 +24,10 @@ const AdminDashboard = () => {
       navigate('/account?login=true');
     }
   }, [isAuthenticated, user, navigate]);
+
+  useEffect(() => {
+    sessionStorage.setItem("adminActiveTab", activeTab);
+  }, [activeTab]);
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6 max-w-7xl">

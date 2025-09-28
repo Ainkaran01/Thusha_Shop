@@ -42,7 +42,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       <div className="bg-accent p-6 rounded-lg">
         <h3 className="text-lg font-semibold mb-2">Cash on Delivery</h3>
         <p className="text-muted-foreground mb-4">
-          You will pay ${orderTotal.toFixed(2)} in cash when your order is {deliveryOption === "pickup" ? "picked up" : "delivered"}.
+          You will pay LKR {orderTotal.toFixed(2)} in cash when your order is {deliveryOption === "pickup" ? "picked up" : "delivered"}.
         </p>
         <Button 
           onClick={handleCashPayment}

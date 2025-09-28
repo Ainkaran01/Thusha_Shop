@@ -30,15 +30,15 @@ class Product(models.Model):
     description = models.TextField(blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     frame_type = models.ForeignKey(FrameType, on_delete=models.SET_NULL, null=True, blank=True)
-    size = models.CharField(max_length=5,blank=True)  # S / M / L
+    size = models.CharField(max_length=15,blank=True)  # S / M / L
     weight = models.FloatField()
     stock = models.IntegerField()
     frame_material = models.CharField(max_length=100, blank=True)
 
-    manufacturer = models.ForeignKey(
-        User, on_delete=models.CASCADE, limit_choices_to={'role': 'manufacturer'}, null=True, blank=True
-    )
-
+    # manufacturer = models.ForeignKey(
+    #     User, on_delete=models.CASCADE, limit_choices_to={'role': 'manufacturer'}, null=True, blank=True
+    # )
+    sku = models.CharField(max_length=100, unique=True)  # Stock Keeping Unit
     images = models.JSONField(default=list)
     face_shapes = models.JSONField(default=list, blank=True)
     vision_problems = models.JSONField(default=list, blank=True)

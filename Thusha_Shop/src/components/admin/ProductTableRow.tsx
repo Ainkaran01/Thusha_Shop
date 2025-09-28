@@ -80,7 +80,7 @@ const ProductTableRow: React.FC<ProductTableRowProps> = ({
   }
 
   return (
-    <TableRow className="hover:bg-muted/50 transition-colors">
+    <TableRow className="hover:bg-muted/100 transition-colors">
       <TableCell className="font-medium text-sm">#{String(index + 1).padStart(3, "0")}</TableCell>
       <TableCell className="font-medium">
         <div className="max-w-[200px] truncate" title={product.name}>
@@ -127,8 +127,7 @@ const ProductTableRow: React.FC<ProductTableRowProps> = ({
           {product.stock < 10 && <AlertTriangle className="h-4 w-4 text-destructive" />}
         </div>
       </TableCell>
-      <TableCell className="text-muted-foreground">{product.sold || 0}</TableCell>
-      <TableCell>
+       <TableCell>
         <Button
           variant="outline"
           size="sm"

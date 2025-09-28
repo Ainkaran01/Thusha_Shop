@@ -9,23 +9,14 @@ import { Card } from "@/components/ui/card";
 import ProfileInformation from "@/components/user/ProfileInformation";
 
 const UserProfile = () => {
-  const { user,fetchProfile} = useUser();
+  const { user} = useUser();
   const navigate = useNavigate();
-
+  
   useEffect(() => {
-    if (user && user.role === "customer") {
-      fetchProfile();
+    if (!user) {
+      navigate("/login");
     }
-  }, [user]);
-
-  if (!user) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <p>Loading user data...</p>
-      </div>
-    );
-  }
-
+  }, [user, navigate]);
   // Format the creation date with proper error handling
   const formatCreationDate = () => {
     if (!user.created_at) return "Not available";

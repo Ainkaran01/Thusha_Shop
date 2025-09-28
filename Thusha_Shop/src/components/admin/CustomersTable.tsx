@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from "react";
+import type React from "react";
+import { useState, useMemo } from "react";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent,
-  CardFooter,
 } from "@/components/ui/card";
 import {
   Table,
@@ -15,7 +15,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusIcon, BanIcon, CheckCircleIcon, SearchIcon } from "lucide-react";
+import {
+  PlusIcon,
+  BanIcon,
+  CheckCircleIcon,
+  SearchIcon,
+  UsersIcon,
+  UserCheckIcon,
+  UserCogIcon,
+  StethoscopeIcon,
+  TruckIcon,
+  FactoryIcon,
+  UserIcon,
+  ShieldCheckIcon,
+  CrownIcon,
+} from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -69,14 +83,30 @@ interface CustomersTableProps {
   onActivateCustomer: (id: number) => Promise<void>;
 }
 
+const getRoleIcon = (role: string) => {
+  const iconProps = { className: "h-4 w-4" };
+  switch (role.toLowerCase()) {
+    case "doctor":
+      return <StethoscopeIcon {...iconProps} />;
+    case "delivery":
+      return <TruckIcon {...iconProps} />;
+    case "manufacturer":
+      return <FactoryIcon {...iconProps} />;
+    case "customer":
+      return <UserIcon {...iconProps} />;
+    default:
+      return <UserCogIcon {...iconProps} />;
+  }
+};
+
 const getRandomAvatarColor = (str: string) => {
   const colors = [
-    "bg-pink-100 text-pink-800",
-    "bg-purple-100 text-purple-800",
     "bg-yellow-100 text-yellow-800",
-    "bg-green-100 text-green-800",
+    "bg-amber-100 text-amber-800",
+    "bg-orange-100 text-orange-800",
     "bg-blue-100 text-blue-800",
-    "bg-red-100 text-red-800",
+    "bg-green-100 text-green-800",
+    "bg-purple-100 text-purple-800",
     "bg-indigo-100 text-indigo-800",
   ];
   const hash = str.split("").reduce((acc, char) => char.charCodeAt(0) + acc, 0);
@@ -116,11 +146,33 @@ const CustomersTable: React.FC<CustomersTableProps> = ({
   };
 
   const roleBadgeColors: Record<string, string> = {
-    doctor: "bg-blue-100 text-blue-800",
-    delivery: "bg-orange-100 text-orange-800",
-    manufacturer: "bg-purple-100 text-purple-800",
-    customer: "bg-gray-100 text-gray-800",
+    doctor: "bg-blue-50 text-blue-700 border-blue-200",
+    delivery: "bg-orange-50 text-orange-700 border-orange-200",
+    manufacturer: "bg-purple-50 text-purple-700 border-purple-200",
+    customer: "bg-yellow-50 text-yellow-700 border-yellow-200",
   };
+
+  // Calculate user statistics
+  const userStats = useMemo(() => {
+    const allCustomers = customers.filter(
+      (u) => u.role.toLowerCase() === "customer"
+    );
+    const staff = customers.filter((u) => u.role.toLowerCase() !== "customer");
+
+    return {
+      totalCustomers: allCustomers.length,
+      activeCustomers: allCustomers.filter((u) => u.is_active).length,
+      inactiveCustomers: allCustomers.filter((u) => !u.is_active).length,
+      totalStaff: staff.length,
+      activeStaff: staff.filter((u) => u.is_active).length,
+      inactiveStaff: staff.filter((u) => !u.is_active).length,
+      doctors: staff.filter((u) => u.role.toLowerCase() === "doctor").length,
+      manufacturers: staff.filter(
+        (u) => u.role.toLowerCase() === "manufacturer"
+      ).length,
+      delivery: staff.filter((u) => u.role.toLowerCase() === "delivery").length,
+    };
+  }, [customers]);
 
   // Filter and sort customers based on search and role selection
   const filteredCustomers = useMemo(() => {
@@ -247,89 +299,218 @@ const CustomersTable: React.FC<CustomersTableProps> = ({
 
   return (
     <Card className="border-none shadow-none">
-      <CardHeader className="flex flex-col gap-4 px-0">
+      <CardHeader className="flex flex-col gap-6 px-0">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <CardTitle className="text-2xl">User Management</CardTitle>
-            <CardDescription>
-              Manage all system users and their access
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-yellow-500 to-amber-600 bg-clip-text text-transparent flex items-center gap-2">
+              <UsersIcon className="h-7 w-7 text-yellow-600" />
+              User Management
+            </CardTitle>
+
+            <CardDescription className="text-gray-600 mt-1">
+              Manage all system users and their access permissions
             </CardDescription>
           </div>
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
-              <Button className="gap-2">
+              <Button className="gap-2 bg-yellow-500 hover:bg-yellow-600 text-white shadow-lg hover:shadow-xl transition-all duration-200">
                 <PlusIcon className="h-4 w-4" />
-                Add Staff
+                Add Staff Member
               </Button>
             </SheetTrigger>
-            <SheetContent>
+            <SheetContent className="sm:max-w-md">
               <SheetHeader>
-                <SheetTitle>Create Staff Account</SheetTitle>
-                <SheetDescription>
-                  Create a new staff account with specific permissions.
+                <SheetTitle className="text-xl font-semibold">
+                  Create Staff Account
+                </SheetTitle>
+                <SheetDescription className="text-gray-600">
+                  Create a new staff account with specific role permissions.
                 </SheetDescription>
               </SheetHeader>
-              <div className="space-y-4 py-4">
+              <div className="space-y-6 py-6">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="name" className="text-sm font-medium">
+                    Full Name
+                  </Label>
                   <Input
                     id="name"
                     placeholder="Enter full name"
                     value={newStaffName}
                     onChange={(e) => setNewStaffName(e.target.value)}
+                    className="border-gray-200 focus:border-yellow-400 focus:ring-yellow-400"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-sm font-medium">
+                    Email Address
+                  </Label>
                   <Input
                     id="email"
                     type="email"
                     placeholder="Enter email address"
                     value={newStaffEmail}
                     onChange={(e) => setNewStaffEmail(e.target.value)}
+                    className="border-gray-200 focus:border-yellow-400 focus:ring-yellow-400"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-sm font-medium">
+                    Password
+                  </Label>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter password"
+                    placeholder="Enter secure password"
                     value={newStaffPassword}
                     onChange={(e) => setNewStaffPassword(e.target.value)}
+                    className="border-gray-200 focus:border-yellow-400 focus:ring-yellow-400"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
+                  <Label htmlFor="role" className="text-sm font-medium">
+                    Role & Permissions
+                  </Label>
                   <Select
                     value={newStaffRole}
                     onValueChange={(
                       value: "doctor" | "delivery" | "manufacturer"
                     ) => setNewStaffRole(value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="border-gray-200 focus:border-yellow-400 focus:ring-yellow-400">
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="doctor">Doctor</SelectItem>
-                      <SelectItem value="manufacturer">Manufacturer</SelectItem>
+                      <SelectItem value="doctor">
+                        <div className="flex items-center gap-2">
+                          <StethoscopeIcon className="h-4 w-4" />
+                          Doctor
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="manufacturer">
+                        <div className="flex items-center gap-2">
+                          <FactoryIcon className="h-4 w-4" />
+                          Manufacturer
+                        </div>
+                      </SelectItem>
                       <SelectItem value="delivery">
-                        Delivery Personnel
+                        <div className="flex items-center gap-2">
+                          <TruckIcon className="h-4 w-4" />
+                          Delivery Personnel
+                        </div>
                       </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <SheetFooter>
-                <Button onClick={handleCreateStaff} disabled={isSubmitting}>
-                  {isSubmitting ? "Creating..." : "Create Account"}
+                <Button
+                  onClick={handleCreateStaff}
+                  disabled={isSubmitting}
+                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+                >
+                  {isSubmitting
+                    ? "Creating Account..."
+                    : "Create Staff Account"}
                 </Button>
               </SheetFooter>
             </SheetContent>
           </Sheet>
         </div>
 
-        {/* Search and Filter Controls */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Total Customers Card */}
+          <Card className="h-36 hover:shadow-lg transition-all duration-300 border-l-4 border-l-yellow-400 bg-gradient-to-br from-yellow-50 to-amber-50">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-semibold text-gray-700">
+                Total Customers
+              </CardTitle>
+              <div className=" bg-yellow-100 rounded-lg">
+                <UsersIcon className="h-4 w-5 text-yellow-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-gray-900">
+                {userStats.totalCustomers}
+              </div>
+              <p className="text-sm text-gray-600 mt-1">Registered customers</p>
+            </CardContent>
+          </Card>
+
+          {/* Active Customers Card */}
+          <Card className="h-36 hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-400 bg-gradient-to-br from-green-50 to-emerald-50">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-semibold text-gray-700">
+                Active Customers
+              </CardTitle>
+              <div className="bg-green-100 rounded-lg">
+                <UserCheckIcon className="h-4 w-5 text-green-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-gray-900">
+                {userStats.activeCustomers}
+              </div>
+              <p className="text-sm text-gray-600 mt-1">
+                {userStats.totalCustomers > 0
+                  ? `${Math.round(
+                      (userStats.activeCustomers / userStats.totalCustomers) *
+                        100
+                    )}% active rate`
+                  : "No customers yet"}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Staff Summary Card */}
+          <Card className="h-36 hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-400 bg-gradient-to-br from-blue-50 to-indigo-50">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-semibold text-gray-700">
+                Staff Members
+              </CardTitle>
+              <div className="bg-blue-100 rounded-lg">
+                <UserCogIcon className="h-4 w-5 text-blue-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-gray-900">
+                {userStats.totalStaff}
+              </div>
+              <div className="flex flex-wrap gap-1 text-sm text-gray-600 mt-1">
+                <span>{userStats.doctors} doctors</span>
+                <span>•</span>
+                <span>{userStats.manufacturers} manufacturers</span>
+                <span>•</span>
+                <span>{userStats.delivery} delivery</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Active Staff Card */}
+          <Card className="h-36 hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-400 bg-gradient-to-br from-purple-50 to-violet-50">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-semibold text-gray-700">
+                Active Staff
+              </CardTitle>
+              <div className="bg-purple-100 rounded-lg">
+                <ShieldCheckIcon className="h-4 w-5 text-purple-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-gray-900">
+                {userStats.activeStaff}
+              </div>
+              <p className="text-sm text-gray-600 mt-1">
+                {userStats.totalStaff > 0
+                  ? `${Math.round(
+                      (userStats.activeStaff / userStats.totalStaff) * 100
+                    )}% active rate`
+                  : "No staff yet"}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Search and Filter Controls - keeping search box unchanged as requested */}
         <div className="flex flex-col sm:flex-row gap-4 w-full">
           <div className="relative flex-1">
             <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -342,15 +523,35 @@ const CustomersTable: React.FC<CustomersTableProps> = ({
           </div>
           <div className="w-full sm:w-[200px]">
             <Select value={selectedRole} onValueChange={setSelectedRole}>
-              <SelectTrigger>
+              <SelectTrigger className="border-gray-200 focus:border-yellow-400 focus:ring-yellow-400">
                 <SelectValue placeholder="Filter by role" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="doctor">Doctors</SelectItem>
-                <SelectItem value="manufacturer">Manufacturers</SelectItem>
-                <SelectItem value="delivery">Delivery Personnel</SelectItem>
-                <SelectItem value="customer">Customers</SelectItem>
+                <SelectItem value="doctor">
+                  <div className="flex items-center gap-2">
+                    <StethoscopeIcon className="h-4 w-4" />
+                    Doctors
+                  </div>
+                </SelectItem>
+                <SelectItem value="manufacturer">
+                  <div className="flex items-center gap-2">
+                    <FactoryIcon className="h-4 w-4" />
+                    Manufacturers
+                  </div>
+                </SelectItem>
+                <SelectItem value="delivery">
+                  <div className="flex items-center gap-2">
+                    <TruckIcon className="h-4 w-4" />
+                    Delivery Personnel
+                  </div>
+                </SelectItem>
+                <SelectItem value="customer">
+                  <div className="flex items-center gap-2">
+                    <UserIcon className="h-4 w-4" />
+                    Customers
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -360,32 +561,59 @@ const CustomersTable: React.FC<CustomersTableProps> = ({
       <CardContent className="px-0 space-y-8">
         {visibleRoles.length > 0 ? (
           visibleRoles.map((role) => (
-            <div key={role} className="rounded-lg border overflow-hidden">
-              <div className="bg-gray-50 px-6 py-3 border-b flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <h3 className="font-medium text-lg">
-                    {roleDisplayNames[role] || `${role}s`}
-                  </h3>
-                  <Badge className={roleBadgeColors[role]}>
-                    {customersByRole[role]?.length || 0}{" "}
-                    {customersByRole[role]?.length === 1 ? "user" : "users"}
-                  </Badge>
+            <div
+              key={role}
+              className="rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200"
+            >
+              <div className="bg-gradient-to-r from-yellow-500 to-amber-600 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 bg-white rounded-lg shadow-sm">
+                    {getRoleIcon(role)}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900">
+                      {roleDisplayNames[role] || `${role}s`}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {customersByRole[role]?.length || 0}{" "}
+                      {customersByRole[role]?.length === 1 ? "user" : "users"}
+                    </p>
+                  </div>
                 </div>
-                {role !== "customer" && (
-                  <Badge variant="outline" className="border-gray-300">
-                    Staff
+                <div className="flex items-center gap-2">
+                  <Badge
+                    className={`${roleBadgeColors[role]} font-medium px-3 py-1`}
+                  >
+                    {customersByRole[role]?.length || 0}
                   </Badge>
-                )}
+                  {role !== "customer" && (
+                    <Badge
+                      variant="outline"
+                      className="border-yellow-300 text-yellow-700 bg-yellow-50 font-medium"
+                    >
+                      <CrownIcon className="h-3 w-3 mr-1" />
+                      Staff
+                    </Badge>
+                  )}
+                </div>
               </div>
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[200px]">User</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>ID</TableHead>
-                    <TableHead className="w-[120px]">Status</TableHead>
+                  <TableRow className="bg-gradient-to-r from-gray-100 to-gray-200 text-white">
+                    <TableHead className="w-[300px] font-semibold">
+                      User Information
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      Email Address
+                    </TableHead>
+                    <TableHead className="w-[120px] font-semibold">
+                      User ID
+                    </TableHead>
+                    <TableHead className="w-[120px] font-semibold">
+                      Status
+                    </TableHead>
                     {role !== "customer" && (
-                      <TableHead className="w-[150px] text-right">
+                      <TableHead className="w-[150px] text-right font-semibold">
                         Actions
                       </TableHead>
                     )}
@@ -393,34 +621,49 @@ const CustomersTable: React.FC<CustomersTableProps> = ({
                 </TableHeader>
                 <TableBody>
                   {customersByRole[role]?.map((customer) => (
-                    <TableRow key={customer.id}>
+                    <TableRow
+                      key={customer.id}
+                      className="hover:bg-gray-100/100 transition-colors"
+                    >
                       <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-9 w-9">
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-10 w-10 ring-2 ring-gray-100">
                             <AvatarFallback
-                              className={`text-white ${getRandomAvatarColor(
+                              className={`font-semibold ${getRandomAvatarColor(
                                 customer.name
                               )}`}
                             >
                               {customer.name.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-
                           <div>
-                            <p className="font-medium">{customer.name}</p>
-                            <p className="text-sm text-gray-500">{role}</p>
+                            <p className="font-semibold text-gray-900">
+                              {customer.name}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              {getRoleIcon(role)}
+                              <p className="text-sm text-gray-600 capitalize">
+                                {role}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{customer.email}</TableCell>
-                      <TableCell>UID-{customer.id}</TableCell>
+                      <TableCell className="text-gray-700">
+                        {customer.email}
+                      </TableCell>
+                      <TableCell>
+                        <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono">
+                          UID-{customer.id}
+                        </code>
+                      </TableCell>
                       <TableCell>
                         <Badge
                           variant={customer.is_active ? "default" : "secondary"}
                           className={
                             customer.is_active
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
+                              ? "bg-green-100 text-green-800 border-green-200 font-medium"
+                              : "bg-gray-100 text-gray-800 border-gray-200 font-medium"
                           }
                         >
                           {customer.is_active ? "Active" : "Inactive"}
@@ -437,16 +680,20 @@ const CustomersTable: React.FC<CustomersTableProps> = ({
                               setCustomerToUpdate(customer);
                               setIsConfirmOpen(true);
                             }}
-                            className="h-8"
+                            className={`h-9 font-medium transition-all duration-200 ${
+                              customer.is_active
+                                ? "hover:shadow-md"
+                                : "bg-yellow-500 hover:bg-yellow-600 text-white hover:shadow-md"
+                            }`}
                           >
                             {customer.is_active ? (
                               <>
-                                <BanIcon className="h-4 w-4 mr-1" />
+                                <BanIcon className="h-4 w-4 mr-2" />
                                 Deactivate
                               </>
                             ) : (
                               <>
-                                <CheckCircleIcon className="h-4 w-4 mr-1" />
+                                <CheckCircleIcon className="h-4 w-4 mr-2" />
                                 Activate
                               </>
                             )}
@@ -460,17 +707,27 @@ const CustomersTable: React.FC<CustomersTableProps> = ({
             </div>
           ))
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 gap-2 text-gray-500">
-            <SearchIcon className="h-8 w-8" />
-            <p className="text-lg">No users found matching your criteria</p>
+          <div className="flex flex-col items-center justify-center py-16 gap-4 text-gray-500 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+            <div className="p-4 bg-white rounded-full shadow-sm">
+              <SearchIcon className="h-8 w-8 text-gray-400" />
+            </div>
+            <div className="text-center">
+              <p className="text-xl font-medium text-gray-700">
+                No users found
+              </p>
+              <p className="text-gray-500 mt-1">
+                Try adjusting your search criteria
+              </p>
+            </div>
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={() => {
                 setSearchTerm("");
                 setSelectedRole("all");
               }}
+              className="mt-2 border-yellow-300 text-yellow-700 hover:bg-yellow-50"
             >
-              Clear filters
+              Clear all filters
             </Button>
           </div>
         )}
@@ -478,23 +735,26 @@ const CustomersTable: React.FC<CustomersTableProps> = ({
 
       {/* Confirmation Dialog */}
       <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="sm:max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className="text-xl">
               {customerToUpdate?.is_active
-                ? "Deactivate User?"
-                : "Activate User?"}
+                ? "Deactivate User Account?"
+                : "Activate User Account?"}
             </AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-gray-600">
               {customerToUpdate?.is_active
-                ? `Are you sure you want to deactivate ${customerToUpdate.name}? They will no longer have access to the system.`
-                : `Are you sure you want to activate ${customerToUpdate?.name}? They will regain access to the system.`}
+                ? `Are you sure you want to deactivate ${customerToUpdate.name}? They will lose access to the system immediately.`
+                : `Are you sure you want to activate ${customerToUpdate?.name}? They will regain full access to the system.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmStatusChange}>
-              Confirm
+            <AlertDialogAction
+              onClick={handleConfirmStatusChange}
+              className="bg-yellow-500 hover:bg-yellow-600 text-white"
+            >
+              Confirm Changes
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

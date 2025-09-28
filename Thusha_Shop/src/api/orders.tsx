@@ -40,7 +40,7 @@ export interface OrderItem {
   quantity: number;
   price: string;
   lens_option: string[] | null;
-  prescription: Prescription | null;
+  prescription: number | null;
   product: {
     id: number;
     name: string;
@@ -147,5 +147,10 @@ export const fetchMonthlyRevenue = async (): Promise<{ monthly_revenue: number; 
 
 export const fetchSalesOverview = async (): Promise<SalesDataPoint[]> => {
   const res = await apiClient.get(`${endpoint}sales-overview/`);
+  return res.data;
+};
+
+export const fetchPrescriptionDetails = async (prescriptionId: number): Promise<Prescription> => {
+  const res = await apiClient.get(`/api/prescriptions/prescription/${prescriptionId}/`);
   return res.data;
 };

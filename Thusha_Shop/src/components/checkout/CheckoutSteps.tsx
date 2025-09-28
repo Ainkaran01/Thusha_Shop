@@ -17,11 +17,11 @@ const CheckoutSteps: React.FC<CheckoutStepsProps> = ({
   if (hasEyeglasses) {
     steps.push(
       { number: 3, label: 'Lens Selection' },
-      { number: 4, label: 'Prescription' }
+      // { number: 4, label: 'Prescription' }
     );
   }
 
-  steps.push({ number: hasEyeglasses ? 5 : 3, label: 'Payment' });
+  steps.push({ number: hasEyeglasses ? 4 : 3, label: 'Payment' });
 
   return (
     <div className="flex items-center">

@@ -46,6 +46,7 @@ interface ProductFormData {
 }
 
 const frameMaterials = [
+  "Stainless Steel",
   "metal",
   "acetate",
   "titanium",
@@ -110,6 +111,15 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onCancel }) => {
     recommendedVisionProblems: [],
   });
 
+  const selectedCategoryName = categories.find(
+  (cat) => cat.id.toString() === formData.category
+  )?.name || "";
+
+  const isAccessoryCategory = () => {
+  const normalized = selectedCategoryName.trim().toLowerCase();
+  return ["accessory", "accessories"].includes(normalized);
+  };
+  
   const [images, setImages] = useState<File[]>([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -395,6 +405,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onCancel }) => {
 
           {/* Physical Properties */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {!isAccessoryCategory() && (
             <div className="space-y-2">
               <Label htmlFor="frameType">Frame Type</Label>
               <Select
@@ -416,7 +427,9 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onCancel }) => {
                 </SelectContent>
               </Select>
             </div>
+            )}
 
+            {!isAccessoryCategory() && (
             <div className="space-y-2">
               <Label htmlFor="frameMaterial">Material</Label>
               <Select
@@ -437,6 +450,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onCancel }) => {
                 </SelectContent>
               </Select>
             </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="color">Color</Label>
@@ -471,6 +485,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onCancel }) => {
           </div>
 
           {/* Features */}
+          {!isAccessoryCategory() && (
           <div className="space-y-2">
             <Label>Features</Label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -490,8 +505,10 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onCancel }) => {
               ))}
             </div>
           </div>
+          )}
 
           {/* Recommendations */}
+          {!isAccessoryCategory() && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label>Recommended Face Shapes</Label>
@@ -541,6 +558,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onCancel }) => {
               </div>
             </div>
           </div>
+          )}
 
           {/* Image Upload */}
           <div className="space-y-4">
