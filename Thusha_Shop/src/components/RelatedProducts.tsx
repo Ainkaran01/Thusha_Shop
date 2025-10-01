@@ -145,8 +145,10 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
         <p className="text-muted-foreground">
           {category?.toLowerCase() === "Eyeglasses"
             ? "More eyeglasses perfect for your style"
-            : category?.toLowerCase() === "sunglasses"
+            : category?.toLowerCase() === "sun glasses"
             ? "More sunglasses for sun protection"
+            : category?.toLowerCase() === "sport glasses"
+            ? "More sportlasses for sports activities"
             : category?.toLowerCase() === "accessories"
             ? "Essential accessories for your eyewear"
             : "Recommended based on your selection"}
@@ -186,7 +188,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({
                   <Badge className="capitalize bg-white/90 text-foreground hover:bg-white">
                     {product.frame_type?.name || "Standard"}
                   </Badge>
-                  {product.category?.name?.toLowerCase() === "eyeglasses" && (
+                  {product.category?.name?.toLowerCase() === "Eyeglasses" && (
                     <Badge variant="outline" className="bg-white/90">
                       <Eye className="h-3 w-3 mr-1" />
                       Prescription

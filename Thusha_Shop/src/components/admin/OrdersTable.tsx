@@ -885,7 +885,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                             Shipping:
                           </span>
                           <Badge className="rounded-full bg-purple-100/80 dark:bg-purple-800 px-3 py-1">
-                            $0.00
+                            LKR 0.00
                           </Badge>
                         </div>
                         <Separator />

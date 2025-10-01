@@ -14,7 +14,7 @@ interface AccountTabsProps {
 const AccountTabs: React.FC<AccountTabsProps> = ({ children, defaultTab = "profile" }) => {
   return (
     <Tabs defaultValue={defaultTab} className="w-full">
-      <TabsList className="grid grid-cols-4 mb-8">
+      <TabsList className="grid grid-cols-3 mb-8">
         <TabsTrigger value="profile" className="flex items-center gap-2">
           <User className="h-4 w-4" />
           <span className="hidden sm:inline">Profile</span>
@@ -23,10 +23,10 @@ const AccountTabs: React.FC<AccountTabsProps> = ({ children, defaultTab = "profi
           <ShoppingBag className="h-4 w-4" />
           <span className="hidden sm:inline">Orders</span>
         </TabsTrigger>
-        <TabsTrigger value="wishlist" className="flex items-center gap-2">
+        {/* <TabsTrigger value="wishlist" className="flex items-center gap-2">
           <Heart className="h-4 w-4" />
           <span className="hidden sm:inline">Wishlist</span>
-        </TabsTrigger>
+        </TabsTrigger> */}
         <TabsTrigger value="security" className="flex items-center gap-2">
           <Key className="h-4 w-4" />
           <span className="hidden sm:inline">Security</span>

@@ -1,6 +1,11 @@
-
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { CartItem } from "@/types/cart";
 
@@ -41,21 +46,28 @@ const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
               />
               <div className="flex-1">
                 <h4 className="font-medium mb-1">{item.product.name}</h4>
-                <p className="text-sm text-muted-foreground mb-1">
-                  {item.product.frame_type.name}, {item.product.frame_material}
-                </p>
+                {item.product.category?.name?.toLowerCase() !==
+                  "accessories" && (
+                  <p className="text-sm text-muted-foreground mb-1">
+                    {item.product.frame_type?.name || "Frame type"},{" "}
+                    {item.product.frame_material || "Material"}
+                  </p>
+                )}
                 <div className="flex justify-between">
                   <div className="text-sm">Qty: {item.quantity}</div>
                   <div className="font-medium">
                     LKR {(item.product.price * item.quantity).toFixed(2)}
                   </div>
                 </div>
-                
+
                 {/* Show selected lens option */}
                 {item.lensOption && (
                   <div className="mt-1">
                     <div className="text-sm text-primary">
-                      {item.lensOption.type === "prescription" ? "Prescription" : "Standard"}: {item.lensOption.option}
+                      {item.lensOption.type === "prescription"
+                        ? "Prescription"
+                        : "Standard"}
+                      : {item.lensOption.option}
                     </div>
                     <div className="text-sm font-medium text-right">
                       + LKR {(item.lensOption.price * item.quantity).toFixed(2)}
@@ -66,9 +78,9 @@ const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
             </div>
           ))}
         </div>
-        
+
         <Separator className="my-4" />
-        
+
         <div className="space-y-2">
           <div className="flex justify-between">
             <span>Products Subtotal</span>
@@ -90,17 +102,19 @@ const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
             <span>Tax (5%)</span>
             <span>LKR {tax.toFixed(2)}</span>
           </div>
-        </div> 
-        
+        </div>
+
         <Separator className="my-4" />
-        
+
         <div className="flex justify-between font-semibold text-lg">
           <span>Total</span>
           <span>LKR {orderTotal.toFixed(2)}</span>
         </div>
-        
+
         <div className="mt-4 bg-accent p-3 rounded-md text-sm text-muted-foreground">
-          <p>Your order will be processed and shipped within 1-2 business days.</p>
+          <p>
+            Your order will be processed and shipped within 1-2 business days.
+          </p>
         </div>
       </CardContent>
     </Card>
