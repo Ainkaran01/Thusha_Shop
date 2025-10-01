@@ -42,11 +42,13 @@ const CartItem: React.FC<CartItemProps> = ({
             >
               {item.product.name}
             </Link>
+            { item.product.category.name !== "accessories" && (
             <p className="text-sm text-muted-foreground mb-2">
-              {item.product.frame_type.name}, {item.product.frame_material},
-              {item.product.colors}
+              {item.product.frame_type?.name || "Frame type not available"},{" "}
+              {item.product.frame_material || "Material not available"},{" "}
+              {item.product.colors || "Colors not available"}
             </p>
-
+            )}
             {/* Prescription lens option */}
             {item.lensOption && (
               <div className="mb-2 space-y-1">

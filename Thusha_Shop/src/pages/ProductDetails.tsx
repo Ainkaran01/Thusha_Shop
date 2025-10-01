@@ -34,7 +34,6 @@ import { getOptimal360Frames } from "@/utils/360EffectUtils";
 // Extend Product type for cart items
 interface CartProduct extends Product {
   quantity: number;
- 
 }
 
 const API_BASE_URL = "http://localhost:8000/api";
@@ -90,12 +89,10 @@ const ProductDetails = () => {
   }, [id, navigate]);
 
   const handleAddToCart = () => {
-  if (product) {
-    addToCart(product, quantity); 
-  }
-};
-
-
+    if (product) {
+      addToCart(product, quantity);
+    }
+  };
 
   const handleQuantityChange = (value: number) => {
     if (value >= 1) {
@@ -206,15 +203,17 @@ const ProductDetails = () => {
             >
               <ChevronRight className="h-5 w-5" />
             </Button>
-             {/* 360° Icon - Top Right Corner */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShow360Modal(true)}
-              className="absolute top-2 right-2 bg-white/90 hover:bg-white text-yellow-600 hover:text-yellow-700 rounded-full shadow-lg border border-yellow-200 h-10 w-10"
-            >
-              <span className="text-lg font-bold">360°</span>
-            </Button>
+            {/* 360° Icon - Top Right Corner */}
+            {product.category.name !== "accessories" && product.category.name !== "Eyeglasses" && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShow360Modal(true)}
+                className="absolute top-2 right-2 bg-white/90 hover:bg-white text-yellow-600 hover:text-yellow-700 rounded-full shadow-lg border border-yellow-200 h-10 w-10"
+              >
+                <span className="text-lg font-bold">360°</span>
+              </Button>
+            )}
           </div>
 
           <div className="grid grid-cols-4 gap-4">
@@ -293,7 +292,7 @@ const ProductDetails = () => {
                   <span className="capitalize">{product.size}</span>
                 </div>
               )}
-               {product.weight && (
+              {product.weight && (
                 <div className="flex justify-between">
                   <span className="font-medium">Weight:</span>
                   <span className="capitalize">{product.weight}</span>
@@ -429,7 +428,7 @@ const ProductDetails = () => {
             />
           )}
 
-          {product.category.name === "Eyeglasses" && (
+          { (product.category.name === "Eyeglasses" || product.category.name === "sport glasses" || product.category.name === "sun glasses" )&& (
             <div className="mb-6">
               <Button
                 onClick={() => setShowVirtualTryOn(true)}
@@ -537,22 +536,22 @@ const ProductDetails = () => {
         <Tabs defaultValue="details" className="w-full">
           <div className="relative">
             <TabsList className="w-full justify-start mb-6 bg-gradient-to-r from-gray-50 to-gray-100 p-1 rounded-lg border border-gray-200 shadow-sm">
-              <TabsTrigger 
-                value="details" 
+              <TabsTrigger
+                value="details"
                 className="text-sm font-medium px-4 py-2 rounded-md transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-600 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/50"
               >
                 <Box className="h-3 w-3 mr-1" />
                 Details
               </TabsTrigger>
-              <TabsTrigger 
-                value="reviews" 
+              <TabsTrigger
+                value="reviews"
                 className="text-sm font-medium px-4 py-2 rounded-md transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-600 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/50"
               >
                 <Star className="h-3 w-3 mr-1" />
                 Reviews
               </TabsTrigger>
-              <TabsTrigger 
-                value="shipping" 
+              <TabsTrigger
+                value="shipping"
                 className="text-sm font-medium px-4 py-2 rounded-md transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-600 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/50"
               >
                 <Truck className="h-3 w-3 mr-1" />
@@ -561,7 +560,7 @@ const ProductDetails = () => {
             </TabsList>
           </div>
           <TabsContent value="details" className="mt-0">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
@@ -571,7 +570,9 @@ const ProductDetails = () => {
                 <div className="p-2 bg-blue-100 rounded-lg mr-3">
                   <Box className="h-5 w-5 text-blue-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">Product Details</h3>
+                <h3 className="text-xl font-bold text-gray-900">
+                  Product Details
+                </h3>
               </div>
 
               {/* Product Description */}
@@ -581,7 +582,9 @@ const ProductDetails = () => {
                     <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
                     Description
                   </h4>
-                  <p className="text-gray-700 leading-relaxed text-sm">{product.description}</p>
+                  <p className="text-gray-700 leading-relaxed text-sm">
+                    {product.description}
+                  </p>
                 </div>
               </div>
 
@@ -594,36 +597,54 @@ const ProductDetails = () => {
                       <div className="p-2 bg-blue-100 rounded-lg mr-2">
                         <Check className="h-4 w-4 text-blue-600" />
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900">Specifications</h4>
+                      <h4 className="text-lg font-semibold text-gray-900">
+                        Specifications
+                      </h4>
                     </div>
                     <div className="space-y-3">
                       {product.frame_type && (
                         <div className="flex justify-between items-center py-1 border-b border-blue-200">
-                          <span className="font-medium text-gray-700 text-sm">Frame Type:</span>
-                          <span className="text-gray-900 font-semibold text-sm">{product.frame_type.name}</span>
+                          <span className="font-medium text-gray-700 text-sm">
+                            Frame Type:
+                          </span>
+                          <span className="text-gray-900 font-semibold text-sm">
+                            {product.frame_type.name}
+                          </span>
                         </div>
                       )}
                       {product.frame_material && (
                         <div className="flex justify-between items-center py-1 border-b border-blue-200">
-                          <span className="font-medium text-gray-700 text-sm">Frame Material:</span>
-                          <span className="text-gray-900 font-semibold text-sm">{product.frame_material}</span>
+                          <span className="font-medium text-gray-700 text-sm">
+                            Frame Material:
+                          </span>
+                          <span className="text-gray-900 font-semibold text-sm">
+                            {product.frame_material}
+                          </span>
                         </div>
                       )}
                       {product.colors && (
                         <div className="flex justify-between items-center py-1 border-b border-blue-200">
-                          <span className="font-medium text-gray-700 text-sm">Color:</span>
-                          <span className="text-gray-900 font-semibold text-sm">{product.colors}</span>
+                          <span className="font-medium text-gray-700 text-sm">
+                            Color:
+                          </span>
+                          <span className="text-gray-900 font-semibold text-sm">
+                            {product.colors}
+                          </span>
                         </div>
                       )}
                       <div className="flex justify-between items-center py-1 border-b border-blue-200">
-                        <span className="font-medium text-gray-700 text-sm">UV Protection:</span>
+                        <span className="font-medium text-gray-700 text-sm">
+                          UV Protection:
+                        </span>
                         <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
                           <Check className="h-3 w-3 mr-1" />
                           Yes
                         </Badge>
                       </div>
                       <div className="flex justify-between items-center py-1">
-                        <span className="font-medium text-gray-700 text-sm">Prescription Compatible:</span>
+                        <span className="font-medium text-gray-700 text-sm">
+                          Prescription Compatible:
+                        </span>
                         <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
                           <Check className="h-3 w-3 mr-1" />
                           Yes
@@ -638,9 +659,11 @@ const ProductDetails = () => {
                       <div className="p-2 bg-purple-100 rounded-lg mr-2">
                         <Star className="h-4 w-4 text-purple-600" />
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900">Recommended For</h4>
+                      <h4 className="text-lg font-semibold text-gray-900">
+                        Recommended For
+                      </h4>
                     </div>
-                    
+
                     {product.face_shapes?.length > 0 && (
                       <div className="mb-4">
                         <h5 className="font-semibold text-gray-800 mb-2 flex items-center text-sm">
@@ -649,14 +672,17 @@ const ProductDetails = () => {
                         </h5>
                         <div className="flex flex-wrap gap-1">
                           {product.face_shapes.map((shape) => (
-                            <Badge key={shape} className="bg-purple-100 text-purple-800 border-purple-200 capitalize px-2 py-1 text-xs">
+                            <Badge
+                              key={shape}
+                              className="bg-purple-100 text-purple-800 border-purple-200 capitalize px-2 py-1 text-xs"
+                            >
                               {shape}
                             </Badge>
                           ))}
                         </div>
                       </div>
                     )}
-                    
+
                     {product.vision_problems?.length > 0 && (
                       <div>
                         <h5 className="font-semibold text-gray-800 mb-2 flex items-center text-sm">
@@ -665,7 +691,10 @@ const ProductDetails = () => {
                         </h5>
                         <div className="flex flex-wrap gap-1">
                           {product.vision_problems.map((problem) => (
-                            <Badge key={problem} className="bg-pink-100 text-pink-800 border-pink-200 capitalize px-2 py-1 text-xs">
+                            <Badge
+                              key={problem}
+                              className="bg-pink-100 text-pink-800 border-pink-200 capitalize px-2 py-1 text-xs"
+                            >
                               {problem}
                             </Badge>
                           ))}
@@ -678,7 +707,7 @@ const ProductDetails = () => {
             </motion.div>
           </TabsContent>
           <TabsContent value="reviews" className="mt-0">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
@@ -688,7 +717,9 @@ const ProductDetails = () => {
                 <div className="p-2 bg-yellow-100 rounded-lg mr-3">
                   <Star className="h-5 w-5 text-yellow-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">Customer Reviews</h3>
+                <h3 className="text-xl font-bold text-gray-900">
+                  Customer Reviews
+                </h3>
               </div>
               <ProductReviews
                 productId={product.id}
@@ -698,7 +729,7 @@ const ProductDetails = () => {
             </motion.div>
           </TabsContent>
           <TabsContent value="shipping" className="mt-0">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
@@ -708,7 +739,9 @@ const ProductDetails = () => {
                 <div className="p-2 bg-green-100 rounded-lg mr-3">
                   <Truck className="h-5 w-5 text-green-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">Shipping & Returns</h3>
+                <h3 className="text-xl font-bold text-gray-900">
+                  Shipping & Returns
+                </h3>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -718,44 +751,58 @@ const ProductDetails = () => {
                     <div className="p-2 bg-green-100 rounded-lg mr-3">
                       <Truck className="h-5 w-5 text-green-600" />
                     </div>
-                    <h4 className="text-xl font-semibold text-gray-900">Shipping Information</h4>
+                    <h4 className="text-xl font-semibold text-gray-900">
+                      Shipping Information
+                    </h4>
                   </div>
-                  
+
                   <p className="text-gray-700 mb-6 leading-relaxed">
-                    We offer free standard shipping on all orders within Sri Lanka. 
-                    International shipping rates vary by destination.
+                    We offer free standard shipping on all orders within Sri
+                    Lanka. International shipping rates vary by destination.
                   </p>
 
                   <h5 className="font-semibold text-gray-800 mb-4 flex items-center">
                     <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
                     Shipping Options
                   </h5>
-                  
+
                   <div className="space-y-4">
                     <div className="flex justify-between items-center py-3 px-4 bg-white rounded-lg border border-green-200">
                       <div>
-                        <span className="font-semibold text-gray-900">Standard Shipping</span>
-                        <p className="text-sm text-gray-600">5-7 business days</p>
+                        <span className="font-semibold text-gray-900">
+                          Standard Shipping
+                        </span>
+                        <p className="text-sm text-gray-600">
+                          5-7 business days
+                        </p>
                       </div>
                       <Badge className="bg-green-100 text-green-800 border-green-200">
                         Free
                       </Badge>
                     </div>
-                    
+
                     <div className="flex justify-between items-center py-3 px-4 bg-white rounded-lg border border-green-200">
                       <div>
-                        <span className="font-semibold text-gray-900">Express Shipping</span>
-                        <p className="text-sm text-gray-600">2-3 business days</p>
+                        <span className="font-semibold text-gray-900">
+                          Express Shipping
+                        </span>
+                        <p className="text-sm text-gray-600">
+                          2-3 business days
+                        </p>
                       </div>
                       <Badge className="bg-blue-100 text-blue-800 border-blue-200">
                         LKR 400
                       </Badge>
                     </div>
-                    
+
                     <div className="flex justify-between items-center py-3 px-4 bg-white rounded-lg border border-green-200">
                       <div>
-                        <span className="font-semibold text-gray-900">Next Day Shipping</span>
-                        <p className="text-sm text-gray-600">Next business day (before 2pm)</p>
+                        <span className="font-semibold text-gray-900">
+                          Next Day Shipping
+                        </span>
+                        <p className="text-sm text-gray-600">
+                          Next business day (before 2pm)
+                        </p>
                       </div>
                       <Badge className="bg-purple-100 text-purple-800 border-purple-200">
                         LKR 500
@@ -770,33 +817,37 @@ const ProductDetails = () => {
                     <div className="p-2 bg-orange-100 rounded-lg mr-3">
                       <Repeat className="h-5 w-5 text-orange-600" />
                     </div>
-                    <h4 className="text-xl font-semibold text-gray-900">Return Policy</h4>
+                    <h4 className="text-xl font-semibold text-gray-900">
+                      Return Policy
+                    </h4>
                   </div>
-                  
+
                   <p className="text-gray-700 mb-6 leading-relaxed">
-                    We offer a 30-day return policy for all our frames. If you're
-                    not completely satisfied with your purchase, you can return it
-                    within 30 days for a full refund or exchange.
+                    We offer a 30-day return policy for all our frames. If
+                    you're not completely satisfied with your purchase, you can
+                    return it within 30 days for a full refund or exchange.
                   </p>
 
                   <h5 className="font-semibold text-gray-800 mb-4 flex items-center">
                     <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
                     Return Process
                   </h5>
-                  
+
                   <div className="space-y-3">
                     {[
                       "Contact our customer service to initiate a return",
                       "Pack your glasses in their original packaging",
                       "Print the prepaid return label that we'll send to you",
                       "Drop off the package at any postal service location",
-                      "Once we receive and inspect the return, we'll process your refund"
+                      "Once we receive and inspect the return, we'll process your refund",
                     ].map((step, index) => (
                       <div key={index} className="flex items-start">
                         <div className="flex-shrink-0 w-6 h-6 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-sm font-semibold mr-3 mt-0.5">
                           {index + 1}
                         </div>
-                        <p className="text-gray-700 text-sm leading-relaxed">{step}</p>
+                        <p className="text-gray-700 text-sm leading-relaxed">
+                          {step}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -810,12 +861,14 @@ const ProductDetails = () => {
                     <ShieldCheck className="h-5 w-5 text-amber-600" />
                   </div>
                   <div>
-                    <h5 className="font-semibold text-amber-800 mb-2">Important Note</h5>
+                    <h5 className="font-semibold text-amber-800 mb-2">
+                      Important Note
+                    </h5>
                     <p className="text-amber-700 text-sm leading-relaxed">
-                      Prescription lenses are custom-made for your specific vision
-                      needs and cannot be returned unless there's a manufacturing
-                      defect. Please contact our customer service if you have any
-                      issues with your prescription lenses.
+                      Prescription lenses are custom-made for your specific
+                      vision needs and cannot be returned unless there's a
+                      manufacturing defect. Please contact our customer service
+                      if you have any issues with your prescription lenses.
                     </p>
                   </div>
                 </div>
@@ -837,7 +890,14 @@ const ProductDetails = () => {
           </>
         )}
 
-        {product.category.name === "sunglasses" && (
+        {product.category.name === "sport glasses" && (
+          <RelatedProducts
+            currentProductId={product.id}
+            currentProduct={product}
+            category={product.category.name}
+          />
+        )}
+        {product.category.name === "sun glasses" && (
           <RelatedProducts
             currentProductId={product.id}
             currentProduct={product}
@@ -852,7 +912,7 @@ const ProductDetails = () => {
               currentProduct={product}
               category={product.category.name}
             />
-            <div className="mt-12">
+            {/* <div className="mt-12">
               <h2 className="text-2xl font-bold mb-6">
                 Perfect Frames for These Accessories
               </h2>
@@ -861,17 +921,18 @@ const ProductDetails = () => {
                 currentProduct={product}
                 category={product.category.name}
               />
-            </div>
+            </div> */}
           </>
         )}
       </div>
-       {/* 360° Modal */}
+      {/* 360° Modal */}
+
       <ProductViewer360Modal
         isOpen={show360Modal}
         onClose={() => setShow360Modal(false)}
-        images={getOptimal360Frames(product.images || ["/images/f1.jpg"], 32)}
-        productName={product.name}
-        fallbackImage={product.images?.[0] || "/images/f1.jpg"}
+        images={getOptimal360Frames(product?.images || ["/images/f1.jpg"], 32)}
+        productName={product?.name || "Unnamed Product"}
+        fallbackImage={product?.images?.[0] || "/images/f1.jpg"}
       />
     </div>
   );
